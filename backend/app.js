@@ -18,7 +18,17 @@ const { CommentDeleteController, CommentFlagController, CommentReplyController, 
 const { AdminBlogRestore, AdminBlogUnarchive, AdminBlogPermanentDelete, AdminBlogDelete, AdminBlogArchive } = require('./controllers/adminStatusController.js');
 
 const corsOptions = {
-  origin: 'https://my-app-frontend-g1f2.onrender.com',
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      'https://my-app-frontend-g1f2.onrender.com',
+      'http://localhost:5173', // Add local development origin
+    ];
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'OPTIONS'],
   allowedHeaders: ['Content-Type'],
 };
