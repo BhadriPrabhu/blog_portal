@@ -48,7 +48,7 @@ export default function ArchivedPosts({ posts, onUnarchive, onError }) {
   };
 
 
-  
+
   return (
     <div style={{
       backgroundColor: '#F7F9FA',
@@ -254,7 +254,7 @@ export default function ArchivedPosts({ posts, onUnarchive, onError }) {
           isDeleted={false}
         />
       )}
-      <style jsx>{`
+      <style>{`
         @media (max-width: 768px) {
           div[style*="padding: 16px"] {
             padding: 12px;

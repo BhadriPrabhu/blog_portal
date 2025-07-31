@@ -252,7 +252,7 @@ export default function DeletedPosts({ posts, onRestore, onError }) {
           isDeleted={true}
         />
       )}
-      <style jsx>{`
+      <style>{`
         @media (max-width: 768px) {
           div[style*="padding: 16px"] {
             padding: 12px;

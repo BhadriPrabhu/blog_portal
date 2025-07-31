@@ -33,7 +33,7 @@ export default function Button({ value, onClick, disabled = false }) {
       aria-label={value}
     >
       {value}
-      <style jsx>{`
+      <style>{`
         @media (max-width: 768px) {
           button {
             font-size: 14px !important;

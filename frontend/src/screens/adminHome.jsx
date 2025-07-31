@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import axios from 'axios';
 import { Trash2, TrendingUp, Users, Activity } from 'lucide-react';
 import { debounce } from 'lodash';
 import Button from '../components/button';
@@ -8,6 +7,7 @@ import DeletedPosts from '../components/deletedPosts';
 import ArcheivedPosts from '../components/archeivedPosts';
 import { useNavigate } from 'react-router-dom';
 import { fetchBlogByStatus, bulkAction } from '../utils/api';
+import api from '../utils/api';
 
 const StatsCard = ({ title, value, icon: Icon, color, bgColor }) => (
   <div style={{
@@ -91,7 +91,7 @@ export default function AdminHome() {
 
       if (errors.length > 0) {
         console.warn('Status queries failed, fetching all posts:', errors);
-        const allRes = await api.get('/blog');
+        const allRes = await api.get('/blog'); // Use imported api
         console.log('All posts:', allRes.data);
         const mapPosts = (data) => data.map(post => ({
           _id: post._id || '',
@@ -548,7 +548,7 @@ export default function AdminHome() {
 
       {selectedPost && <PopupAnalytics post={selectedPost} onClose={() => setSelectedPost(null)} onCommentUpdate={handleCommentUpdate} />}
 
-      <style jsx>{`
+      <style>{`
         @media (max-width: 768px) {
           div[style*="padding: 20px"] {
             padding: 12px;
