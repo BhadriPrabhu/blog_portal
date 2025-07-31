@@ -179,7 +179,7 @@
 
 import React from 'react';
 import { useState } from 'react';
-import SearchBar from './SearchBar';
+import SearchBar from './searchbar';
 import { Home, Settings, LogOut, HelpCircle, Heart } from 'lucide-react';
 import Post from '@mui/icons-material/ArticleOutlined';
 import Bookmark from '@mui/icons-material/BookmarkBorderOutlined';
