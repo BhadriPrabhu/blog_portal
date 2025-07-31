@@ -25,14 +25,12 @@ const { AdminBlogRestore, AdminBlogUnarchive, AdminBlogPermanentDelete, AdminBlo
 app.use(cors());
 app.use(express.json());
 
-// const URI = process.env.MONGO_URI;
+const URI = process.env.MONGO_URI || "mongodb+srv://bhadriprabhu:bhadri%402006@bhadri.osdxvju.mongodb.net/blog_portal?retryWrites=true&w=majority&appName=bhadri";
 
-
-const uri = "mongodb+srv://bhadriprabhu:bhadri%402006@bhadri.osdxvju.mongodb.net/blog_portal?retryWrites=true&w=majority&appName=bhadri";
 
 const connectDB = async () => {
     try {
-        await mongoose.connect(uri);
+        await mongoose.connect(URI);
         console.log("DB connected successfully")
     } catch (error) {
         console.log(error)
