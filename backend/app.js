@@ -1,4 +1,4 @@
-require('dotenv').config;
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const app = express();
@@ -24,6 +24,8 @@ const { AdminBlogRestore, AdminBlogUnarchive, AdminBlogPermanentDelete, AdminBlo
 
 app.use(cors());
 app.use(express.json());
+
+app.use(cors({ origin: 'https://my-app-frontend.onrender.com' }));
 
 const URI = process.env.MONGO_URI || "mongodb+srv://bhadriprabhu:bhadri%402006@bhadri.osdxvju.mongodb.net/blog_portal?retryWrites=true&w=majority&appName=bhadri";
 
