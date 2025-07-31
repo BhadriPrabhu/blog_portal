@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { Archive, XCircle } from 'lucide-react';
 import PopupPostDetails from './popupPostDetails';
+import { unarchivePost, permanentDeletePost } from '../utils/api';
 
 export default function ArchivedPosts({ posts, onUnarchive, onError }) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -16,7 +17,7 @@ export default function ArchivedPosts({ posts, onUnarchive, onError }) {
     if (!window.confirm('Are you sure you want to unarchive this post?')) return;
     setIsLoading(true);
     try {
-      await axios.post('http://localhost:3000/blog/unarchive', { ids: [id] });
+      await unarchivePost(id);
       const postToUnarchive = posts.find(post => post._id === id);
       if (postToUnarchive && onUnarchive) {
         onUnarchive(postToUnarchive);
@@ -35,7 +36,7 @@ export default function ArchivedPosts({ posts, onUnarchive, onError }) {
     if (!window.confirm('Are you sure you want to permanently delete this post?')) return;
     setIsLoading(true);
     try {
-      await axios.post('http://localhost:3000/blog/permanent-delete', { ids: [id] });
+      await permanentDeletePost(id);
       setSelectedPost(null);
       setIsPopupOpen(false);
     } catch (err) {
@@ -46,6 +47,8 @@ export default function ArchivedPosts({ posts, onUnarchive, onError }) {
     }
   };
 
+
+  
   return (
     <div style={{
       backgroundColor: '#F7F9FA',
@@ -57,9 +60,9 @@ export default function ArchivedPosts({ posts, onUnarchive, onError }) {
       fontFamily: "'Poppins', sans-serif",
       transition: 'transform 0.2s ease-in-out',
     }}
-    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
-    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-    onClick={handlePopupToggle}
+      onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+      onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+      onClick={handlePopupToggle}
     >
       <h2 style={{
         margin: '0 0 12px 0',

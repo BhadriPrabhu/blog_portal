@@ -3,6 +3,7 @@ import Button from "../components/button";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useStore } from "../data/zustand";
+import { register } from '../utils/api';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -63,7 +64,7 @@ export default function Register() {
       return;
     }
     try {
-      const res = await axios.post("http://localhost:3000/register", registerData);
+      const res = await register(registerData);
       setProfileData({
         _id: res.data._id,
         user: res.data.user,

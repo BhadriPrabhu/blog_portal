@@ -202,6 +202,7 @@ import ViewData from './viewdata';
 import axios from 'axios';
 import { useStore } from '../data/zustand.jsx';
 import { useLocation } from 'react-router-dom';
+import api from '../utils/api';
 
 export default function PostCard({ postsData = null, onReload = null }) {
     const [sampleDatas, setSampleDatas] = React.useState([]);
@@ -217,6 +218,11 @@ export default function PostCard({ postsData = null, onReload = null }) {
 
     const profileData = useStore((state) => state.profileData);
     const location = useLocation();
+
+    React.useEffect(() => {
+        fetchPosts();
+    }, [postsData, location.search, profileData]);
+
 
     const fetchPosts = async () => {
         if (postsData) {
@@ -234,13 +240,13 @@ export default function PostCard({ postsData = null, onReload = null }) {
         }
 
         const endpoint = sortBy === 'saved' ? '/blog/saved' : sortBy === 'liked' ? '/blog/liked' : '/blog';
-        let query = sortBy === 'saved' || sortBy === 'liked' ? 
-                    `?userId=${encodeURIComponent(userId)}` : 
-                    `?sortBy=${sortBy}&userId=${encodeURIComponent(userId)}${search ? `&search=${encodeURIComponent(search)}` : ''}`;
+        let query = sortBy === 'saved' || sortBy === 'liked'
+            ? `?userId=${encodeURIComponent(userId)}`
+            : `?sortBy=${sortBy}&userId=${encodeURIComponent(userId)}${search ? `&search=${encodeURIComponent(search)}` : ''}`;
 
         console.log('Fetching posts:', { endpoint, query, userId });
         try {
-            const res = await axios.get(`http://localhost:3000${endpoint}${query}`);
+            const res = await api.get(`${endpoint}${query}`);
             console.log('Fetched posts:', res.data);
             setSampleDatas(res.data);
         } catch (err) {
@@ -248,14 +254,10 @@ export default function PostCard({ postsData = null, onReload = null }) {
         }
     };
 
-    React.useEffect(() => {
-        fetchPosts();
-    }, [postsData, location.search, profileData]);
-
     const likeBlog = async (blogId, idx, userId) => {
         try {
             if (!userId) throw new Error('User ID is missing');
-            const res = await axios.put('http://localhost:3000/blog/like', { blogId, userId });
+            const res = await api.put('/blog/like', { blogId, userId });
             const { likeCount, liked } = res.data;
 
             console.log('Like response:', res.data);
@@ -275,10 +277,7 @@ export default function PostCard({ postsData = null, onReload = null }) {
     const handleSave = async (blogId, idx) => {
         try {
             if (!profileData.email) throw new Error('User ID is missing');
-            const res = await axios.post('http://localhost:3000/blog/save', { 
-                blogId, 
-                userId: profileData.email 
-            });
+            const res = await api.post('/blog/save', { blogId, userId: profileData.email });
 
             console.log('Save response:', res.data);
             setSampleDatas((data) => data.map((d, i) =>
@@ -291,6 +290,7 @@ export default function PostCard({ postsData = null, onReload = null }) {
             console.error('Error saving blog:', err.response?.data || err.message);
         }
     };
+
 
     const buttonStyle = {
         backgroundColor: 'transparent',

@@ -7,6 +7,7 @@ import ThumbDownOutlinedIcon from '@mui/icons-material/ThumbDownOutlined';
 import ReplyIcon from '@mui/icons-material/Reply';
 import { useStore } from "../data/zustand";
 import axios from "axios";
+import { addComment, addReply } from '../utils/api';
 
 export default function CommentData({ commentData, blogId }) {
     const [comments, setComments] = React.useState(commentData);
@@ -59,10 +60,7 @@ export default function CommentData({ commentData, blogId }) {
         }
         setIsLoading(true);
         try {
-            const result = await axios.post(`http://localhost:3000/blog/${blogId}/comment`, {
-                userId: profileData._id,
-                value: newComment.trim(),
-            });
+            const result = await addComment(blogId, profileData._id, newComment.trim());
             setComments((prev) => [...prev, { ...result.data.newComment, isReply: false, replyText: "" }]);
             setNewComment("");
         } catch (err) {
@@ -77,10 +75,7 @@ export default function CommentData({ commentData, blogId }) {
         if (!commentToReply.replyText?.trim()) return;
         setIsLoading(true);
         try {
-            const result = await axios.post(`http://localhost:3000/blog/${blogId}/comment/${commentId}/reply`, {
-                userId: profileData._id,
-                value: commentToReply.replyText.trim(),
-            });
+            const result = await addReply(blogId, commentId, profileData._id, commentToReply.replyText.trim());
             const newReply = result.data.newReply;
             setComments((prev) =>
                 prev.map((comment) =>
@@ -235,7 +230,7 @@ export default function CommentData({ commentData, blogId }) {
                             }}>
                                 {item.user?.user?.[0]?.toUpperCase() || "?"}
                             </div>
-                            <div style={{ margin: "0px", fontSize: "16px", color: "#2C3E50", fontFamily: "'Poppins', sans-serif", display: "flex", flexDirection: "row", justifyContent: "center", alignItems: "center", gap: "5px" }}><p style={{padding: "0px", margin: "0px"}}>{item.user?.user}</p>{item.user?.email === "bhadri@gmail.com" && <span style={{ color: "#f0f4faff", backgroundColor: "gray", padding: "0px 5px", borderRadius: "10px", fontSize: "12px" }}>Admin</span>}</div>
+                            <div style={{ margin: "0px", fontSize: "16px", color: "#2C3E50", fontFamily: "'Poppins', sans-serif", display: "flex", flexDirection: "row", justifyContent: "center", alignItems: "center", gap: "5px" }}><p style={{ padding: "0px", margin: "0px" }}>{item.user?.user}</p>{item.user?.email === "bhadri@gmail.com" && <span style={{ color: "#f0f4faff", backgroundColor: "gray", padding: "0px 5px", borderRadius: "10px", fontSize: "12px" }}>Admin</span>}</div>
                         </div>
                         <div style={{ marginLeft: "30px" }}>
                             <p style={{ margin: "0px", fontSize: "14px", color: "#7F8C8D", fontFamily: "'Poppins', sans-serif" }}>{item.value}</p>

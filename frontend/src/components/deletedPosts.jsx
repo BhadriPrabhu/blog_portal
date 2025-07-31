@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { Trash2, XCircle } from 'lucide-react';
 import PopupPostDetails from './popupPostDetails';
+import { restorePost, permanentDeletePost } from '../utils/api';
 
 export default function DeletedPosts({ posts, onRestore, onError }) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -16,7 +17,7 @@ export default function DeletedPosts({ posts, onRestore, onError }) {
     if (!window.confirm('Are you sure you want to restore this post?')) return;
     setIsLoading(true);
     try {
-      await axios.post('http://localhost:3000/blog/restore', { ids: [id] });
+      await restorePost(id);
       const postToRestore = posts.find(post => post._id === id);
       if (postToRestore && onRestore) {
         onRestore(postToRestore);
@@ -35,7 +36,7 @@ export default function DeletedPosts({ posts, onRestore, onError }) {
     if (!window.confirm('Are you sure you want to permanently delete this post?')) return;
     setIsLoading(true);
     try {
-      await axios.post('http://localhost:3000/blog/permanent-delete', { ids: [id] });
+      await permanentDeletePost(id);
       setSelectedPost(null);
       setIsPopupOpen(false);
     } catch (err) {
@@ -57,9 +58,9 @@ export default function DeletedPosts({ posts, onRestore, onError }) {
       fontFamily: "'Poppins', sans-serif",
       transition: 'transform 0.2s ease-in-out',
     }}
-    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
-    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-    onClick={handlePopupToggle}
+      onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+      onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+      onClick={handlePopupToggle}
     >
       <h2 style={{
         margin: '0 0 12px 0',

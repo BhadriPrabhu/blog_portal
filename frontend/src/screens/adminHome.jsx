@@ -7,6 +7,7 @@ import PopupAnalytics from '../components/popupAnalytics';
 import DeletedPosts from '../components/deletedPosts';
 import ArcheivedPosts from '../components/archeivedPosts';
 import { useNavigate } from 'react-router-dom';
+import { fetchBlogByStatus, bulkAction } from '../utils/api';
 
 const StatsCard = ({ title, value, icon: Icon, color, bgColor }) => (
   <div style={{
@@ -21,8 +22,8 @@ const StatsCard = ({ title, value, icon: Icon, color, bgColor }) => (
     minWidth: '200px',
     transition: 'transform 0.2s ease-in-out, background-color 0.2s ease-in-out',
   }}
-  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
-  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
   >
     <div style={{
       backgroundColor: color,
@@ -63,9 +64,9 @@ export default function AdminHome() {
       setError(null);
 
       const [activeRes, deletedRes, archivedRes] = await Promise.all([
-        axios.get('http://localhost:3000/blog?status=active').catch(err => ({ error: err, data: [] })),
-        axios.get('http://localhost:3000/blog?status=deleted').catch(err => ({ error: err, data: [] })),
-        axios.get('http://localhost:3000/blog?status=archived').catch(err => ({ error: err, data: [] })),
+        fetchBlogByStatus('active').catch(err => ({ error: err, data: [] })),
+        fetchBlogByStatus('deleted').catch(err => ({ error: err, data: [] })),
+        fetchBlogByStatus('archived').catch(err => ({ error: err, data: [] })),
       ]);
 
       const errors = [];
@@ -90,7 +91,7 @@ export default function AdminHome() {
 
       if (errors.length > 0) {
         console.warn('Status queries failed, fetching all posts:', errors);
-        const allRes = await axios.get('http://localhost:3000/blog');
+        const allRes = await api.get('/blog');
         console.log('All posts:', allRes.data);
         const mapPosts = (data) => data.map(post => ({
           _id: post._id || '',
@@ -192,7 +193,7 @@ export default function AdminHome() {
     if (ids.length === 0) return;
     if (!window.confirm(`Are you sure you want to ${action} ${ids.length} post(s)?`)) return;
     try {
-      await axios.post(`http://localhost:3000/blog/${action}`, { ids });
+      await bulkAction(action, ids);
       setSelectedIds(new Set());
       await fetchData();
     } catch (err) {

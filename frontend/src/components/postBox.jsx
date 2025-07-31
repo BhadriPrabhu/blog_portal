@@ -7,6 +7,7 @@ import { useStore } from "../data/zustand";
 import { TagsRefer } from '../data/tagsRefer';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { BeatLoader } from 'react-spinners';
+import { addBlog } from '../utils/api';
 
 export default function PostBox() {
   const profileData = useStore((state) => state.profileData);
@@ -103,6 +104,7 @@ Example Output: ["tech", "programming"]`;
     return () => clearTimeout(timer);
   }, [data.title, data.desc]);
 
+
   const handlePost = async () => {
     if (!data.title.trim() || !data.desc.trim()) {
       setError("Title and description are required");
@@ -132,7 +134,7 @@ Example Output: ["tech", "programming"]`;
         tags,
       };
 
-      const res = await axios.post("http://localhost:3000/blog/add", postData);
+      const res = await addBlog(postData);
       console.log("Blog added:", res.data);
       setData({ title: "", desc: "", userId: "", email: "", tags: [] });
       setGeneratedTags([]);

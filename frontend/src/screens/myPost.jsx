@@ -2,13 +2,14 @@ import React from "react";
 import { useStore } from "../data/zustand";
 import axios from "axios";
 import PostCard from "../components/postCard";
+import { fetchMyPosts } from '../utils/api';
 
 export default function MyPost() {
     const profileData = useStore((state) => state.profileData);
     const [data, setData] = React.useState([]);
 
     React.useEffect(() => {
-        axios.post("http://localhost:3000/blog/mypost", { userId: profileData._id })
+        fetchMyPosts(profileData._id)
             .then((res) => {
                 setData(res.data);
                 console.log("My", res.data);

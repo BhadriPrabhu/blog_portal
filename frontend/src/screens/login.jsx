@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 import { useStore } from "../data/zustand";
+import { login } from '../utils/api';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -62,7 +63,7 @@ export default function Login() {
       return;
     }
     try {
-      const res = await axios.post("http://localhost:3000/", loginData);
+      const res = await login(loginData);
       setProfileData({
         _id: res.data._id,
         user: res.data.user,

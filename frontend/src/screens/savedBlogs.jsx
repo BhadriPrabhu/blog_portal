@@ -30,6 +30,7 @@ import React from 'react';
 import axios from 'axios';
 import { useStore } from '../data/zustand.jsx';
 import PostCard from '../components/postCard.jsx';
+import { fetchSavedBlogs } from '../utils/api';
 
 export default function SavedBlogs() {
     const [posts, setPosts] = React.useState([]);
@@ -43,7 +44,7 @@ export default function SavedBlogs() {
         }
 
         console.log('Fetching saved blogs for userId:', userId);
-        axios.get(`http://localhost:3000/blog/saved?userId=${encodeURIComponent(userId)}`)
+        fetchSavedBlogs(userId)
             .then((res) => {
                 console.log('Fetched saved blogs:', res.data);
                 setPosts(res.data);

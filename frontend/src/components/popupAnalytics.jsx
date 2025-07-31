@@ -3,6 +3,7 @@ import axios from 'axios';
 import { X, TrendingUp, MessageCircle, Heart, Eye, Share2 } from 'lucide-react';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+import { replyToComment } from '../utils/api';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -55,9 +56,9 @@ const ChartContainer = ({ title, data, dataKey, color }) => {
     responsive: true,
     plugins: {
       legend: { position: 'top' },
-      title: { 
-        display: true, 
-        text: title, 
+      title: {
+        display: true,
+        text: title,
         color: '#2C3E50',
         font: { family: "'Poppins', sans-serif", size: 16 },
       },
@@ -69,10 +70,10 @@ const ChartContainer = ({ title, data, dataKey, color }) => {
   };
 
   return (
-    <div style={{ 
-      backgroundColor: '#FFFFFF', 
-      padding: '24px', 
-      borderRadius: '16px', 
+    <div style={{
+      backgroundColor: '#FFFFFF',
+      padding: '24px',
+      borderRadius: '16px',
       boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
       border: '1px solid #D5DBDB',
     }}>
@@ -140,17 +141,9 @@ export default function PopupAnalytics({ post, onClose, onCommentUpdate }) {
           setIsLoading(false);
           return;
         }
-        response = await axios.post('http://localhost:3000/blog/comments/reply', {
-          commentId,
-          blogId: post._id,
-          replyText: replyText.trim(),
-          userId: 'admin-user-id', // Replace with actual user ID from auth context
-        });
+        response = await replyToComment(commentId, post._id, replyText.trim(), 'admin-user-id'); // Replace with actual user ID
       } else {
-        response = await axios.post(`http://localhost:3000/blog/comments/${action}`, {
-          commentId,
-          blogId: post._id,
-        });
+        response = await api.post(`/blog/comments/${action}`, { commentId, blogId: post._id });
       }
 
       setAnalytics(prev => {
@@ -170,24 +163,24 @@ export default function PopupAnalytics({ post, onClose, onCommentUpdate }) {
             recentComments: prev.recentComments.map(comment =>
               comment.id === commentId
                 ? {
-                    ...comment,
-                    status: action === 'approve' ? 'approved' : action === 'flag' ? 'flagged' : comment.status,
-                    replies: action === 'reply' ? [...comment.replies, {
-                      id: response.data.comment?._id || `mock-reply-${Date.now()}`,
-                      user: { user: 'Admin' },
-                      value: replyText,
-                      liked: false,
-                      disliked: false,
-                    }] : comment.replies,
-                  }
+                  ...comment,
+                  status: action === 'approve' ? 'approved' : action === 'flag' ? 'flagged' : comment.status,
+                  replies: action === 'reply' ? [...comment.replies, {
+                    id: response.data.comment?._id || `mock-reply-${Date.now()}`,
+                    user: { user: 'Admin' },
+                    value: replyText,
+                    liked: false,
+                    disliked: false,
+                  }] : comment.replies,
+                }
                 : comment
             ),
             comments: action === 'reply' ? prev.comments + 1 : prev.comments,
             commentsOverTime: action === 'reply'
               ? prev.commentsOverTime.map(item => ({
-                  ...item,
-                  comments: item.day === 'Sun' ? item.comments + 1 : item.comments,
-                }))
+                ...item,
+                comments: item.day === 'Sun' ? item.comments + 1 : item.comments,
+              }))
               : prev.commentsOverTime,
           };
         }
@@ -327,40 +320,40 @@ export default function PopupAnalytics({ post, onClose, onCommentUpdate }) {
             marginBottom: '32px',
             flexWrap: 'wrap',
           }}>
-            <StatCard 
-              icon={Heart} 
-              title="Total Likes" 
-              value={analytics.likes} 
-              color="#3498DB" 
-              bgColor="#FFFFFF" 
+            <StatCard
+              icon={Heart}
+              title="Total Likes"
+              value={analytics.likes}
+              color="#3498DB"
+              bgColor="#FFFFFF"
             />
-            <StatCard 
-              icon={MessageCircle} 
-              title="Total Comments" 
-              value={analytics.comments} 
-              color="#2ECC71" 
-              bgColor="#FFFFFF" 
+            <StatCard
+              icon={MessageCircle}
+              title="Total Comments"
+              value={analytics.comments}
+              color="#2ECC71"
+              bgColor="#FFFFFF"
             />
-            <StatCard 
-              icon={Eye} 
-              title="Total Views" 
-              value={analytics.views} 
-              color="#3498DB" 
-              bgColor="#FFFFFF" 
+            <StatCard
+              icon={Eye}
+              title="Total Views"
+              value={analytics.views}
+              color="#3498DB"
+              bgColor="#FFFFFF"
             />
-            <StatCard 
-              icon={Share2} 
-              title="Shares" 
-              value={analytics.shares} 
-              color="#3498DB" 
-              bgColor="#FFFFFF" 
+            <StatCard
+              icon={Share2}
+              title="Shares"
+              value={analytics.shares}
+              color="#3498DB"
+              bgColor="#FFFFFF"
             />
-            <StatCard 
-              icon={TrendingUp} 
-              title="Engagement Rate" 
-              value={`${analytics.engagementRate}%`} 
-              color="#2ECC71" 
-              bgColor="#FFFFFF" 
+            <StatCard
+              icon={TrendingUp}
+              title="Engagement Rate"
+              value={`${analytics.engagementRate}%`}
+              color="#2ECC71"
+              bgColor="#FFFFFF"
             />
           </div>
 
@@ -391,14 +384,14 @@ export default function PopupAnalytics({ post, onClose, onCommentUpdate }) {
             boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
             border: '1px solid #D5DBDB',
           }}>
-            <h3 style={{ 
-              color: '#2C3E50', 
-              marginBottom: '20px', 
-              fontSize: '20px', 
+            <h3 style={{
+              color: '#2C3E50',
+              marginBottom: '20px',
+              fontSize: '20px',
               fontWeight: '700',
               fontFamily: "'Poppins', sans-serif",
             }}>Recent Comments Management</h3>
-            
+
             {replyCommentId && (
               <div style={{ marginBottom: '20px' }}>
                 <textarea
@@ -488,8 +481,8 @@ export default function PopupAnalytics({ post, onClose, onCommentUpdate }) {
                         padding: '4px 8px',
                         borderRadius: '12px',
                         fontWeight: '600',
-                        backgroundColor: comment.status === 'approved' ? '#2ECC71' : 
-                                        comment.status === 'pending' ? '#3498DB' : '#E74C3C',
+                        backgroundColor: comment.status === 'approved' ? '#2ECC71' :
+                          comment.status === 'pending' ? '#3498DB' : '#E74C3C',
                         color: '#FFFFFF',
                         fontFamily: "'Poppins', sans-serif",
                       }}>

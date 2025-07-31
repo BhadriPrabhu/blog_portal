@@ -2,6 +2,7 @@ import React from 'react';
 import axios from 'axios';
 import { useStore } from '../data/zustand.jsx';
 import PostCard from '../components/postCard.jsx';
+import { fetchLikedBlogs } from '../utils/api';
 
 export default function LikedBlogs() {
     const [posts, setPosts] = React.useState([]);
@@ -15,7 +16,7 @@ export default function LikedBlogs() {
         }
 
         console.log('Fetching liked blogs for userId:', userId);
-        axios.get(`http://localhost:3000/blog/liked?userId=${encodeURIComponent(userId)}`)
+        fetchLikedBlogs(userId)
             .then((res) => {
                 console.log('Fetched liked blogs:', res.data);
                 setPosts(res.data);
