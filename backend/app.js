@@ -22,10 +22,13 @@ const { AdminBlogRestore, AdminBlogUnarchive, AdminBlogPermanentDelete, AdminBlo
 
 
 
-app.use(cors());
+const corsOptions = {
+  origin: 'https://my-app-frontend-g1f2.onrender.com', // Match your frontend URL
+  methods: ['GET', 'POST', 'PUT', 'OPTIONS'], // Allow OPTIONS for preflight
+  allowedHeaders: ['Content-Type'], // Match request headers
+};
+app.use(cors(corsOptions));
 app.use(express.json());
-
-app.use(cors({ origin: 'https://my-app-frontend.onrender.com' }));
 
 const URI = process.env.MONGO_URI || "mongodb+srv://bhadriprabhu:bhadri%402006@bhadri.osdxvju.mongodb.net/blog_portal?retryWrites=true&w=majority&appName=bhadri";
 
