@@ -40,7 +40,7 @@ export default function PostBox() {
     transition: "background-color 0.2s ease-in-out",
   };
 
-  const chatApi = import.meta.env.VITE_API_GEMINI_KEY;
+  const chatApi = import.meta.env.VITE_API_GEMINI_KEY || AIzaSyDgA2HToUax3SyFHzWhnVXa755OoWs3PI8;
 
   const fetchData = async (retryCount = 0, maxRetries = 3) => {
     if (!chatApi) {
