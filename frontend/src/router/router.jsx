@@ -43,7 +43,7 @@ export default function Router() {
                         ) : <Navigate to={"/blog"} />}
                     />
 
-                    <Route path='/blog' element={<><Layout /></>}>
+                    <Route path='/blog' element={<Layout />}>
                         <Route index element={<Home />} />
                         <Route path='/blog/saved' element={<SavedBlogs />} />
                         <Route path='/blog/liked' element={<LikedBlogs />} />
