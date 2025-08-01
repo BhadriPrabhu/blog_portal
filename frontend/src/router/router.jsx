@@ -62,7 +62,7 @@
 //     );
 // }
 
-import { Route, Routes, Navigate } from 'react-router-dom';
+import { Route, Routes, Navigate, useNavigate } from 'react-router-dom';
 import Home from '../screens/home';
 import Login from '../screens/login';
 import Register from '../screens/register';
@@ -72,14 +72,14 @@ import AdminHome from '../screens/adminHome'; // Using AdminHome as the primary 
 import SavedBlogs from '../screens/savedBlogs';
 import LikedBlogs from '../screens/likedBlogs';
 import MyPost from '../screens/myPost';
-import React, { useEffect } from 'react';
+import React from 'react';
 
 export default function Router() {
   const isAuth = useStore((state) => state.isAuth);
   const user = useStore((state) => state.profileData);
   const navigate = useNavigate();
 
-  useEffect(() => {
+  React.useEffect(() => {
     // Redirect only if not on the current route to avoid infinite loops
     if (isAuth && user?.role === "admin" && window.location.pathname !== "/admin") {
       navigate("/admin");
