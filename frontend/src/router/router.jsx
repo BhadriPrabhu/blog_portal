@@ -97,7 +97,8 @@ export default function Router() {
             <Route path="liked" element={<LikedBlogs />} />
             <Route path="mypost" element={<MyPost />} />
           </Route>
-          <Route path="*" element={<Navigate to="/blog" />} />
+          {/* <Route path="*" element={<Navigate to="/blog" />} /> */}
+          <Route path="*" element={<Navigate to={isAuth ? "/blog" : "/"} replace />} />
         </>
       ) : (
         <>
