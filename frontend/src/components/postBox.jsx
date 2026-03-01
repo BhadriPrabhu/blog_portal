@@ -50,6 +50,11 @@ export default function PostBox() {
   const chatApi = import.meta.env.VITE_API_GEMINI_KEY || AIzaSyCOyZeZEPsgihpHyE26 - cJ4ojTp9uST6yU;
 
   const fetchData = async (retryCount = 0, maxRetries = 3) => {
+    if (!data.title.trim() || !data.desc.trim()) {
+      setError("Title and description are required");
+      return;
+    }
+
     if (!chatApi) {
       console.error("Gemini API key is missing");
       setError("API key is missing. Contact support.");
@@ -212,132 +217,132 @@ Example Output: ["tech", "programming"]`;
         }}>
           {profileData?.user ? <p>{profileData.user.charAt(0).toUpperCase()}</p> : <Profile size={16} />}
         </div> */}
-        <input
-          required
-          value={data.title}
-          onChange={(e) => setData({ ...data, title: e.target.value })}
-          placeholder="Enter Your Challenge"
-          type="text"
-          style={{
-            height: "32px",
-            fontSize: "14px",
-            fontFamily: "'Poppins', sans-serif",
-            borderRadius: "8px",
-            border: "1px solid #D5DBDB",
-            padding: "8px",
-            backgroundColor: "#F7F9FA",
-            color: "#2C3E50",
-          }}
-          aria-label="Challenge title"
-        />
-        <textarea
-          rows="4"
-          value={data.desc}
-          onChange={(e) => setData({ ...data, desc: e.target.value })}
-          placeholder="Explain Your Challenge - Tags will be generated"
-          style={{
-            borderRadius: "8px",
-            fontSize: "14px",
-            fontFamily: "'Poppins', sans-serif",
-            padding: "8px",
-            border: "1px solid #D5DBDB",
-            backgroundColor: "#F7F9FA",
-            color: "#2C3E50",
-            resize: "vertical",
-          }}
-          aria-label="Challenge description"
-        />
-        <div style={{ display: "flex", flexDirection: "row", justifyContent: "flex-end", margin: "0px", padding: "0px" }}>
-          <button
-            type="button"
-            onClick={() => fetchData()}
-            disabled={isLoading || !data.title || !data.desc}
-            onMouseEnter={() => setHover4(true)}
-            onMouseLeave={() => setHover4(false)}
-            style={hover4 ? { ...buttonStyle, backgroundColor: isLoading ? "transparent" : "#3498DB33", display: "flex", gap: "4px", flexDirection: "row", alignItems: "center" } : { ...buttonStyle, display: "flex", gap: "4px", flexDirection: "row", alignItems: "center" }}
-          >
-            <Tag size="16px" fontWeight="bold" /> {isLoading ? "Generating..." : "Suggest Tags"}
-          </button>
-        </div>
+      <input
+        required
+        value={data.title}
+        onChange={(e) => setData({ ...data, title: e.target.value })}
+        placeholder="Enter Your Challenge"
+        type="text"
+        style={{
+          height: "32px",
+          fontSize: "14px",
+          fontFamily: "'Poppins', sans-serif",
+          borderRadius: "8px",
+          border: "1px solid #D5DBDB",
+          padding: "8px",
+          backgroundColor: "#F7F9FA",
+          color: "#2C3E50",
+        }}
+        aria-label="Challenge title"
+      />
+      <textarea
+        rows="4"
+        value={data.desc}
+        onChange={(e) => setData({ ...data, desc: e.target.value })}
+        placeholder="Explain Your Challenge - Tags will be generated"
+        style={{
+          borderRadius: "8px",
+          fontSize: "14px",
+          fontFamily: "'Poppins', sans-serif",
+          padding: "8px",
+          border: "1px solid #D5DBDB",
+          backgroundColor: "#F7F9FA",
+          color: "#2C3E50",
+          resize: "vertical",
+        }}
+        aria-label="Challenge description"
+      />
+      <div style={{ display: "flex", flexDirection: "row", justifyContent: "flex-end", margin: "0px", padding: "0px" }}>
+        <button
+          type="button"
+          onClick={() => fetchData()}
+          disabled={isLoading}
+          onMouseEnter={() => setHover4(true)}
+          onMouseLeave={() => setHover4(false)}
+          style={hover4 ? { ...buttonStyle, backgroundColor: isLoading ? "transparent" : "#3498DB33", display: "flex", gap: "4px", flexDirection: "row", alignItems: "center" } : { ...buttonStyle, display: "flex", gap: "4px", flexDirection: "row", alignItems: "center" }}
+        >
+          <Tag size="16px" fontWeight="bold" /> {isLoading ? "Generating..." : "Suggest Tags"}
+        </button>
+      </div>
 
-        {generatedTags.length > 0 && (
-          <div style={{ display: "flex", flexDirection: 'row', justifyContent: "flex-start", alignItems: "flex-start", gap: "8px" }}>
-            <p style={{ margin: "0px", padding: "0px", width: "110px" }}>Select Tags:</p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', }}>
-              {generatedTags.map((tag, index) => {
+      {generatedTags.length > 0 && (
+        <div style={{ display: "flex", flexDirection: 'row', justifyContent: "flex-start", alignItems: "flex-start", gap: "8px" }}>
+          <p style={{ margin: "0px", padding: "0px", width: "110px" }}>Select Tags:</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', }}>
+            {generatedTags.map((tag, index) => {
 
-                const isSelected = selectedTags.includes(tag);
+              const isSelected = selectedTags.includes(tag);
 
-                return (
-                  <button
-                    key={index}
-                    onClick={() => toggletag(tag)}
-                    style={{
-                      backgroundColor: isSelected ? "#1f73aa" : '#3498DB',
-                      color: 'white',
-                      padding: '2px 6px',
-                      borderRadius: '12px',
-                      fontSize: '14px',
-                      fontFamily: "'Poppins', sans-serif",
-                      border: isSelected ? '2px solid white' : '2px solid transparent',
-                      cursor: "pointer",
-                      transition: "all 0.3s ease",
-                      display: "flex",
-                      flexDirection: "row",
-                      justifyContent: "center",
-                      alignItems: "center", 
-                      gap: "2px"
-                    }}
-                  >
-                    {tag} {isSelected ? <Check size="16px"/> : <BadgePlus size="15px" />}
-                  </button>
-                )
-              })}
-            </div>
+              return (
+                <button
+                  key={index}
+                  onClick={() => toggletag(tag)}
+                  style={{
+                    backgroundColor: isSelected ? "#1f73aa" : '#3498DB',
+                    color: 'white',
+                    padding: '2px 6px',
+                    borderRadius: '12px',
+                    fontSize: '14px',
+                    fontFamily: "'Poppins', sans-serif",
+                    border: isSelected ? '2px solid white' : '2px solid transparent',
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    gap: "2px"
+                  }}
+                >
+                  {tag} {isSelected ? <Check size="16px" /> : <BadgePlus size="15px" />}
+                </button>
+              )
+            })}
           </div>
-        )}
-
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", flexWrap: "wrap" }}>
-          <button
-            style={hover1 ? { ...buttonStyle, backgroundColor: isLoading ? "transparent" : "#3498DB33" } : buttonStyle}
-            onMouseEnter={() => setHover1(true)}
-            onMouseLeave={() => setHover1(false)}
-            aria-label="Insert image"
-            disabled={isLoading}
-          // onClick={notify}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <Insert size={16} />
-              Image
-            </div>
-          </button>
-          <button
-            style={hover2 ? { ...buttonStyle, backgroundColor: isLoading ? "transparent" : "#3498DB33" } : buttonStyle}
-            onMouseEnter={() => setHover2(true)}
-            onMouseLeave={() => setHover2(false)}
-            aria-label="Insert video"
-            disabled={isLoading}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <Insert size={16} />
-              Video
-            </div>
-          </button>
-          <button
-            style={hover3 ? { ...buttonStyle, backgroundColor: isLoading ? "transparent" : "#3498DB33" } : buttonStyle}
-            onMouseEnter={() => setHover3(true)}
-            onMouseLeave={() => setHover3(false)}
-            onClick={handlePost}
-            disabled={isLoading}
-            aria-label="Post challenge"
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <Send size={16} />
-              Post
-            </div>
-          </button>
         </div>
-      
+      )}
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", flexWrap: "wrap" }}>
+        <button
+          style={hover1 ? { ...buttonStyle, backgroundColor: isLoading ? "transparent" : "#3498DB33" } : buttonStyle}
+          onMouseEnter={() => setHover1(true)}
+          onMouseLeave={() => setHover1(false)}
+          aria-label="Insert image"
+          disabled={isLoading}
+        // onClick={notify}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Insert size={16} />
+            Image
+          </div>
+        </button>
+        <button
+          style={hover2 ? { ...buttonStyle, backgroundColor: isLoading ? "transparent" : "#3498DB33" } : buttonStyle}
+          onMouseEnter={() => setHover2(true)}
+          onMouseLeave={() => setHover2(false)}
+          aria-label="Insert video"
+          disabled={isLoading}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Insert size={16} />
+            Video
+          </div>
+        </button>
+        <button
+          style={hover3 ? { ...buttonStyle, backgroundColor: isLoading ? "transparent" : "#3498DB33" } : buttonStyle}
+          onMouseEnter={() => setHover3(true)}
+          onMouseLeave={() => setHover3(false)}
+          onClick={handlePost}
+          disabled={isLoading}
+          aria-label="Post challenge"
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Send size={16} />
+            Post
+          </div>
+        </button>
+      </div>
+
       {/* </div> */}
 
       {/* <div>
