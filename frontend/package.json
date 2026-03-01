@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emailjs/browser": "^4.4.1",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@google/generative-ai": "^0.24.1",
@@ -18,14 +19,17 @@
     "@radix-ui/react-avatar": "^1.1.10",
     "axios": "^1.11.0",
     "chart.js": "^4.5.0",
+    "framer-motion": "^12.34.3",
     "lodash": "^4.17.21",
     "lucide-react": "^0.525.0",
     "react": "^19.1.0",
     "react-chartjs-2": "^5.3.0",
     "react-dom": "^19.1.0",
     "react-markdown": "^10.1.0",
+    "react-quill-new": "^3.8.3",
     "react-router-dom": "^7.7.0",
     "react-spinners": "^0.17.0",
+    "react-toastify": "^11.0.5",
     "zustand": "^5.0.6"
   },
   "devDependencies": {

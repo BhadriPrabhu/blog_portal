@@ -31,7 +31,7 @@ export default function LikedBlogs() {
             <div style={{ display: "flex", flexDirection: "column", justifyContent: "start", padding: "20px", gap: "20px" }}>
                 <h2 style={{ padding: "0px", margin: "0px 5px" }}>Liked Post</h2>
                 <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap" }}>
-                    <PostCard postsData={posts} onReload={() => setPosts([])} />;
+                    <PostCard postsData={posts} onReload={() => setPosts([])} />
                 </div>
 
             </div>

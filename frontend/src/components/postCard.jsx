@@ -203,6 +203,8 @@ import axios from 'axios';
 import { useStore } from '../data/zustand.jsx';
 import { useLocation } from 'react-router-dom';
 import api from '../utils/api';
+import ToastBlog from '../utils/toast.jsx';
+import { motion } from 'framer-motion'
 
 export default function PostCard({ postsData = null, onReload = null }) {
     const [sampleDatas, setSampleDatas] = React.useState([]);
@@ -217,11 +219,12 @@ export default function PostCard({ postsData = null, onReload = null }) {
     const [viewData, setViewData] = React.useState({});
 
     const profileData = useStore((state) => state.profileData);
+    const refreshTrigger = useStore((state) => state.refreshTrigger);
     const location = useLocation();
 
     React.useEffect(() => {
         fetchPosts();
-    }, [postsData, location.search, profileData]);
+    }, [postsData, location.search, profileData, refreshTrigger]);
 
 
     const fetchPosts = async () => {
@@ -276,8 +279,13 @@ export default function PostCard({ postsData = null, onReload = null }) {
 
     const handleSave = async (blogId, idx) => {
         try {
+
             if (!profileData.email) throw new Error('User ID is missing');
             const res = await api.post('/blog/save', { blogId, userId: profileData.email });
+
+            if (res.data.saved) {
+                ToastBlog("Saved Post");
+            }
 
             console.log('Save response:', res.data);
             setSampleDatas((data) => data.map((d, i) =>
@@ -416,7 +424,7 @@ export default function PostCard({ postsData = null, onReload = null }) {
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', fontSize: '14px', gap: '4px', color: '#100f0fff' }}>
                                 <FavoriteRoundedIcon sx={{ width: '18px', height: '18px', color: 'red' }} />
-                                {item.like} likes
+                                <motion.p>{item.like}</motion.p> likes
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', color: '#100f0fff' }}>
                                 <ChatRoundedIcon sx={{ width: '18px', height: '18px', color: 'gray' }} />
@@ -427,31 +435,47 @@ export default function PostCard({ postsData = null, onReload = null }) {
 
                     <hr />
                     <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '10px' }}>
-                        <button
+                        <motion.button
                             style={hover1 === idx ? { ...buttonStyle, ...hoverStyle } : buttonStyle}
                             onMouseEnter={() => setHover1(idx)}
                             onMouseLeave={() => setHover1(null)}
                             onClick={() => likeBlog(item._id, idx, profileData.email)}
                             aria-label={item.liked ? 'Unlike post' : 'Like post'}
+                            whileTap={{scale: 0.8}}
                         >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <motion.div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+                            key={item.liked ? "liked" : "unliked"}
+                            initial={{ scale: 1 }}
+                            animate={{
+                                scale: item.liked ? [1, 1.5, 1.2, 1] : 1,
+                            }}
+                            transition={{ duration: 0.4, type: "spring", stiffness: 300 }}
+                            >
                                 {item.liked ? <ThumbUpIcon sx={{ color: '#0a82d2ff' }} /> : <ThumbUpOutlinedIcon sx={{ color: 'gray' }} />}
-                            </div>
-                        </button>
+                            </motion.div>
+                        </motion.button>
 
-                        <button
+                        <motion.button
                             style={hover2 === idx ? { ...buttonStyle, ...hoverStyle } : buttonStyle}
                             onMouseEnter={() => setHover2(idx)}
                             onMouseLeave={() => setHover2(null)}
                             onClick={() => handleSave(item._id, idx)}
                             aria-label={item.saved ? 'Unsave post' : 'Save post'}
+                            whileTap={{scale: 0.8}}
                         >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <motion.div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+                            key={item.saved ? "saved" : "unsaved" }
+                            initial={{ scale: 1 }}
+                            animate={{
+                                scale: item.saved ? [1, 1.5, 1.2, 1] : 1,
+                            }}
+                            transition={{ duration: 0.4, type: "spring", stiffness: 300 }}
+                            >
                                 {item.saved ? <BookmarkIcon sx={{ color: '#0a82d2ff' }} /> : <BookmarkBorderOutlinedIcon sx={{ color: 'gray' }} />}
-                            </div>
-                        </button>
+                            </motion.div>
+                        </motion.button>
 
-                        <button
+                        <motion.button
                             style={hover3 === idx ? { ...buttonStyle, ...hoverStyle } : buttonStyle}
                             onMouseEnter={() => setHover3(idx)}
                             onMouseLeave={() => setHover3(null)}
@@ -462,16 +486,34 @@ export default function PostCard({ postsData = null, onReload = null }) {
                             }}
                             aria-label='View comments'
                         >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <motion.div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <MessageSquareText color={hover3 === idx ? '#2ECC71' : 'gray'} />
-                            </div>
-                        </button>
+                            </motion.div>
+                        </motion.button>
 
                         <button
                             style={hover4 === idx ? { ...buttonStyle, ...hoverStyle } : buttonStyle}
                             onMouseEnter={() => setHover4(idx)}
                             onMouseLeave={() => setHover4(null)}
                             aria-label='Share post'
+                            onClick={async () => {
+
+                                const postTitle = item.title;
+                                const postDesc = item.desc;
+                                const postUrl = window.location.href;
+
+                                const shareData = {
+                                    title: item.title,
+                                    text: `*${postTitle}*\n${postDesc}\n${"URL: " + postUrl}`,
+                                    // url: window.location.href
+                                }
+
+                                try {
+                                    await navigator.share(shareData);
+                                } catch (err) {
+                                    console.log("Error", err);
+                                }
+                            }}
                         >
                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <Share2 color={hover4 === idx ? '#3498DB' : 'gray'} />

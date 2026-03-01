@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Insert from "../assets/icons/insert";
 import Send from "../assets/icons/send";
 import Profile from "../assets/icons/profile";
@@ -6,30 +6,37 @@ import axios from "axios";
 import { useStore } from "../data/zustand";
 import { TagsRefer } from '../data/tagsRefer';
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { BeatLoader } from 'react-spinners';
+import { BeatLoader, ScaleLoader } from 'react-spinners';
 import { addBlog } from '../utils/api';
+// import OtpSender from "../utils/otp";
+import { ToastContainer, toast } from 'react-toastify';
+import { BadgePlus, Check, Tag } from "lucide-react";
 
 export default function PostBox() {
   const profileData = useStore((state) => state.profileData);
+  const triggerRefresh = useStore((state) => state.triggerRefresh);
   const [hover1, setHover1] = React.useState(false);
   const [hover2, setHover2] = React.useState(false);
   const [hover3, setHover3] = React.useState(false);
+  const [hover4, setHover4] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState("");
   const [generatedTags, setGeneratedTags] = React.useState([]);
+  const [selectedTags, setselectedTags] = React.useState([]);
   const [data, setData] = React.useState({
     title: "",
     desc: "",
     userId: "",
     email: "",
-    tags: [],
+    tags: selectedTags.length > 0 ? selectedTags : ["General"],
   });
+  const notify = () => toast("Posted successfully!");
 
   const buttonStyle = {
     backgroundColor: "transparent",
     border: "none",
     borderRadius: "12px",
-    padding: "8px 12px",
+    padding: "6px 10px",
     display: "flex",
     alignItems: "center",
     fontFamily: "'Poppins', sans-serif",
@@ -40,7 +47,7 @@ export default function PostBox() {
     transition: "background-color 0.2s ease-in-out",
   };
 
-  const chatApi = import.meta.env.VITE_API_GEMINI_KEY || AIzaSyDgA2HToUax3SyFHzWhnVXa755OoWs3PI8;
+  const chatApi = import.meta.env.VITE_API_GEMINI_KEY || AIzaSyCOyZeZEPsgihpHyE26 - cJ4ojTp9uST6yU;
 
   const fetchData = async (retryCount = 0, maxRetries = 3) => {
     if (!chatApi) {
@@ -50,8 +57,9 @@ export default function PostBox() {
     }
 
     try {
+      setIsLoading(true);
       const genAI = new GoogleGenerativeAI(chatApi);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
       const prompt = `Select relevant tags from the following title and description based on the provided tags reference. Return tags as a JSON array of strings.
 
 Title: ${data.title}
@@ -65,7 +73,7 @@ Example Output: ["tech", "programming"]`;
       // Clean Markdown code fences
       tagsText = tagsText.replace(/```json\n|```/g, '').trim();
 
-      let tags = [];
+      let tags = ["Random"];
       try {
         tags = JSON.parse(tagsText);
         if (!Array.isArray(tags) || !tags.every(tag => typeof tag === 'string')) {
@@ -78,31 +86,40 @@ Example Output: ["tech", "programming"]`;
         return [];
       }
 
+      setIsLoading(false);
       console.log("Generated tags:", tags);
+
       setGeneratedTags(tags);
       return tags;
     } catch (error) {
-      console.error("Error fetching tags:", error);
-      if (error.message.includes("503") && retryCount < maxRetries) {
-        console.log(`Retrying (${retryCount + 1}/${maxRetries}) after 5s...`);
-        await new Promise(resolve => setTimeout(resolve, 5000));
+      console.error("Attempt failed:", error.message);
+
+      // Specific logic for 429 (Rate Limit)
+      if (error.message.includes("429") && retryCount < maxRetries) {
+        // Exponential backoff: 2s, 4s, 8s, 16s... plus a random "jitter"
+        const waitTime = Math.pow(2, retryCount) * 2000 + Math.random() * 1000;
+        console.log(`Rate limited. Retrying in ${Math.round(waitTime / 1000)}s...`);
+
+        await new Promise(resolve => setTimeout(resolve, waitTime));
         return fetchData(retryCount + 1, maxRetries);
       }
-      setError(`Failed to generate tags: ${error.message}`);
+
+      setIsLoading(false);
+      setError(`Error: ${error.message}`);
       return [];
     }
   };
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (data.title.trim() && data.desc.trim()) {
-        fetchData().then(tags => setGeneratedTags(tags));
-      } else {
-        setGeneratedTags([]);
-      }
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [data.title, data.desc]);
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     if (data.title.trim() && data.desc.trim()) {
+  //       fetchData().then(tags => setGeneratedTags(tags));
+  //     } else {
+  //       setGeneratedTags([]);
+  //     }
+  //   }, 1000);
+  //   return () => clearTimeout(timer);
+  // }, [data.title, data.desc]);
 
 
   const handlePost = async () => {
@@ -119,25 +136,27 @@ Example Output: ["tech", "programming"]`;
     setIsLoading(true);
     setError("");
     try {
-      let tags = await fetchData();
-      if (tags.length === 0) {
-        console.warn("No valid tags generated, using fallback: ['general']");
-        tags = ["general"];
-        setGeneratedTags(tags);
-      }
+      // let tags = await fetchData();
+      // if (tags.length === 0) {
+      //   console.warn("No valid tags generated, using fallback: ['general']");
+      //   tags = ["general"];
+      //   setGeneratedTags(tags);
+      // }
 
       const postData = {
         title: data.title,
         desc: data.desc,
         userId: profileData._id,
         email: profileData.email,
-        tags,
+        tags: selectedTags || "General",
       };
 
       const res = await addBlog(postData);
       console.log("Blog added:", res.data);
       setData({ title: "", desc: "", userId: "", email: "", tags: [] });
       setGeneratedTags([]);
+      notify();
+      triggerRefresh();
     } catch (err) {
       console.error("Error adding blog:", err.response?.data || err.message);
       setError(err.response?.data?.message || "Failed to post blog. Try again.");
@@ -146,27 +165,40 @@ Example Output: ["tech", "programming"]`;
     }
   };
 
+  const toggletag = (tag) => {
+    if (selectedTags.includes(tag)) {
+      setselectedTags(selectedTags.filter(t => t !== tag))
+    } else {
+      setselectedTags([...selectedTags, tag]);
+    }
+  }
+
   return (
     <div style={{
       display: "flex",
       flexDirection: "column",
-      gap: "12px",
+      gap: "8px",
       backgroundColor: "#fff",
-      padding: "16px",
+      padding: "10px",
       borderRadius: "12px",
       border: "1px solid #D5DBDB",
       boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
-      margin: "16px auto",
+      margin: "12px auto",
       maxWidth: "600px",
       width: "100%",
       // position: "relative",
       zIndex: "0px",
     }}>
+      <ToastContainer />
+      <div>
+        <p style={{ margin: "0px", fontSize: "20px", lineHeight: "20px" }}>Bring your ideas to life</p>
+      </div>
       {error && (
-        <div style={{ color: 'red', fontSize: '14px', marginBottom: '8px' }}>{error}</div>
+        <div style={{ color: 'red', fontSize: '14px' }}>{error}</div>
       )}
-      <div style={{ display: "flex", flexDirection: "row", gap: "12px", alignItems: "flex-start" }}>
-        <div style={{
+
+      {/* <div style={{ display: "flex", flexDirection: "row", alignItems: "flex-start" }}> */}
+      {/* <div style={{
           height: "32px",
           width: "32px",
           backgroundColor: "#1e7fc0ff",
@@ -179,103 +211,148 @@ Example Output: ["tech", "programming"]`;
           fontWeight: "600",
         }}>
           {profileData?.user ? <p>{profileData.user.charAt(0).toUpperCase()}</p> : <Profile size={16} />}
+        </div> */}
+        <input
+          required
+          value={data.title}
+          onChange={(e) => setData({ ...data, title: e.target.value })}
+          placeholder="Enter Your Challenge"
+          type="text"
+          style={{
+            height: "32px",
+            fontSize: "14px",
+            fontFamily: "'Poppins', sans-serif",
+            borderRadius: "8px",
+            border: "1px solid #D5DBDB",
+            padding: "8px",
+            backgroundColor: "#F7F9FA",
+            color: "#2C3E50",
+          }}
+          aria-label="Challenge title"
+        />
+        <textarea
+          rows="4"
+          value={data.desc}
+          onChange={(e) => setData({ ...data, desc: e.target.value })}
+          placeholder="Explain Your Challenge - Tags will be generated"
+          style={{
+            borderRadius: "8px",
+            fontSize: "14px",
+            fontFamily: "'Poppins', sans-serif",
+            padding: "8px",
+            border: "1px solid #D5DBDB",
+            backgroundColor: "#F7F9FA",
+            color: "#2C3E50",
+            resize: "vertical",
+          }}
+          aria-label="Challenge description"
+        />
+        <div style={{ display: "flex", flexDirection: "row", justifyContent: "flex-end", margin: "0px", padding: "0px" }}>
+          <button
+            type="button"
+            onClick={() => fetchData()}
+            disabled={isLoading || !data.title || !data.desc}
+            onMouseEnter={() => setHover4(true)}
+            onMouseLeave={() => setHover4(false)}
+            style={hover4 ? { ...buttonStyle, backgroundColor: isLoading ? "transparent" : "#3498DB33", display: "flex", gap: "4px", flexDirection: "row", alignItems: "center" } : { ...buttonStyle, display: "flex", gap: "4px", flexDirection: "row", alignItems: "center" }}
+          >
+            <Tag size="16px" fontWeight="bold" /> {isLoading ? "Generating..." : "Suggest Tags"}
+          </button>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px", flex: 1 }}>
-          <input
-            required
-            value={data.title}
-            onChange={(e) => setData({ ...data, title: e.target.value })}
-            placeholder="Enter Your Challenge"
-            type="text"
-            style={{
-              height: "32px",
-              fontSize: "14px",
-              fontFamily: "'Poppins', sans-serif",
-              borderRadius: "8px",
-              border: "1px solid #D5DBDB",
-              padding: "8px",
-              backgroundColor: "#F7F9FA",
-              color: "#2C3E50",
-            }}
-            aria-label="Challenge title"
-          />
-          <textarea
-            rows="4"
-            value={data.desc}
-            onChange={(e) => setData({ ...data, desc: e.target.value })}
-            placeholder="Explain Your Challenge - Tags will be generated"
-            style={{
-              borderRadius: "8px",
-              fontSize: "14px",
-              fontFamily: "'Poppins', sans-serif",
-              padding: "8px",
-              border: "1px solid #D5DBDB",
-              backgroundColor: "#F7F9FA",
-              color: "#2C3E50",
-              resize: "vertical",
-            }}
-            aria-label="Challenge description"
-          />
-          {generatedTags.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
-              {generatedTags.map((tag, index) => (
-                <span
-                  key={index}
-                  style={{
-                    backgroundColor: '#3498DB',
-                    color: 'white',
-                    padding: '4px 8px',
-                    borderRadius: '12px',
-                    fontSize: '12px',
-                    fontFamily: "'Poppins', sans-serif",
-                  }}
-                >
-                  {tag}
-                </span>
-              ))}
+
+        {generatedTags.length > 0 && (
+          <div style={{ display: "flex", flexDirection: 'row', justifyContent: "flex-start", alignItems: "flex-start", gap: "8px" }}>
+            <p style={{ margin: "0px", padding: "0px", width: "110px" }}>Select Tags:</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', }}>
+              {generatedTags.map((tag, index) => {
+
+                const isSelected = selectedTags.includes(tag);
+
+                return (
+                  <button
+                    key={index}
+                    onClick={() => toggletag(tag)}
+                    style={{
+                      backgroundColor: isSelected ? "#1f73aa" : '#3498DB',
+                      color: 'white',
+                      padding: '2px 6px',
+                      borderRadius: '12px',
+                      fontSize: '14px',
+                      fontFamily: "'Poppins', sans-serif",
+                      border: isSelected ? '2px solid white' : '2px solid transparent',
+                      cursor: "pointer",
+                      transition: "all 0.3s ease",
+                      display: "flex",
+                      flexDirection: "row",
+                      justifyContent: "center",
+                      alignItems: "center", 
+                      gap: "2px"
+                    }}
+                  >
+                    {tag} {isSelected ? <Check size="16px"/> : <BadgePlus size="15px" />}
+                  </button>
+                )
+              })}
             </div>
-          )}
+          </div>
+        )}
+
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", flexWrap: "wrap" }}>
+          <button
+            style={hover1 ? { ...buttonStyle, backgroundColor: isLoading ? "transparent" : "#3498DB33" } : buttonStyle}
+            onMouseEnter={() => setHover1(true)}
+            onMouseLeave={() => setHover1(false)}
+            aria-label="Insert image"
+            disabled={isLoading}
+          // onClick={notify}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <Insert size={16} />
+              Image
+            </div>
+          </button>
+          <button
+            style={hover2 ? { ...buttonStyle, backgroundColor: isLoading ? "transparent" : "#3498DB33" } : buttonStyle}
+            onMouseEnter={() => setHover2(true)}
+            onMouseLeave={() => setHover2(false)}
+            aria-label="Insert video"
+            disabled={isLoading}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <Insert size={16} />
+              Video
+            </div>
+          </button>
+          <button
+            style={hover3 ? { ...buttonStyle, backgroundColor: isLoading ? "transparent" : "#3498DB33" } : buttonStyle}
+            onMouseEnter={() => setHover3(true)}
+            onMouseLeave={() => setHover3(false)}
+            onClick={handlePost}
+            disabled={isLoading}
+            aria-label="Post challenge"
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <Send size={16} />
+              Post
+            </div>
+          </button>
         </div>
-      </div>
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", flexWrap: "wrap" }}>
-        <button
-          style={hover1 ? { ...buttonStyle, backgroundColor: isLoading ? "transparent" : "#3498DB33" } : buttonStyle}
-          onMouseEnter={() => setHover1(true)}
-          onMouseLeave={() => setHover1(false)}
-          aria-label="Insert image"
-          disabled={isLoading}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <Insert size={16} />
-            Image
-          </div>
-        </button>
-        <button
-          style={hover2 ? { ...buttonStyle, backgroundColor: isLoading ? "transparent" : "#3498DB33" } : buttonStyle}
-          onMouseEnter={() => setHover2(true)}
-          onMouseLeave={() => setHover2(false)}
-          aria-label="Insert video"
-          disabled={isLoading}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <Insert size={16} />
-            Video
-          </div>
-        </button>
-        <button
-          style={hover3 ? { ...buttonStyle, backgroundColor: isLoading ? "transparent" : "#3498DB33" } : buttonStyle}
-          onMouseEnter={() => setHover3(true)}
-          onMouseLeave={() => setHover3(false)}
-          onClick={handlePost}
-          disabled={isLoading}
-          aria-label="Post challenge"
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <Send size={16} />
-            Post
-          </div>
-        </button>
-      </div>
+      
+      {/* </div> */}
+
+      {/* <div>
+        <button onClick={() => {
+          // const randonNum = Math.floor(100000 + Math.random() * 900000);
+          // setOtp(randonNum);
+          const emailData = {
+            email: profileData.email,
+            name: profileData.user,
+            timing: 5,
+          }
+          OtpSender(emailData);
+        }}>Generate</button>
+      </div> */}
+
       {isLoading && (
         <div style={{
           position: "absolute",
@@ -290,7 +367,7 @@ Example Output: ["tech", "programming"]`;
           padding: "10px",
           borderRadius: "8px",
         }}>
-          <BeatLoader color="#2C3E50" size={10} />
+          <ScaleLoader color="#2C3E50" size={10} />
         </div>
       )}
       <style jsx>{`

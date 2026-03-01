@@ -24,11 +24,11 @@ export default function MyPost() {
             <h2 style={{ padding: "0px", margin: "0px 5px" }}>My Post</h2>
             <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap" }}>
                 <PostCard postsData={data} />
-                {data.length === 0 && (
+                {/* {data.length === 0 && (
                     <div style={{ justifyContent: "center", alignItems: "center", display: "flex", width: "100%" }}>
                         Empty
                     </div>
-                )}
+                )} */}
             </div>
         </div>
     );

@@ -18,24 +18,14 @@ const { CommentDeleteController, CommentFlagController, CommentReplyController, 
 const { AdminBlogRestore, AdminBlogUnarchive, AdminBlogPermanentDelete, AdminBlogDelete, AdminBlogArchive } = require('./controllers/adminStatusController.js');
 
 const corsOptions = {
-  origin: (origin, callback) => {
-    const allowedOrigins = [
-      'https://my-app-frontend-g1f2.onrender.com',
-      'http://localhost:5173', // Add local development origin
-    ];
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  methods: ['GET', 'POST', 'PUT', 'OPTIONS'],
-  allowedHeaders: ['Content-Type'],
+  origin: '*', 
+  methods: ['GET', 'POST', 'PUT', 'OPTIONS', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 };
 app.use(cors(corsOptions));
 app.use(express.json());
 
-const URI = process.env.MONGO_URI || "mongodb+srv://bhadriprabhu:bhadri%402006@bhadri.osdxvju.mongodb.net/blog_portal?retryWrites=true&w=majority&appName=bhadri";
+const URI = process.env.MONGO_URI || "mongodb+srv://bhadriprabhu:bhadri%402006@bhadri.osdxvju.mongodb.net/?appName=bhadri";
 
 const connectDB = async () => {
   try {

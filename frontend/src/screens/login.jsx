@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 import { useStore } from "../data/zustand";
 import { login } from '../utils/api';
+import loginIcon from '../assets/image/login.svg'
+import ToastBlog from "../utils/toast";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -23,7 +25,7 @@ export default function Login() {
     justifyContent: "center",
     alignItems: "center",
     gap: "16px",
-    margin: "100px auto 0",
+    // margin: "60px auto 0",
     border: "1px solid #D5DBDB",
     width: "fit-content",
     padding: "16px 24px",
@@ -72,6 +74,7 @@ export default function Login() {
       });
       setIsAuth(true);
       console.log("Profile:", useStore.getState().profileData);
+      ToastBlog("Login was Successfull");
       navigate("/blog");
     } catch (err) {
       console.error("Login error:", err.response?.data || err.message);
@@ -81,84 +84,93 @@ export default function Login() {
 
   return (
     <div
+      style={{display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: "50px", margin: "150px 0px" }}
+    >
+      <img
+        src={loginIcon}
+        alt="OTP Illustration"
+        style={{ width: '400px', height: 'auto' }}
+      />
+      <div 
       style={hover ? { ...cardStyle, ...hoverStyle } : cardStyle}
       onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-    >
-      <h1
-        style={{
-          margin: "0",
-          padding: "0",
-          fontWeight: "600",
-          fontSize: "24px",
-          color: "#2C3E50",
-          fontFamily: "'Poppins', sans-serif",
-        }}
-      >
-        Login
-      </h1>
-      {error && (
-        <div style={{ color: "#FF6B6B", fontSize: "14px", marginBottom: "8px" }}>
-          {error}
-        </div>
-      )}
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-        <label style={labelStyle}>Email</label>
-        <input
-          required
-          placeholder="Enter Email"
-          type="email"
-          value={loginData.email}
-          onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-          style={inputStyle}
-          aria-label="Email"
-        />
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-        <label style={labelStyle}>Password</label>
-        <input
-          required
-          placeholder="Enter Password"
-          type="password"
-          value={loginData.password}
-          onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-          style={inputStyle}
-          aria-label="Password"
-        />
-      </div>
-      <Button
-        value="Login"
-        onClick={handleLogin}
-        style={{
-          backgroundColor: "#3498DB",
-          color: "#FFFFFF",
-          fontFamily: "'Poppins', sans-serif",
-          fontSize: "14px",
-          fontWeight: "500",
-          padding: "8px 16px",
-          borderRadius: "6px",
-          border: "none",
-          cursor: "pointer",
-          transition: "background-color 0.2s ease-in-out",
-        }}
-        hoverStyle={{ backgroundColor: "#3498DBCC" }}
-      />
-      <div style={{ display: "flex", gap: "8px", alignItems: "center", fontSize: "14px", color: "#2C3E50" }}>
-        <p style={{ margin: 0, fontFamily: "'Poppins', sans-serif" }}>Don't have an account?</p>
-        <a
-          href="/register"
+      onMouseLeave={() => setHover(false)}>
+        <h1
           style={{
-            color: "#3498DB",
-            textDecoration: "none",
+            margin: "0",
+            padding: "0",
+            fontWeight: "600",
+            fontSize: "24px",
+            color: "#2C3E50",
             fontFamily: "'Poppins', sans-serif",
-            transition: "color 0.2s ease-in-out",
           }}
-          onMouseEnter={(e) => (e.target.style.color = "#3498DBCC")}
-          onMouseLeave={(e) => (e.target.style.color = "#3498DB")}
         >
-          Register Now
-        </a>
+          Login
+        </h1>
+        {error && (
+          <div style={{ color: "#FF6B6B", fontSize: "14px", marginBottom: "8px" }}>
+            {error}
+          </div>
+        )}
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <label style={labelStyle}>Email</label>
+          <input
+            required
+            placeholder="Enter Email"
+            type="email"
+            value={loginData.email}
+            onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
+            style={inputStyle}
+            aria-label="Email"
+          />
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <label style={labelStyle}>Password</label>
+          <input
+            required
+            placeholder="Enter Password"
+            type="password"
+            value={loginData.password}
+            onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+            style={inputStyle}
+            aria-label="Password"
+          />
+        </div>
+        <Button
+          value="Login"
+          onClick={handleLogin}
+          style={{
+            backgroundColor: "#3498DB",
+            color: "#FFFFFF",
+            fontFamily: "'Poppins', sans-serif",
+            fontSize: "14px",
+            fontWeight: "500",
+            padding: "8px 16px",
+            borderRadius: "6px",
+            border: "none",
+            cursor: "pointer",
+            transition: "background-color 0.2s ease-in-out",
+          }}
+          hoverStyle={{ backgroundColor: "#3498DBCC" }}
+        />
+        <div style={{ display: "flex", gap: "8px", alignItems: "center", fontSize: "14px", color: "#2C3E50" }}>
+          <p style={{ margin: 0, fontFamily: "'Poppins', sans-serif" }}>Don't have an account?</p>
+          <a
+            href="/register"
+            style={{
+              color: "#3498DB",
+              textDecoration: "none",
+              fontFamily: "'Poppins', sans-serif",
+              transition: "color 0.2s ease-in-out",
+            }}
+            onMouseEnter={(e) => (e.target.style.color = "#3498DBCC")}
+            onMouseLeave={(e) => (e.target.style.color = "#3498DB")}
+          >
+            Register Now
+          </a>
+        </div>
       </div>
+
       <style jsx>{`
         @media (max-width: 768px) {
           div[style*="maxWidth: 400px"] {
