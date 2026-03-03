@@ -1,5 +1,5 @@
 import React, { useState, memo, useCallback } from 'react';
-import { Trash2, XCircle } from 'lucide-react';
+import { Flag, Trash2, XCircle } from 'lucide-react';
 import PopupPostDetails from './popupPostDetails';
 import { restorePost, permanentDeletePost } from '../utils/api';
 
@@ -65,7 +65,7 @@ const PostRow = memo(({ post, onSelect }) => {
   );
 });
 
-export default function DeletedPosts({ posts, onRestore, onError }) {
+export default function ReportedPosts({ posts, onRestore, onError }) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -122,8 +122,8 @@ export default function DeletedPosts({ posts, onRestore, onError }) {
       onClick={handlePopupToggle}
     >
       <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#2C3E50', display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <Trash2 size={18} color="#FF6B6B" />
-        Deleted Posts
+        <Flag size={18} color="#FF6B6B" />
+        Reported Posts
       </h2>
 
       {posts.length === 0 && (

@@ -5,11 +5,22 @@ const blogSchema = new mongoose.Schema({
   email: { type: String, required: true },
   title: { type: String, required: true },
   desc: { type: String, required: true },
+
+
   date: { type: Date, default: Date.now },
+  updatedAt: { type: Date },
+
+
+  viewCount: { type: Number, default: 0 },
   like: { type: Number, default: 0 },
-  likedBy: [{ type: String }],
-  savedBy: [{ type: String }],  
-  tags: [{ type: String }],  
+  likedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'auth' }],
+  savedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'auth' }],
+
+
+  tags: [{ type: String }],
+  isFeatured: { type: Boolean, default: false },
+
+
   comments: [
     {
       user: { type: mongoose.Schema.Types.ObjectId, ref: 'auth' },
@@ -29,7 +40,11 @@ const blogSchema = new mongoose.Schema({
       ],
     },
   ],
-  status: { type: String, enum: ['active', 'deleted', 'archived'], default: 'active' },
-});
+
+
+  status: { type: String, enum: ['active', 'deleted', 'archived','flag','report'], default: 'active' },
+  statusReason: { type: String },
+
+}, { timestamps: true });
 
 module.exports = mongoose.model('Blog', blogSchema);

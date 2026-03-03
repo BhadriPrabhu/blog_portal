@@ -7,10 +7,12 @@ import { useStore } from "../data/zustand";
 import { TagsRefer } from '../data/tagsRefer';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { BeatLoader, ScaleLoader } from 'react-spinners';
-import { addBlog } from '../utils/api';
+import { addBlog, reportAiFlag } from '../utils/api';
 // import OtpSender from "../utils/otp";
 import { ToastContainer, toast } from 'react-toastify';
 import { BadgePlus, Check, Tag } from "lucide-react";
+import GenAI from "../utils/AI";
+import ToastBlog from "../utils/toast";
 
 export default function PostBox() {
   const profileData = useStore((state) => state.profileData);
@@ -47,7 +49,6 @@ export default function PostBox() {
     transition: "background-color 0.2s ease-in-out",
   };
 
-  const chatApi = import.meta.env.VITE_API_GEMINI_KEY || AIzaSyCOyZeZEPsgihpHyE26 - cJ4ojTp9uST6yU;
 
   const fetchData = async (retryCount = 0, maxRetries = 3) => {
     if (!data.title.trim() || !data.desc.trim()) {
@@ -55,16 +56,9 @@ export default function PostBox() {
       return;
     }
 
-    if (!chatApi) {
-      console.error("Gemini API key is missing");
-      setError("API key is missing. Contact support.");
-      return [];
-    }
 
     try {
       setIsLoading(true);
-      const genAI = new GoogleGenerativeAI(chatApi);
-      const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
       const prompt = `Select relevant tags from the following title and description based on the provided tags reference. Return tags as a JSON array of strings.
 
 Title: ${data.title}
@@ -72,7 +66,7 @@ Description: ${data.desc}
 Tags Reference: ${JSON.stringify(TagsRefer)}
 Example Output: ["tech", "programming"]`;
 
-      const result = await model.generateContent(prompt);
+      const result = await GenAI(prompt);
       let tagsText = result.response.text();
 
       // Clean Markdown code fences
@@ -153,11 +147,47 @@ Example Output: ["tech", "programming"]`;
         desc: data.desc,
         userId: profileData._id,
         email: profileData.email,
-        tags: selectedTags || "General",
+        tags: selectedTags.length > 0 ? selectedTags : ["General"],
       };
 
+
       const res = await addBlog(postData);
-      console.log("Blog added:", res.data);
+      const id = res.data.blog?._id;
+      console.log("Blog", id);
+
+      const prompt = `
+Act as a legal content moderator. Analyze this blog post for violations of government laws and criminal codes.
+
+Blog Title: ${data.title}
+Blog Description: ${data.desc}
+
+Flag "true" ONLY if the content includes:
+1. National Security Threats: Terrorism, classified info, or inciting riots against government institutions.
+2. Criminal Activity: Detailed instructions for committing crimes (e.g., making weapons, drug manufacturing, or financial fraud).
+3. Regulated Goods: Illegal sale of firearms, prescription drugs, or human trafficking.
+4. Non-consensual Content: Explicit material shared without consent or child exploitation.
+
+DO NOT flag: Controversial opinions, political criticism, or general adult themes that are legal.
+
+Return ONLY "true" if it violates government rules, or "false" if it is legally permissible.
+Output must be lowercase.
+`;
+
+      const result = await GenAI(prompt);
+      const aiResponse = result.response.text().toLowerCase();
+      const isIllegal = aiResponse.includes("true");
+
+      if (isIllegal) {
+        ToastBlog("Content flagged for Manual review");
+        try {
+          await reportAiFlag(id);
+        } catch (reportErr) {
+          console.error("Failed to flag blog:", reportErr);
+        }
+      }
+
+      // console.log("Blog added:", res.data);
+
       setData({ title: "", desc: "", userId: "", email: "", tags: [] });
       setGeneratedTags([]);
       notify();

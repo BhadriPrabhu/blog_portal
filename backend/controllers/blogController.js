@@ -3,20 +3,16 @@ const Blog = require('../models/blogSchema');
 const blogController = async (req, res) => {
   try {
     const { status, sortBy, userId, search } = req.query;
-    const validStatuses = ['active', 'deleted', 'archived'];
+    const validStatuses = ['active', 'archived', 'deleted', 'report'];
 
-    if (status && !validStatuses.includes(status)) {
-      return res.status(400).json({ error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` });
-    }
-
-    let filter = {};
+    let filter = {status: "active"};
     if (status) {
       filter.status = status;
     }
     if (search) {
       filter.$or = [
         { title: { $regex: search, $options: 'i' } },
-        { tags: { $in: [search] } },
+        { tags: { $in: [new RegExp(search, 'i')] } },
       ];
     }
 
@@ -42,24 +38,20 @@ const blogController = async (req, res) => {
       .populate({
         path: 'user',
         select: 'user email',
-        strictPopulate: false,
       })
       .populate({
         path: 'comments.user',
         select: 'user email',
-        strictPopulate: false,
       })
       .populate({
         path: 'comments.reply.user',
         select: 'user email',
-        strictPopulate: false,
       })
       .sort(sortOption)
       .lean();
 
     const sanitizedBlogs = blogs.map(blog => ({
       ...blog,
-      status: blog.status || 'active',
       liked: userId ? blog.likedBy?.includes(userId) || false : false,
       saved: userId ? blog.savedBy?.includes(userId) || false : false,
       tags: blog.tags || [],
@@ -74,15 +66,9 @@ const blogController = async (req, res) => {
       })),
     }));
 
-    console.log(`Fetched ${sanitizedBlogs.length} blogs for status: ${status || 'all'}, sortBy: ${sortBy || 'newest'}, search: ${search || 'none'}, userId: ${userId || 'none'}`);
     res.status(200).json(sanitizedBlogs);
   } catch (err) {
-    console.error('Blog Controller Error:', {
-      error: err.message,
-      stack: err.stack,
-      query: req.query,
-      timestamp: new Date().toISOString(),
-    });
+    console.log("Blog Controller Error:",err.message)
     res.status(500).json({ error: 'Server error', details: err.message });
   }
 };

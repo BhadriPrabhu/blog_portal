@@ -8,6 +8,7 @@ import ArcheivedPosts from '../components/archeivedPosts';
 import { useNavigate } from 'react-router-dom';
 import { fetchBlogByStatus, bulkAction } from '../utils/api';
 import api from '../utils/api';
+import ReportedPosts from '../components/reportedPosts';
 
 const StatsCard = ({ title, value, icon: Icon, color, bgColor }) => (
   <div style={{
@@ -47,6 +48,7 @@ export default function AdminHome() {
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [deletedPosts, setDeletedPosts] = useState([]);
+  const [reportedPosts, setReportedPosts] = useState([]);
   const [archivedPosts, setArchivedPosts] = useState([]);
   const [selectedPost, setSelectedPost] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -529,6 +531,15 @@ export default function AdminHome() {
       )}
 
       <DeletedPosts
+        posts={deletedPosts}
+        onRestore={(post) => {
+          setPosts(prev => [...prev, { ...post, status: 'active' }]);
+          setDeletedPosts(prev => prev.filter(p => p._id !== post._id));
+        }}
+        onError={handleError}
+      />
+
+      <ReportedPosts
         posts={deletedPosts}
         onRestore={(post) => {
           setPosts(prev => [...prev, { ...post, status: 'active' }]);

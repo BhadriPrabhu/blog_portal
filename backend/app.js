@@ -16,6 +16,8 @@ const likedBlogController = require('./controllers/likedBlogController.js');
 const myPostController = require('./controllers/myPostController.js');
 const { CommentDeleteController, CommentFlagController, CommentReplyController, CommentApproveController } = require('./controllers/adminController.js');
 const { AdminBlogRestore, AdminBlogUnarchive, AdminBlogPermanentDelete, AdminBlogDelete, AdminBlogArchive } = require('./controllers/adminStatusController.js');
+const Blog = require('./models/blogSchema.js');
+const { reportAiFlag } = require('./controllers/reportController.js');
 
 const corsOptions = {
   origin: '*', 
@@ -31,6 +33,8 @@ const connectDB = async () => {
   try {
     await mongoose.connect(URI);
     console.log("DB connected successfully");
+    // const res = await Blog.updateMany({}, { $set: { viewCount: 0, isFeatured: false } });
+    // console.log(res);
   } catch (error) {
     console.log("MongoDB connection error:", error);
   }
@@ -56,6 +60,8 @@ app.post("/blog/unarchive", AdminBlogUnarchive);
 app.post("/blog/permanent-delete", AdminBlogPermanentDelete);
 app.post("/blog/delete", AdminBlogDelete);
 app.post("/blog/archive", AdminBlogArchive);
+app.post("/blog/report", reportAiFlag)
+
 
 app.listen(PORT, () => {
   connectDB();
