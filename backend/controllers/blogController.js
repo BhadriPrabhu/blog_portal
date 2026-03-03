@@ -3,15 +3,16 @@ const Blog = require('../models/blogSchema');
 const blogController = async (req, res) => {
   try {
     const { status, sortBy, userId, search } = req.query;
-    const validStatuses = ['active', 'archived', 'deleted', 'report'];
+    const validStatuses = ['active', 'archived', 'deleted', 'report','flag'];
 
-    let filter = {status: "active"};
+    let filter = { status: validStatuses.includes(status) ? status : "active" };
     if (status) {
       filter.status = status;
     }
     if (search) {
+      const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       filter.$or = [
-        { title: { $regex: search, $options: 'i' } },
+        { title: { $regex: safeSearch, $options: 'i' } },
         { tags: { $in: [new RegExp(search, 'i')] } },
       ];
     }
@@ -52,8 +53,8 @@ const blogController = async (req, res) => {
 
     const sanitizedBlogs = blogs.map(blog => ({
       ...blog,
-      liked: userId ? blog.likedBy?.includes(userId) || false : false,
-      saved: userId ? blog.savedBy?.includes(userId) || false : false,
+      liked: userId ? blog.likedBy?.some(id => id.toString() === userId) : false,
+      saved: userId ? blog.savedBy?.some(id => id.toString() === userId) : false,
       tags: blog.tags || [],
       comments: (blog.comments || []).map(comment => ({
         ...comment,

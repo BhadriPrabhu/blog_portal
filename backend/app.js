@@ -17,7 +17,7 @@ const myPostController = require('./controllers/myPostController.js');
 const { CommentDeleteController, CommentFlagController, CommentReplyController, CommentApproveController } = require('./controllers/adminController.js');
 const { AdminBlogRestore, AdminBlogUnarchive, AdminBlogPermanentDelete, AdminBlogDelete, AdminBlogArchive } = require('./controllers/adminStatusController.js');
 const Blog = require('./models/blogSchema.js');
-const { reportAiFlag } = require('./controllers/reportController.js');
+const { reportAiFlag, UnreportAiFlag } = require('./controllers/reportController.js');
 
 const corsOptions = {
   origin: '*', 
@@ -60,7 +60,8 @@ app.post("/blog/unarchive", AdminBlogUnarchive);
 app.post("/blog/permanent-delete", AdminBlogPermanentDelete);
 app.post("/blog/delete", AdminBlogDelete);
 app.post("/blog/archive", AdminBlogArchive);
-app.post("/blog/report", reportAiFlag)
+app.post("/blog/report", reportAiFlag);
+app.post("/blog/unreport", UnreportAiFlag);
 
 
 app.listen(PORT, () => {

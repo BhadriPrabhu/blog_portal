@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { fetchBlogByStatus, bulkAction } from '../utils/api';
 import api from '../utils/api';
 import ReportedPosts from '../components/reportedPosts';
+import { useStore } from '../data/zustand';
 
 const StatsCard = ({ title, value, icon: Icon, color, bgColor }) => (
   <div style={{
@@ -60,15 +61,18 @@ export default function AdminHome() {
   const [sortOrder, setSortOrder] = useState('desc');
   const postsPerPage = 10;
 
+  const refreshTrigger = useStore((state) => state.refreshTrigger);
+
   const fetchData = async (retryCount = 0) => {
     try {
       setLoading(true);
       setError(null);
 
-      const [activeRes, deletedRes, archivedRes] = await Promise.all([
+      const [activeRes, deletedRes, archivedRes, reportedRes] = await Promise.all([
         fetchBlogByStatus('active').catch(err => ({ error: err, data: [] })),
         fetchBlogByStatus('deleted').catch(err => ({ error: err, data: [] })),
         fetchBlogByStatus('archived').catch(err => ({ error: err, data: [] })),
+        fetchBlogByStatus('report').catch(err => ({ error: err, data: [] })),
       ]);
 
       const errors = [];
@@ -89,6 +93,12 @@ export default function AdminHome() {
         errors.push(`Archived posts: ${archivedRes.error.response?.data?.details || archivedRes.error.message}`);
       } else {
         console.log('Archived posts:', archivedRes.data);
+      }
+      if (reportedRes.error) {
+        console.error('Reported posts error:', reportedRes.error.response?.data || reportedRes.error.message);
+        errors.push(`Reported posts: ${reportedRes.error.response?.data?.details || reportedRes.error.message}`);
+      } else {
+        console.log('Reported posts:', reportedRes.data);
       }
 
       if (errors.length > 0) {
@@ -117,6 +127,7 @@ export default function AdminHome() {
         setPosts(allPosts.filter(post => post.status === 'active'));
         setDeletedPosts(allPosts.filter(post => post.status === 'deleted'));
         setArchivedPosts(allPosts.filter(post => post.status === 'archived'));
+        setReportedPosts(allPosts.filter(post => post.status === 'report'));
         setError(`Failed to load some post categories: ${errors.join('; ')}. Showing all available posts.`);
         return;
       }
@@ -143,6 +154,7 @@ export default function AdminHome() {
       setPosts(mapPosts(activeRes.data));
       setDeletedPosts(mapPosts(deletedRes.data));
       setArchivedPosts(mapPosts(archivedRes.data));
+      setReportedPosts(mapPosts(reportedRes.data));
     } catch (err) {
       console.error('Fetch error:', err.response?.data || err.message);
       const message = err.response?.data?.details || err.response?.data?.error || 'Failed to fetch posts. Please try again later.';
@@ -159,7 +171,7 @@ export default function AdminHome() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [refreshTrigger]);
 
   const handleCommentUpdate = (postId, updatedComments) => {
     setPosts(prev => prev.map(post =>
@@ -540,10 +552,10 @@ export default function AdminHome() {
       />
 
       <ReportedPosts
-        posts={deletedPosts}
+        posts={reportedPosts}
         onRestore={(post) => {
           setPosts(prev => [...prev, { ...post, status: 'active' }]);
-          setDeletedPosts(prev => prev.filter(p => p._id !== post._id));
+          setReportedPosts(prev => prev.filter(p => p._id !== post._id));
         }}
         onError={handleError}
       />

@@ -24,5 +24,6 @@ export const fetchMyPosts = (userId) => api.post(`/blog/mypost`, { userId });
 export const register = (data) => api.post(`/register`, data);
 export const fetchSavedBlogs = (userId) => api.get(`/blog/saved?userId=${encodeURIComponent(userId)}`);
 export const reportAiFlag = (id) => api.post('/blog/report', { ids: [id] });
+export const unReportAiFlag = (id) => api.post('/blog/unreport', { ids: [id] });
 
 export default api;

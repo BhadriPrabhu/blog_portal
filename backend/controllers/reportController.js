@@ -17,4 +17,21 @@ const reportAiFlag = async (req, res) => {
     }
 }
 
-module.exports = { reportAiFlag };
+const UnreportAiFlag = async (req, res) => {
+    const { ids } = req.body;
+    try{
+        const result = await Blog.updateMany(
+            { _id: { $in: ids }},
+            {$set: { status: 'active' }}
+        );
+        if(result.matchedCount === 0){
+            return res.status(404).json({ error: 'No posts found to Unreport' });
+        }
+        res.json({ message: 'Posts Unreported'});
+    }catch(err){
+        console.log('Report Error:',err);
+        res.status(500).json({ error: 'Server Error', details: err.message });
+    }
+}
+
+module.exports = { reportAiFlag, UnreportAiFlag };

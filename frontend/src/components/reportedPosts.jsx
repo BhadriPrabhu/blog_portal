@@ -189,7 +189,7 @@ export default function ReportedPosts({ posts, onRestore, onError }) {
           onClose={() => setSelectedPost(null)}
           onRestore={handleRestorePost}
           onDelete={handlePermanentDelete}
-          isDeleted={true}
+          isreport="true"
         />
       )}
 

@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { X, RotateCcw, Trash2 } from 'lucide-react';
+import { unReportAiFlag } from '../utils/api';
+import { useStore } from '../data/zustand';
 
-export default function PopupPostDetails({ post, onClose, onRestore, onDelete, isDeleted }) {
+export default function PopupPostDetails({ post, onClose, onRestore, onDelete, isDeleted, isreport }) {
   const [isLoading, setIsLoading] = useState(false);
+  const triggerRefresh = useStore((state) =>state.triggerRefresh);
 
   if (!post) return null;
 
@@ -16,8 +19,16 @@ export default function PopupPostDetails({ post, onClose, onRestore, onDelete, i
     e.stopPropagation();
     setIsLoading(true);
     try {
-      await onRestore(post._id);
+      if(isreport){
+        await unReportAiFlag(post._id);
+      }else{
+        await onRestore(post._id);
+      }
+      
       onClose();
+      triggerRefresh();
+    }catch(err){
+      console.log("Error:", err);
     } finally {
       setIsLoading(false);
     }
@@ -29,10 +40,26 @@ export default function PopupPostDetails({ post, onClose, onRestore, onDelete, i
     try {
       await onDelete(post._id);
       onClose();
+      triggerRefresh();
+    }catch(err){
+      console.log("Error:",err);
     } finally {
       setIsLoading(false);
     }
   };
+
+  // const handleDisregard = async (e) => {
+  //   e.stopPropagation();
+  //   setIsLoading(true);
+  //   try{
+  //     await unReportAiFlag(post._id);
+  //     onClose();
+  //   }catch(err){
+  //     console.log("Error:",err);
+  //   } finally{
+  //     setIsLoading(false);
+  //   }
+  // }
 
   return (
     <div
@@ -182,10 +209,10 @@ export default function PopupPostDetails({ post, onClose, onRestore, onDelete, i
                 }}
                 onMouseEnter={(e) => !isLoading && (e.target.style.backgroundColor = '#2ECC71CC')}
                 onMouseLeave={(e) => !isLoading && (e.target.style.backgroundColor = '#2ECC71')}
-                aria-label={isDeleted ? 'Undelete post' : 'Unarchive post'}
+                aria-label={isDeleted ? 'Undelete post' : isreport ? 'Disregard post' : 'Unarchive post'}
               >
                 <RotateCcw size={16} />
-                {isDeleted ? 'Undelete' : 'Unarchive'}
+                {isDeleted ? 'Undelete' : isreport ? 'Disregard' : 'Unarchive'}
               </button>
               <button
                 onClick={handleDelete}
