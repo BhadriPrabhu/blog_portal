@@ -13,6 +13,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import { BadgePlus, Check, Tag } from "lucide-react";
 import GenAI from "../utils/AI";
 import ToastBlog from "../utils/toast";
+import ButtonTrans from "./buttonTran";
 
 export default function PostBox() {
   const profileData = useStore((state) => state.profileData);
@@ -283,16 +284,23 @@ Output must be lowercase.
         aria-label="Challenge description"
       />
       <div style={{ display: "flex", flexDirection: "row", justifyContent: "flex-end", margin: "0px", padding: "0px" }}>
-        <button
-          type="button"
-          onClick={() => fetchData()}
-          disabled={isLoading}
-          onMouseEnter={() => setHover4(true)}
-          onMouseLeave={() => setHover4(false)}
-          style={hover4 ? { ...buttonStyle, backgroundColor: isLoading ? "transparent" : "#3498DB33", display: "flex", gap: "4px", flexDirection: "row", alignItems: "center" } : { ...buttonStyle, display: "flex", gap: "4px", flexDirection: "row", alignItems: "center" }}
-        >
-          <Tag size="16px" fontWeight="bold" /> {isLoading ? "Generating..." : "Suggest Tags"}
-        </button>
+        <ButtonTrans
+          child={
+            <>
+              <Tag size="16px" fontWeight="bold" /> {isLoading ? "Generating..." : "Suggest Tags"}
+            </>
+          }
+          ClickEvent={() => fetchData()}
+          disable={isLoading}
+          buttonType="button"
+          mouseEnter={() => setHover4(true)}
+          mouseLeave={() => setHover4(false)}
+          hover={hover4}
+          isLoading={isLoading}
+          label="Tags Suggestion"
+          tooltipContent="Tags Suggestion"
+          font="12px"
+        />
       </div>
 
       {generatedTags.length > 0 && (
@@ -333,44 +341,58 @@ Output must be lowercase.
       )}
 
       <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", flexWrap: "wrap" }}>
-        <button
-          style={hover1 ? { ...buttonStyle, backgroundColor: isLoading ? "transparent" : "#3498DB33" } : buttonStyle}
-          onMouseEnter={() => setHover1(true)}
-          onMouseLeave={() => setHover1(false)}
-          aria-label="Insert image"
-          disabled={isLoading}
-        // onClick={notify}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <Insert size={16} />
-            Image
-          </div>
-        </button>
-        <button
-          style={hover2 ? { ...buttonStyle, backgroundColor: isLoading ? "transparent" : "#3498DB33" } : buttonStyle}
-          onMouseEnter={() => setHover2(true)}
-          onMouseLeave={() => setHover2(false)}
-          aria-label="Insert video"
-          disabled={isLoading}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <Insert size={16} />
-            Video
-          </div>
-        </button>
-        <button
-          style={hover3 ? { ...buttonStyle, backgroundColor: isLoading ? "transparent" : "#3498DB33" } : buttonStyle}
-          onMouseEnter={() => setHover3(true)}
-          onMouseLeave={() => setHover3(false)}
-          onClick={handlePost}
-          disabled={isLoading}
-          aria-label="Post challenge"
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <Send size={16} />
-            Post
-          </div>
-        </button>
+        <ButtonTrans
+          child={
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <Insert size={16} />
+              Image
+            </div>
+          }
+          disable={isLoading}
+          mouseEnter={() => setHover1(true)}
+          mouseLeave={() => setHover1(false)}
+          buttonType="type"
+          hover={hover1}
+          isLoading={isLoading}
+          label="Insert Image"
+          tooltipContent="Insert Image"
+          font="12px"
+        />
+        <ButtonTrans
+          child={
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <Insert size={16} />
+              Video
+            </div>
+          }
+          disable={isLoading}
+          mouseEnter={() => setHover2(true)}
+          mouseLeave={() => setHover2(false)}
+          buttonType="type"
+          hover={hover2}
+          isLoading={isLoading}
+          label="Insert Video"
+          tooltipContent="Insert Video"
+          font="12px"
+        />
+        <ButtonTrans
+          child={
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <Send size={16} />
+              Post
+            </div>
+          }
+          disable={isLoading}
+          mouseEnter={() => setHover3(true)}
+          mouseLeave={() => setHover3(false)}
+          buttonType="type"
+          hover={hover3}
+          isLoading={isLoading}
+          label="Post Challenge"
+          ClickEvent={handlePost}
+          tooltipContent="Post Challenge"
+          font="12px"
+        />
       </div>
 
       {/* </div> */}

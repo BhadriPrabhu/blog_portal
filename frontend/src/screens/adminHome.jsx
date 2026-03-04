@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Trash2, TrendingUp, Users, Activity } from 'lucide-react';
+import { Trash2, TrendingUp, Users, Activity, Flag } from 'lucide-react';
 import { debounce } from 'lodash';
 import Button from '../components/button';
 import PopupAnalytics from '../components/popupAnalytics';
@@ -10,6 +10,7 @@ import { fetchBlogByStatus, bulkAction } from '../utils/api';
 import api from '../utils/api';
 import ReportedPosts from '../components/reportedPosts';
 import { useStore } from '../data/zustand';
+import ButtonTrans from '../components/buttonTran';
 
 const StatsCard = ({ title, value, icon: Icon, color, bgColor }) => (
   <div style={{
@@ -47,18 +48,20 @@ const StatsCard = ({ title, value, icon: Icon, color, bgColor }) => (
 
 export default function AdminHome() {
   const navigate = useNavigate();
-  const [posts, setPosts] = useState([]);
-  const [deletedPosts, setDeletedPosts] = useState([]);
-  const [reportedPosts, setReportedPosts] = useState([]);
-  const [archivedPosts, setArchivedPosts] = useState([]);
-  const [selectedPost, setSelectedPost] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedIds, setSelectedIds] = useState(new Set());
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [page, setPage] = useState(1);
-  const [sortField, setSortField] = useState('date');
-  const [sortOrder, setSortOrder] = useState('desc');
+  const [posts, setPosts] = React.useState([]);
+  const [deletedPosts, setDeletedPosts] = React.useState([]);
+  const [reportedPosts, setReportedPosts] = React.useState([]);
+  const [archivedPosts, setArchivedPosts] = React.useState([]);
+  const [selectedPost, setSelectedPost] = React.useState(null);
+  const [searchTerm, setSearchTerm] = React.useState('');
+  const [selectedIds, setSelectedIds] = React.useState(new Set());
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+  const [page, setPage] = React.useState(1);
+  const [sortField, setSortField] = React.useState('date');
+  const [sortOrder, setSortOrder] = React.useState('desc');
+  const [hover1, setHover1] = React.useState(null);
+  const [hover2, setHover2] = React.useState(null);
   const postsPerPage = 10;
 
   const refreshTrigger = useStore((state) => state.refreshTrigger);
@@ -426,6 +429,9 @@ export default function AdminHome() {
                 <th style={{ padding: '12px', textAlign: 'left', cursor: 'pointer', fontWeight: '500', fontSize: '14px' }} onClick={() => handleSort('comments')}>
                   Comments {sortField === 'comments' && (sortOrder === 'asc' ? '↑' : '↓')}
                 </th>
+                <th style={{ padding: '12px', textAlign: 'center', cursor: 'pointer', fontWeight: '500', fontSize: '14px' }}>
+                  Action
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -474,6 +480,42 @@ export default function AdminHome() {
                   <td style={{ padding: '10px', fontSize: '14px', color: '#2C3E50' }}>{post.desc.substring(0, 60)}...</td>
                   <td style={{ padding: '10px', fontSize: '14px', color: '#2C3E50' }}>{post.like}</td>
                   <td style={{ padding: '10px', fontSize: '14px', color: '#2C3E50' }}>{post.comments.length}</td>
+                  <td style={{ padding: '10px', fontSize: '14px', color: '#2C3E50', display: "flex", flexDirection: "row" }}>
+                    <ButtonTrans
+                      child={
+                        <>
+                          <Flag size="14px" />
+                        </>
+                      }
+                      // ClickEvent={}
+                      // disable={}
+                      mouseEnter={() => setHover1(post._id)}
+                      mouseLeave={() => setHover1(null)}
+                      buttonType="button"
+                      hover={hover1 === post._id}
+                      // isLoading={}
+                      label="Flag the Post"
+                      tooltipContent="Flag/Report"
+                      font="10px"
+                    />
+                    <ButtonTrans
+                      child={
+                        <>
+                          <Trash2 size="14px" />
+                        </>
+                      }
+                      // ClickEvent={}
+                      // disable={}
+                      mouseEnter={() => setHover2(post._id)}
+                      mouseLeave={() => setHover2(null)}
+                      buttonType="button"
+                      hover={hover2 === post._id}
+                      // isLoading={}
+                      label="Delete the Post"
+                      tooltipContent="Delete"
+                      font="10px"
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
