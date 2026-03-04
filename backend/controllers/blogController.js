@@ -3,7 +3,7 @@ const Blog = require('../models/blogSchema');
 const blogController = async (req, res) => {
   try {
     const { status, sortBy, userId, search } = req.query;
-    const validStatuses = ['active', 'archived', 'deleted', 'report','flag'];
+    const validStatuses = ['active', 'archived', 'deleted', 'report', 'flag'];
 
     let filter = { status: validStatuses.includes(status) ? status : "active" };
     if (status) {
@@ -51,25 +51,32 @@ const blogController = async (req, res) => {
       .sort(sortOption)
       .lean();
 
-    const sanitizedBlogs = blogs.map(blog => ({
-      ...blog,
-      liked: userId ? blog.likedBy?.some(id => id.toString() === userId) : false,
-      saved: userId ? blog.savedBy?.some(id => id.toString() === userId) : false,
-      tags: blog.tags || [],
-      comments: (blog.comments || []).map(comment => ({
-        ...comment,
-        status: comment.status || 'pending',
-        user: comment.user && comment.user._id ? comment.user : { user: 'Unknown', email: 'unknown@example.com' },
-        reply: (comment.reply || []).map(reply => ({
-          ...reply,
-          user: reply.user && reply.user._id ? reply.user : { user: 'Unknown', email: 'unknown@example.com' },
+    const sanitizedBlogs = blogs.map(blog => {
+      // Convert Mongoose ObjectIds to Strings for reliable comparison
+      const likedByStr = (blog.likedBy || []).map(id => id.toString());
+      const savedByStr = (blog.savedBy || []).map(id => id.toString());
+
+      return {
+        ...blog,
+        // Use the converted string arrays to check status
+        liked: userId ? likedByStr.includes(userId.toString()) : false,
+        saved: userId ? savedByStr.includes(userId.toString()) : false,
+        tags: blog.tags || [],
+        comments: (blog.comments || []).map(comment => ({
+          ...comment,
+          status: comment.status || 'pending',
+          user: comment.user && comment.user._id ? comment.user : { user: 'Unknown', email: 'unknown@example.com' },
+          reply: (comment.reply || []).map(reply => ({
+            ...reply,
+            user: reply.user && reply.user._id ? reply.user : { user: 'Unknown', email: 'unknown@example.com' },
+          })),
         })),
-      })),
-    }));
+      };
+    });
 
     res.status(200).json(sanitizedBlogs);
   } catch (err) {
-    console.log("Blog Controller Error:",err.message)
+    console.log("Blog Controller Error:", err.message)
     res.status(500).json({ error: 'Server error', details: err.message });
   }
 };

@@ -17,7 +17,7 @@ import ButtonTrans from "./buttonTran";
 
 export default function PostBox() {
   const profileData = useStore((state) => state.profileData);
-  const triggerRefresh = useStore((state) => state.triggerRefresh);
+  const setTriggerRefresh = useStore((state) => state.setTriggerRefresh);
   const [hover1, setHover1] = React.useState(false);
   const [hover2, setHover2] = React.useState(false);
   const [hover3, setHover3] = React.useState(false);
@@ -33,7 +33,6 @@ export default function PostBox() {
     email: "",
     tags: selectedTags.length > 0 ? selectedTags : ["General"],
   });
-  const notify = () => toast("Posted successfully!");
 
   const buttonStyle = {
     backgroundColor: "transparent",
@@ -191,8 +190,8 @@ Output must be lowercase.
 
       setData({ title: "", desc: "", userId: "", email: "", tags: [] });
       setGeneratedTags([]);
-      notify();
-      triggerRefresh();
+      ToastBlog("Posted successfully!");
+      setTriggerRefresh();
     } catch (err) {
       console.error("Error adding blog:", err.response?.data || err.message);
       setError(err.response?.data?.message || "Failed to post blog. Try again.");

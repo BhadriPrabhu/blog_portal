@@ -6,11 +6,12 @@ import PopupAnalytics from '../components/popupAnalytics';
 import DeletedPosts from '../components/deletedPosts';
 import ArcheivedPosts from '../components/archeivedPosts';
 import { useNavigate } from 'react-router-dom';
-import { fetchBlogByStatus, bulkAction } from '../utils/api';
+import { fetchBlogByStatus, bulkAction, reportAiFlag } from '../utils/api';
 import api from '../utils/api';
 import ReportedPosts from '../components/reportedPosts';
 import { useStore } from '../data/zustand';
 import ButtonTrans from '../components/buttonTran';
+import ToastBlog from '../utils/toast';
 
 const StatsCard = ({ title, value, icon: Icon, color, bgColor }) => (
   <div style={{
@@ -65,6 +66,7 @@ export default function AdminHome() {
   const postsPerPage = 10;
 
   const refreshTrigger = useStore((state) => state.refreshTrigger);
+  const setTriggerRefresh = useStore((state) => state.setTriggerRefresh);
 
   const fetchData = async (retryCount = 0) => {
     try {
@@ -211,6 +213,11 @@ export default function AdminHome() {
     if (!window.confirm(`Are you sure you want to ${action} ${ids.length} post(s)?`)) return;
     try {
       await bulkAction(action, ids);
+      if (action === "delete") {
+        ToastBlog(`${ids.length} ${ids.length > 1 ? "Posts" : "Post"} Deleted.`);
+      } else if (action === "archive") {
+        ToastBlog(`${ids.length} ${ids.length > 1 ? "Posts" : "Post"} Archived.`)
+      }
       setSelectedIds(new Set());
       await fetchData();
     } catch (err) {
@@ -265,6 +272,18 @@ export default function AdminHome() {
   const totalLikes = posts.reduce((sum, post) => sum + (post.like || 0), 0);
   const totalComments = posts.reduce((sum, post) => sum + (post.comments?.length || 0), 0);
   const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
+
+
+  const handleReport = async (id) => {
+
+    try {
+      await reportAiFlag(id);
+      ToastBlog("Posted Reported");
+      setTriggerRefresh();
+    } catch (err) {
+      console.log("Failed to flag blog:", err);
+    }
+  }
 
   return (
     <div style={{
@@ -487,7 +506,7 @@ export default function AdminHome() {
                           <Flag size="14px" />
                         </>
                       }
-                      // ClickEvent={}
+                      ClickEvent={() => handleReport(post._id)}
                       // disable={}
                       mouseEnter={() => setHover1(post._id)}
                       mouseLeave={() => setHover1(null)}
@@ -504,7 +523,17 @@ export default function AdminHome() {
                           <Trash2 size="14px" />
                         </>
                       }
-                      // ClickEvent={}
+                      ClickEvent={async () => {
+                        const ids = post._id;
+                        if (!window.confirm(`Are you sure you want to delete the post?`)) return;
+                        try{   
+                          await bulkAction("delete", ids);
+                          ToastBlog("Post Deleted");
+                          await fetchData();
+                        }catch(err){
+                          console.log("Failed to Delete:",err);
+                        }
+                      }}
                       // disable={}
                       mouseEnter={() => setHover2(post._id)}
                       mouseLeave={() => setHover2(null)}

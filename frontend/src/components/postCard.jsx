@@ -236,7 +236,7 @@ export default function PostCard({ postsData = null, onReload = null }) {
         const urlParams = new URLSearchParams(location.search);
         const sortBy = urlParams.get('sortBy') || 'newest';
         const search = urlParams.get('search') || '';
-        const userId = profileData?.email || '';
+        const userId = profileData?._id || '';
         if (!userId) {
             console.error('No userId found for fetching posts');
             return;
@@ -259,6 +259,7 @@ export default function PostCard({ postsData = null, onReload = null }) {
 
     const likeBlog = async (blogId, idx, userId) => {
         try {
+            console.log("User ID:",userId);
             if (!userId) throw new Error('User ID is missing');
             const res = await api.put('/blog/like', { blogId, userId });
             const { likeCount, liked } = res.data;
@@ -280,8 +281,8 @@ export default function PostCard({ postsData = null, onReload = null }) {
     const handleSave = async (blogId, idx) => {
         try {
 
-            if (!profileData.email) throw new Error('User ID is missing');
-            const res = await api.post('/blog/save', { blogId, userId: profileData.email });
+            if (!profileData._id) throw new Error('User ID is missing');
+            const res = await api.post('/blog/save', { blogId, userId: profileData._id });
 
             if (res.data.saved) {
                 ToastBlog("Saved Post");
@@ -395,7 +396,7 @@ export default function PostCard({ postsData = null, onReload = null }) {
                         </h3>
                         <p
                             style={{
-                                margin: '5px 0px',
+                                margin: '0px',
                                 height: '70px',
                                 display: '-webkit-box',
                                 WebkitLineClamp: 3,
@@ -421,10 +422,10 @@ export default function PostCard({ postsData = null, onReload = null }) {
                                 </span>
                             ))}
                         </div> */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: "5px" }}>
                             <div style={{ display: 'flex', alignItems: 'center', fontSize: '14px', gap: '4px', color: '#100f0fff' }}>
                                 <FavoriteRoundedIcon sx={{ width: '18px', height: '18px', color: 'red' }} />
-                                <motion.p>{item.like}</motion.p> likes
+                                <motion.p style={{margin: "0px"}}>{item.like}</motion.p> likes
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', color: '#100f0fff' }}>
                                 <ChatRoundedIcon sx={{ width: '18px', height: '18px', color: 'gray' }} />
@@ -434,12 +435,12 @@ export default function PostCard({ postsData = null, onReload = null }) {
                     </div>
 
                     <hr />
-                    <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '10px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-around' }}>
                         <motion.button
                             style={hover1 === idx ? { ...buttonStyle, ...hoverStyle } : buttonStyle}
                             onMouseEnter={() => setHover1(idx)}
                             onMouseLeave={() => setHover1(null)}
-                            onClick={() => likeBlog(item._id, idx, profileData.email)}
+                            onClick={() => likeBlog(item._id, idx, profileData._id)}
                             aria-label={item.liked ? 'Unlike post' : 'Like post'}
                             whileTap={{scale: 0.8}}
                         >

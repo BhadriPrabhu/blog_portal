@@ -1,4 +1,6 @@
+const mongoose = require('mongoose');
 const Blog = require('../models/blogSchema');
+const Auth = require('../models/authSchema');
 
 const savedController = async (req, res) => {
   const { userId } = req.query;
@@ -9,8 +11,19 @@ const savedController = async (req, res) => {
       return res.status(400).json({ message: 'userId is required' });
     }
 
+    // Resolve email -> ObjectId if necessary
+    let queryUserId = userId;
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      const userDoc = await Auth.findOne({ email: userId }).select('_id').lean();
+      if (!userDoc) {
+        console.log('No user found for provided userId/email');
+        return res.status(200).json([]);
+      }
+      queryUserId = userDoc._id;
+    }
+
     const result = await Blog
-      .find({ likedBy: userId, status: 'active' })
+      .find({ likedBy: queryUserId, status: 'active' })
       .populate({
         path: 'user',
         select: 'user email',
@@ -28,21 +41,27 @@ const savedController = async (req, res) => {
       })
       .lean();
 
-    const sanitizedResult = result.map(blog => ({
-      ...blog,
-      status: blog.status || 'active',
-      liked: userId ? blog.likedBy?.includes(userId) || false : false,
-      saved: userId ? blog.savedBy?.includes(userId) || false : false,
-      comments: (blog.comments || []).map(comment => ({
-        ...comment,
-        status: comment.status || 'pending',
-        user: comment.user && comment.user._id ? comment.user : { user: 'Unknown', email: 'unknown@example.com' },
-        reply: (comment.reply || []).map(reply => ({
-          ...reply,
-          user: reply.user && reply.user._id ? reply.user : { user: 'Unknown', email: 'unknown@example.com' },
+    const sanitizedResult = result.map(blog => {
+      const likedByStr = (blog.likedBy || []).map(id => id.toString());
+      const savedByStr = (blog.savedBy || []).map(id => id.toString());
+      const userIdStr = queryUserId ? queryUserId.toString() : (userId ? userId.toString() : '');
+
+      return {
+        ...blog,
+        status: blog.status || 'active',
+        liked: userIdStr ? likedByStr.includes(userIdStr) : false,
+        saved: userIdStr ? savedByStr.includes(userIdStr) : false,
+        comments: (blog.comments || []).map(comment => ({
+          ...comment,
+          status: comment.status || 'pending',
+          user: comment.user && comment.user._id ? comment.user : { user: 'Unknown', email: 'unknown@example.com' },
+          reply: (comment.reply || []).map(reply => ({
+            ...reply,
+            user: reply.user && reply.user._id ? reply.user : { user: 'Unknown', email: 'unknown@example.com' },
+          })),
         })),
-      })),
-    }));
+      };
+    });
 
     console.log(`Fetched ${sanitizedResult.length} liked blogs for userId: ${userId}`);
     res.status(200).json(sanitizedResult);

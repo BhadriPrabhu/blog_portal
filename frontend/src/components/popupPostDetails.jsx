@@ -5,7 +5,7 @@ import { useStore } from '../data/zustand';
 
 export default function PopupPostDetails({ post, onClose, onRestore, onDelete, isDeleted, isreport }) {
   const [isLoading, setIsLoading] = useState(false);
-  const triggerRefresh = useStore((state) =>state.triggerRefresh);
+  const setTriggerRefresh = useStore((state) =>state.setTriggerRefresh);
 
   if (!post) return null;
 
@@ -26,7 +26,7 @@ export default function PopupPostDetails({ post, onClose, onRestore, onDelete, i
       }
       
       onClose();
-      triggerRefresh();
+      setTriggerRefresh();
     }catch(err){
       console.log("Error:", err);
     } finally {
@@ -40,7 +40,7 @@ export default function PopupPostDetails({ post, onClose, onRestore, onDelete, i
     try {
       await onDelete(post._id);
       onClose();
-      triggerRefresh();
+      setTriggerRefresh();
     }catch(err){
       console.log("Error:",err);
     } finally {

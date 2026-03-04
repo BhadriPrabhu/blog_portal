@@ -8,7 +8,7 @@ export const useStore = create(
         isAuth: false,
         setIsAuth: (value) => set({ isAuth: value }),
         refreshTrigger: 0,
-        triggerRefresh: () => set((state) => ({refreshTrigger: state.refreshTrigger + 1})),
+        setTriggerRefresh: () => set((state) => ({refreshTrigger: state.refreshTrigger + 1})),
     })),
     {
         name: "Profile_storage",
