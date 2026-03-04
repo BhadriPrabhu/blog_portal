@@ -2,12 +2,13 @@ const AuthSchemaModel = require("../models/authSchema.js");
 
 const registerController = async (req, res) => {
   try {
-    const { user, email, password } = req.body;
+    const { user, email, password, username } = req.body;
 
     const newItem = new AuthSchemaModel({
       user,
       email,
       password,
+      username
     });
 
     await newItem.save();

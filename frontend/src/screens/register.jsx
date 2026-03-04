@@ -13,16 +13,18 @@ export default function Register() {
   const setProfileData = useStore((state) => state.setProfileData);
   const setIsAuth = useStore((state) => state.setIsAuth);
 
-  const [hover, setHover] = useState(false);
-  const [registerData, setRegisterData] = useState({
+  const [hover, setHover] = React.useState(false);
+  const [registerData, setRegisterData] = React.useState({
     user: "",
     email: "",
     password: "",
+    username: "",
   });
-  const [error, setError] = useState("");
-  const [isFlipped, setIsFlipped] = useState(false);
-  const [otp, setOtp] = useState(new Array(6).fill(""));
-  const [activeInput, setActiveInput] = useState(null);
+  const [confirmPass,setConfirmPass] = React.useState("");
+  const [error, setError] = React.useState("");
+  const [isFlipped, setIsFlipped] = React.useState(false);
+  const [otp, setOtp] = React.useState(new Array(6).fill(""));
+  const [activeInput, setActiveInput] = React.useState(null);
   const [hover1, setHover1] = React.useState(false);
   const [time, setTime] = React.useState(1);
   const [seconds, setSeconds] = React.useState(time * 60);
@@ -151,6 +153,7 @@ export default function Register() {
         user: res.data.user,
         email: res.data.email,
         role: res.data.role || "user",
+        username: res.data.username,
       });
       setIsAuth(true);
       // console.log("Profile:", useStore.getState().profileData);
@@ -194,7 +197,7 @@ export default function Register() {
 
   return (
     <div
-      style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: "50px", margin: "120px 0" }}
+      style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: "50px", margin: "30px 0" }}
 
     >
       <img
@@ -221,7 +224,7 @@ export default function Register() {
           Register
         </h1>
         {error && (
-          <div style={{ color: "#FF6B6B", fontSize: "14px", marginBottom: "8px" }}>
+          <div style={{ color: "#FF6B6B", fontSize: "14px", flexWrap: "wrap", width: "300px", }}>
             {error}
           </div>
         )}
@@ -364,6 +367,18 @@ export default function Register() {
               />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <label style={labelStyle}>Username</label>
+              <input
+                required
+                placeholder="Enter Username"
+                type="text"
+                value={registerData.username}
+                onChange={(e) => setRegisterData({ ...registerData, username: e.target.value })}
+                style={inputStyle}
+                aria-label="Name"
+              />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               <label style={labelStyle}>Password</label>
               <input
                 required
@@ -375,12 +390,28 @@ export default function Register() {
                 aria-label="Password"
               />
             </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <label style={labelStyle}>Confirm Password</label>
+              <input
+                required
+                placeholder="Confirm Password"
+                type="password"
+                value={confirmPass}
+                onChange={(e) => setConfirmPass(e.target.value)}
+                style={inputStyle}
+                aria-label="Confirm Password"
+              />
+            </div>
             <Button
               value="Get OTP"
               onClick={async () => {
-                
-                if (!registerData.user || !registerData.email || !registerData.password) {
-                  setError("Name, email, and password are required");
+
+                if(registerData.password !== confirmPass){
+                  setError("Password Mismatch(Password and Confirm Password)");
+                  return;
+                }
+                if (!registerData.user || !registerData.email || !registerData.password || !registerData.username || !confirmPass) {
+                  setError("Name, email, username and password are required");
                   return;
                 }
 

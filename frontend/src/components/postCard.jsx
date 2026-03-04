@@ -378,7 +378,7 @@ export default function PostCard({ postsData = null, onReload = null }) {
                                 >
                                     {item.user?.user?.toUpperCase()?.charAt(0) || 'U'}
                                 </div>
-                                {item.user?.user || 'Unknown'}
+                                {item.user?.username || 'Unknown'}
                             </div>
                         </div>
 
