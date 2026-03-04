@@ -1,7 +1,7 @@
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 
-export default function ButtonTrans({ child, ClickEvent, disable, mouseEnter, mouseLeave, buttonType, hover, isLoading, label, tooltipContent, font }) {
+export default function ButtonTrans({ child, ClickEvent, disable, mouseEnter, mouseLeave, buttonType, hover, isLoading, label, tooltipContent, font, noToolTip }) {
 
     const buttonStyle = {
         backgroundColor: "transparent",
@@ -18,7 +18,7 @@ export default function ButtonTrans({ child, ClickEvent, disable, mouseEnter, mo
         transition: "background-color 0.2s ease-in-out",
     };
     return (
-        <Tippy content={<span style={{ fontSize: `${font}`}}>{tooltipContent}</span>} >
+        <Tippy disabled={noToolTip} content={<span style={{ fontSize: `${font}`}}>{tooltipContent}</span>} >
             <button
                 type={buttonType}
                 onClick={ClickEvent}

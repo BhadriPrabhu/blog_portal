@@ -10,10 +10,11 @@ import { BeatLoader, ScaleLoader } from 'react-spinners';
 import { addBlog, reportAiFlag } from '../utils/api';
 // import OtpSender from "../utils/otp";
 import { ToastContainer, toast } from 'react-toastify';
-import { BadgePlus, Check, Tag } from "lucide-react";
+import { BadgePlus, Check, Tag, TrendingUpDown, X } from "lucide-react";
 import GenAI from "../utils/AI";
 import ToastBlog from "../utils/toast";
 import ButtonTrans from "./buttonTran";
+import Dialog from "./dialog";
 
 export default function PostBox() {
   const profileData = useStore((state) => state.profileData);
@@ -22,6 +23,8 @@ export default function PostBox() {
   const [hover2, setHover2] = React.useState(false);
   const [hover3, setHover3] = React.useState(false);
   const [hover4, setHover4] = React.useState(false);
+  const [hover5, setHover5] = React.useState(false);
+  const [hover6, setHover6] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState("");
   const [generatedTags, setGeneratedTags] = React.useState([]);
@@ -33,6 +36,14 @@ export default function PostBox() {
     email: "",
     tags: selectedTags.length > 0 ? selectedTags : ["General"],
   });
+  const [file, setFile] = React.useState(null);
+  const [preview, setPreview] = React.useState(null);
+  const [videoFile, setVideoFile] = React.useState(null);
+  const [videoPreview, setVideoPreview] = React.useState(null);
+  const fileInputRef = React.useRef(null);
+  const videoInputRef = React.useRef(null);
+  const [previewOpen, setPreviewOpen] = React.useState(false);
+  const [videoPreviewOpen, setVideoPreviewOpen] = React.useState(false);
 
   const buttonStyle = {
     backgroundColor: "transparent",
@@ -208,6 +219,30 @@ Output must be lowercase.
     }
   }
 
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    setFile(selectedFile);
+
+    // Create a temporary URL for the preview
+    setPreview(URL.createObjectURL(selectedFile));
+  };
+
+  const handleVideoFileChange = (e) => {
+    const selectedVideoFile = e.target.files[0];
+    if (!selectedVideoFile) return;
+
+    // Optional: 50MB Limit check
+    // if (selectedVideoFile.size > 50 * 1024 * 1024) {
+    //   alert("Video is too large! Please choose a file under 50MB.");
+    //   return;
+    // }
+
+    if (videoPreview) URL.revokeObjectURL(videoPreview);
+
+    setVideoFile(selectedVideoFile);
+    setVideoPreview(URL.createObjectURL(selectedVideoFile));
+  };
+
   return (
     <div style={{
       display: "flex",
@@ -224,7 +259,6 @@ Output must be lowercase.
       // position: "relative",
       zIndex: "0px",
     }}>
-      <ToastContainer />
       <div>
         <p style={{ margin: "0px", fontSize: "20px", lineHeight: "20px" }}>Bring your ideas to life</p>
       </div>
@@ -338,60 +372,156 @@ Output must be lowercase.
           </div>
         </div>
       )}
+      <Dialog
+        children={
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
+              <p style={{ margin: "0px", padding: "0px", fontSize: "20px" }}>Image Preview</p>
+              <ButtonTrans
+                child={<X size={20} />}
+                ClickEvent={() => setPreviewOpen(false)}
+                buttonType="button"
+                mouseEnter={() => setHover5(true)}
+                mouseLeave={() => setHover5(false)}
+                hover={hover5}
+                label="Close preview"
+                noToolTip={true}
+              />
+            </div>
+            <img src={preview} alt="Preview" style={{ width: '800px', height: 'auto' }} />
+          </div>
+        }
+        onclose={() => setPreviewOpen(false)}
+        opened={previewOpen}
+        width="800px"
+        height="auto"
+      />
+      <Dialog
+        children={
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
+              <p style={{ margin: "0px", padding: "0px", fontSize: "20px" }}>Video Preview</p>
+              <ButtonTrans
+                child={<X size={20} />}
+                ClickEvent={() => setVideoPreviewOpen(false)}
+                buttonType="button"
+                mouseEnter={() => setHover6(true)}
+                mouseLeave={() => setHover6(false)}
+                hover={hover6}
+                label="Close preview"
+                noToolTip={true}
+              />
+            </div>
+            <video src={videoPreview} controls alt="Preview" style={{ width: '800px', height: 'auto' }} />
+          </div>
+        }
+        onclose={() => setVideoPreviewOpen(false)}
+        opened={videoPreviewOpen}
+        width="800px"
+        height="auto"
+      />
+      <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ display: "flex", flexDirection: "row" }}>
+          {preview && (
+            <div>
+              <ButtonTrans child={
+                <img src={preview} alt="Preview" style={{ width: '100px', height: 'auto', borderRadius: "8px" }} />
+              }
+                // noToolTip={true}
+                label="Image preview"
+                ClickEvent={() => setPreviewOpen(true)}
+                tooltipContent="Click to Preview Image"
+                font="12px"
+              />
 
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", flexWrap: "wrap" }}>
-        <ButtonTrans
-          child={
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <Insert size={16} />
-              Image
             </div>
-          }
-          disable={isLoading}
-          mouseEnter={() => setHover1(true)}
-          mouseLeave={() => setHover1(false)}
-          buttonType="type"
-          hover={hover1}
-          isLoading={isLoading}
-          label="Insert Image"
-          tooltipContent="Insert Image"
-          font="12px"
-        />
-        <ButtonTrans
-          child={
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <Insert size={16} />
-              Video
+          )}
+          {videoPreview && (
+            <div>
+              <ButtonTrans child={
+                <video src={videoPreview} alt="Preview" style={{ width: '100px', height: 'auto', borderRadius: "8px" }} />
+              }
+                // noToolTip={true}
+                label="Video preview"
+                ClickEvent={() => setVideoPreviewOpen(true)}
+                tooltipContent="Click to Preview Video"
+                font="12px"
+              />
+
             </div>
-          }
-          disable={isLoading}
-          mouseEnter={() => setHover2(true)}
-          mouseLeave={() => setHover2(false)}
-          buttonType="type"
-          hover={hover2}
-          isLoading={isLoading}
-          label="Insert Video"
-          tooltipContent="Insert Video"
-          font="12px"
-        />
-        <ButtonTrans
-          child={
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <Send size={16} />
-              Post
-            </div>
-          }
-          disable={isLoading}
-          mouseEnter={() => setHover3(true)}
-          mouseLeave={() => setHover3(false)}
-          buttonType="type"
-          hover={hover3}
-          isLoading={isLoading}
-          label="Post Challenge"
-          ClickEvent={handlePost}
-          tooltipContent="Post Challenge"
-          font="12px"
-        />
+          )}
+          <input
+            onChange={handleFileChange}
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            style={{ display: "none" }}
+          />
+          <input
+            onChange={handleVideoFileChange}
+            type="file"
+            accept="video/*"
+            ref={videoInputRef}
+            style={{ display: "none" }}
+          />
+        </div>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", flexWrap: "wrap" }}>
+          <ButtonTrans
+            child={
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <Insert size={16} />
+                Image
+              </div>
+            }
+            disable={isLoading}
+            mouseEnter={() => setHover1(true)}
+            mouseLeave={() => setHover1(false)}
+            buttonType="button"
+            hover={hover1}
+            isLoading={isLoading}
+            label="Insert Image"
+            tooltipContent="Insert Image"
+            font="12px"
+            ClickEvent={() => fileInputRef.current.click()}
+          />
+          <ButtonTrans
+            child={
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <Insert size={16} />
+                Video
+              </div>
+            }
+            disable={isLoading}
+            mouseEnter={() => setHover2(true)}
+            mouseLeave={() => setHover2(false)}
+            buttonType="type"
+            hover={hover2}
+            isLoading={isLoading}
+            label="Insert Video"
+            tooltipContent="Insert Video"
+            font="12px"
+            ClickEvent={() => videoInputRef.current.click()}
+          />
+          <ButtonTrans
+            child={
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <Send size={16} />
+                Post
+              </div>
+            }
+            disable={isLoading}
+            mouseEnter={() => setHover3(true)}
+            mouseLeave={() => setHover3(false)}
+            buttonType="type"
+            hover={hover3}
+            isLoading={isLoading}
+            label="Post Challenge"
+            ClickEvent={handlePost}
+            tooltipContent="Post Challenge"
+            font="12px"
+          />
+        </div>
+
       </div>
 
       {/* </div> */}
