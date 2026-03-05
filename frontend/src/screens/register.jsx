@@ -20,7 +20,7 @@ export default function Register() {
     password: "",
     username: "",
   });
-  const [confirmPass,setConfirmPass] = React.useState("");
+  const [confirmPass, setConfirmPass] = React.useState("");
   const [error, setError] = React.useState("");
   const [isFlipped, setIsFlipped] = React.useState(false);
   const [otp, setOtp] = React.useState(new Array(6).fill(""));
@@ -194,6 +194,24 @@ export default function Register() {
     const secs = totalSeconds % 60;
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
+
+  const validate = (val) => {
+    const regex = /^[a-z0-9_.]+$/; // Only lowercase, numbers, and underscores
+
+    if (val.length > 0 && val.length < 3) {
+      setError('Too short (min 3 characters)');
+    } else if (!regex.test(val) && val.length > 0) {
+      setError('Only letters, numbers, and underscores allowed');
+    } else {
+      setError('');
+    }
+  };
+
+  const handleChangeUserName = (e) => {
+    const cleanValue = e.target.value.toLowerCase().replace(/\s/g, '');
+    setRegisterData({ ...registerData, username: cleanValue })
+    validate(cleanValue);
+  }
 
   return (
     <div
@@ -373,7 +391,7 @@ export default function Register() {
                 placeholder="Enter Username"
                 type="text"
                 value={registerData.username}
-                onChange={(e) => setRegisterData({ ...registerData, username: e.target.value })}
+                onChange={handleChangeUserName}
                 style={inputStyle}
                 aria-label="Name"
               />
@@ -406,7 +424,7 @@ export default function Register() {
               value="Get OTP"
               onClick={async () => {
 
-                if(registerData.password !== confirmPass){
+                if (registerData.password !== confirmPass) {
                   setError("Password Mismatch(Password and Confirm Password)");
                   return;
                 }
