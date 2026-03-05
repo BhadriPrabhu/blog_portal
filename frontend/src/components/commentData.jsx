@@ -7,7 +7,7 @@ import ThumbDownOutlinedIcon from '@mui/icons-material/ThumbDownOutlined';
 import ReplyIcon from '@mui/icons-material/Reply';
 import { useStore } from "../data/zustand";
 import axios from "axios";
-import { addComment, addReply } from '../utils/api';
+import { addComment, addReply, fetchSuggestions } from '../utils/api';
 
 export default function CommentData({ commentData, blogId }) {
     const [comments, setComments] = React.useState(commentData);
@@ -98,6 +98,35 @@ export default function CommentData({ commentData, blogId }) {
         setSuggestions([]);
     };
 
+    const handleChange = async (e) => {
+        const val = e.target.value;
+        setNewComment(val);
+
+        const lastAtIndex = val.lastIndexOf("@");
+        const isMentioning = lastAtIndex !== -1 && (lastAtIndex === 0 || val[lastAtIndex - 1] === " ");
+
+        if (isMentioning) {
+            // Only get the text immediately following the @ until the next space
+            const textAfterAt = val.slice(lastAtIndex + 1);
+            const query = textAfterAt.split(" ")[0];
+
+            // If the user types a space after the name, hide suggestions
+            if (textAfterAt.includes(" ")) {
+                setSuggestions([]);
+                return;
+            }
+
+            try {
+                const result = await fetchSuggestions(query);
+                setSuggestions(result.data.message || []);
+            } catch (err) {
+                console.log("Error:", err);
+            }
+        } else {
+            setSuggestions([]);
+        }
+    }
+
     return (
         <div style={{ display: "flex", flexDirection: "column", backgroundColor: "#F7F9FA", borderRadius: "8px", padding: "10px" }}>
             {isLoading && (
@@ -153,18 +182,7 @@ export default function CommentData({ commentData, blogId }) {
                     placeholder="Write a comment"
                     type="text"
                     value={newComment}
-                    onChange={(e) => {
-                        setNewComment(e.target.value);
-                        const val = e.target.value;
-                        const atIndex = val.lastIndexOf("@");
-                        if (atIndex >= 0) {
-                            const query = val.slice(atIndex + 1).toLowerCase();
-                            const filtered = users.filter((u) => u.toLowerCase().startsWith(query));
-                            setSuggestions(filtered);
-                        } else {
-                            setSuggestions([]);
-                        }
-                    }}
+                    onChange={handleChange}
                     style={{
                         height: "32px",
                         width: "83%",
@@ -201,11 +219,11 @@ export default function CommentData({ commentData, blogId }) {
                 <div style={{ backgroundColor: "#E8ECEF", padding: "8px", borderRadius: "4px", border: "1px solid #D5DBDB" }}>
                     {suggestions.map((u) => (
                         <div
-                            key={u}
+                            key={u._id}
                             style={{ padding: "4px", cursor: "pointer", color: "#2C3E50", fontFamily: "'Poppins', sans-serif", "&:hover": { backgroundColor: "#3498DB33" } }}
-                            onClick={() => handleSelect(u)}
+                            onClick={() => handleSelect(u.username)}
                         >
-                            @{u}
+                            @{u.username}
                         </div>
                     ))}
                 </div>
