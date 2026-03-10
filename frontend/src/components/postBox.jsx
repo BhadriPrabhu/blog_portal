@@ -333,6 +333,7 @@ Output must be lowercase.
           label="Tags Suggestion"
           tooltipContent="Tags Suggestion"
           font="12px"
+          noToolTip={true}
         />
       </div>
 
@@ -432,6 +433,7 @@ Output must be lowercase.
                 ClickEvent={() => setPreviewOpen(true)}
                 tooltipContent="Click to Preview Image"
                 font="12px"
+                noToolTip={true}
               />
 
             </div>
@@ -446,6 +448,7 @@ Output must be lowercase.
                 ClickEvent={() => setVideoPreviewOpen(true)}
                 tooltipContent="Click to Preview Video"
                 font="12px"
+                noToolTip={true}
               />
 
             </div>
@@ -483,6 +486,7 @@ Output must be lowercase.
             tooltipContent="Insert Image"
             font="12px"
             ClickEvent={() => fileInputRef.current.click()}
+            noToolTip={true}
           />
           <ButtonTrans
             child={
@@ -501,6 +505,7 @@ Output must be lowercase.
             tooltipContent="Insert Video"
             font="12px"
             ClickEvent={() => videoInputRef.current.click()}
+            noToolTip={true}
           />
           <ButtonTrans
             child={
@@ -519,6 +524,7 @@ Output must be lowercase.
             ClickEvent={handlePost}
             tooltipContent="Post Challenge"
             font="12px"
+            noToolTip={true}
           />
         </div>
 

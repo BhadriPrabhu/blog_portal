@@ -1,13 +1,13 @@
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 
-export default function ButtonTrans({ child, ClickEvent, disable, mouseEnter, mouseLeave, buttonType, hover, isLoading, label, tooltipContent, font, noToolTip }) {
+export default function ButtonTrans({ child, ClickEvent, disable, mouseEnter, mouseLeave, buttonType, hover, isLoading, label, tooltipContent, font, noToolTip, paddingEdit }) {
 
     const buttonStyle = {
         backgroundColor: "transparent",
         border: "none",
         borderRadius: "12px",
-        padding: "6px 10px",
+        padding: `${paddingEdit ? paddingEdit    : "6px 10px"}`,
         display: "flex",
         alignItems: "center",
         fontFamily: "'Poppins', sans-serif",

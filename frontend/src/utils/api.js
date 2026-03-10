@@ -2,6 +2,7 @@
 import axios from 'axios';
 import API_BASE_URL from '../config';
 import { Search } from 'lucide-react';
+import { data } from 'react-router-dom';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -27,5 +28,7 @@ export const fetchSavedBlogs = (userId) => api.get(`/blog/saved?userId=${encodeU
 export const reportAiFlag = (id) => api.post('/blog/report', { ids: [id] });
 export const unReportAiFlag = (id) => api.post('/blog/unreport', { ids: [id] });
 export const fetchSuggestions = (query) => api.get(`/blog/mentions?search=${query}`);
+export const notifyBlog = (data) => api.post(`/blog/notify`, {data});
+export const getNotify = (userId) => api.get(`/blog/getnotify/${userId}`);
 
 export default api;

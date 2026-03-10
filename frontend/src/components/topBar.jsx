@@ -101,7 +101,9 @@ import React, { useEffect } from "react";
 import Avatar from '@mui/material/Avatar';
 import { useNavigate } from "react-router-dom";
 import { useStore } from "../data/zustand";
-import { LogOut } from "lucide-react";
+import { Bell, LogOut, RotateCcw, RotateCw, X } from "lucide-react";
+import ButtonTrans from "./buttonTran";
+import DropBox from "./dropbox";
 
 export default function TopBar() {
   const navigate = useNavigate();
@@ -110,10 +112,16 @@ export default function TopBar() {
   const setProfileData = useStore((state) => state.setProfileData);
 
   const [isOpen, setIsOpen] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [isNotifyOpen, setIsNotifyOpen] = React.useState(false);
   const [hover1, setHover1] = React.useState(false);
   const [hover2, setHover2] = React.useState(false);
   const [hover3, setHover3] = React.useState(false);
+  const [hover4, setHover4] = React.useState(false);
+  const [hover5, setHover5] = React.useState(false);
+  const [hover6, setHover6] = React.useState(false);
   const ref = React.useRef();
+  const notifyRef = React.useRef();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -175,6 +183,11 @@ export default function TopBar() {
     navigate("/");
   };
 
+  const HandleRefresh = () => {
+    setIsLoading(true);
+    setTimeout(() => setIsLoading(false), 2000);
+  }
+
   return (
     <div
       style={{
@@ -188,6 +201,20 @@ export default function TopBar() {
         backgroundColor: "#F7F9FA",
       }}
     >
+      <ButtonTrans
+        child={<>
+          <Bell color="grey" size="20px" />
+        </>}
+        ClickEvent={() => {
+          setIsNotifyOpen(!isNotifyOpen);
+        }}
+        buttonType="button"
+        label="Notifications"
+        mouseEnter={() => setHover4(true)}
+        mouseLeave={() => setHover4(false)}
+        hover={hover4}
+        noToolTip="true"
+      />
       {profile?.user ? (
         <Avatar
           sx={{
@@ -232,56 +259,97 @@ export default function TopBar() {
       >
         <LogOut size={16} color="#FF6B6B" />
       </button>
+      {isNotifyOpen && (
+        <DropBox
+          child={<>
+            <div style={{ display: "flex", flexDirection: "column", }}>
+              <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                <p style={{ margin: "0px", }}>Notification</p>
+                <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: "2px" }}>
+                  <ButtonTrans child={<>
+                    <RotateCw size="18px" color={isLoading ? "red" : "grey"} style={{
+                      animation: `${isLoading ? "spin 1s linear infinite" : "none"}`,
+                    }} />
+                  </>}
+                    buttonType="button"
+                    noToolTip={true}
+                    hover={hover5}
+                    mouseEnter={() => setHover5(true)}
+                    mouseLeave={() => setHover5(false)}
+                    label="Refresh"
+                    ClickEvent={HandleRefresh}
+                    paddingEdit="4px 4px"
+                  />
+                  <ButtonTrans
+                    child={<>
+                      <X size="20px" color="grey" />
+                    </>}
+                    noToolTip={true}
+                    label="Close"
+                    buttonType="button"
+                    hover={hover6}
+                    mouseEnter={() => setHover6(true)}
+                    mouseLeave={() => setHover6(false)}
+                    paddingEdit="4px 4px"
+                    ClickEvent={() => setIsNotifyOpen(false)}
+                  />
+
+                </div>
+
+              </div>
+            </div>
+          </>}
+          boxRef={notifyRef}
+          top="60px"
+          right="180px"
+        />
+      )}
       {isOpen && (
-        <div
-          ref={ref}
-          style={{
-            position: "absolute",
-            top: "60px",
-            right: "60px",
-            backgroundColor: "#FFFFFF",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
-            border: "1px solid #D5DBDB",
-            borderRadius: "8px",
-            padding: "12px",
-            zIndex: 9999,
-            minWidth: "200px",
-          }}
-        >
-          <p
-            style={{
-              fontSize: "14px",
-              color: "#2C3E50",
-              fontFamily: "'Poppins', sans-serif",
-              margin: "0 0 8px 0",
-            }}
-          >
-            Name: {profile?.user || "Unknown"}
-          </p>
-          <p
-            style={{
-              fontSize: "14px",
-              color: "#2C3E50",
-              fontFamily: "'Poppins', sans-serif",
-              margin: "0 0 12px 0",
-            }}
-          >
-            Email: {profile?.email || "No email"}
-          </p>
-          <div style={{ display: "flex", justifyContent: "center" }}>
-            <button
-              style={hover2 ? { ...buttonStyle, ...hoverStyle } : buttonStyle}
-              onMouseEnter={() => setHover2(true)}
-              onMouseLeave={() => setHover2(false)}
-              onClick={() => setIsOpen(false)}
-              aria-label="Close dropdown"
+        <DropBox
+          child={<>
+            <p
+              style={{
+                fontSize: "14px",
+                color: "#2C3E50",
+                fontFamily: "'Poppins', sans-serif",
+                margin: "0 0 8px 0",
+              }}
             >
-              Close
-            </button>
-          </div>
-        </div>
+              Name: {profile?.user || "Unknown"}
+            </p>
+            <p
+              style={{
+                fontSize: "14px",
+                color: "#2C3E50",
+                fontFamily: "'Poppins', sans-serif",
+                margin: "0 0 12px 0",
+              }}
+            >
+              Email: {profile?.email || "No email"}
+            </p>
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <button
+                style={hover2 ? { ...buttonStyle, ...hoverStyle } : buttonStyle}
+                onMouseEnter={() => setHover2(true)}
+                onMouseLeave={() => setHover2(false)}
+                onClick={() => setIsOpen(false)}
+                aria-label="Close dropdown"
+              >
+                Close
+              </button>
+            </div>
+          </>}
+          boxRef={ref}
+          top="60px"
+          right="60px"
+
+        />
       )}
       <style jsx>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
         @media (max-width: 768px) {
           div[style*="padding: 12px 60px"] {
             padding: 8px 16px;

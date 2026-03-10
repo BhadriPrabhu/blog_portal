@@ -19,6 +19,7 @@ const { AdminBlogRestore, AdminBlogUnarchive, AdminBlogPermanentDelete, AdminBlo
 const Blog = require('./models/blogSchema.js');
 const { reportAiFlag, UnreportAiFlag } = require('./controllers/reportController.js');
 const { mentionController } = require('./controllers/mentionController.js');
+const { notificationAddController, getNotifications } = require('./controllers/notificationController.js');
 
 const corsOptions = {
   origin: '*', 
@@ -64,6 +65,8 @@ app.post("/blog/archive", AdminBlogArchive);
 app.post("/blog/report", reportAiFlag);
 app.post("/blog/unreport", UnreportAiFlag);
 app.get("/blog/mentions", mentionController);
+app.post("/blog/notify", notificationAddController);
+app.get("/blog/getnotify", getNotifications);
 
 
 app.listen(PORT, () => {
