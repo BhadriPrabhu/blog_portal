@@ -235,10 +235,10 @@ export default function CommentData({ commentData, blogId }) {
                     <div key={item._id} style={{ padding: "3px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                             <div style={{
-                                width: "24px",
-                                height: "24px",
+                                width: "18px",
+                                height: "18px",
                                 backgroundColor: "#3498DB",
-                                fontSize: "12px",
+                                fontSize: "10px",
                                 borderRadius: "50%",
                                 color: "#FFFFFF",
                                 display: "flex",
@@ -248,7 +248,10 @@ export default function CommentData({ commentData, blogId }) {
                             }}>
                                 {item.user?.user?.[0]?.toUpperCase() || "?"}
                             </div>
-                            <div style={{ margin: "0px", fontSize: "16px", color: "#2C3E50", fontFamily: "'Poppins', sans-serif", display: "flex", flexDirection: "row", justifyContent: "center", alignItems: "center", gap: "5px" }}><p style={{ padding: "0px", margin: "0px" }}>{item.user?.user}</p>{item.user?.email === "bhadri@gmail.com" && <span style={{ color: "#f0f4faff", backgroundColor: "gray", padding: "0px 5px", borderRadius: "10px", fontSize: "12px" }}>Admin</span>}</div>
+                            <div style={{ margin: "0px", fontSize: "14px", color: "#2C3E50", fontFamily: "'Poppins', sans-serif", display: "flex", flexDirection: "row", justifyContent: "center", alignItems: "center", gap: "5px" }}>
+                                <p style={{ padding: "0px", margin: "0px" }}>{item.user?.username}</p>
+                                {item.user?.role === "admin" && <span style={{ color: "#f0f4faff", backgroundColor: "blue", padding: "1px 5px", borderRadius: "10px", fontSize: "10px" }}>Admin</span>}
+                            </div>
                         </div>
                         <div style={{ marginLeft: "30px" }}>
                             <p style={{ margin: "0px", fontSize: "14px", color: "#7F8C8D", fontFamily: "'Poppins', sans-serif" }}>{item.value}</p>
@@ -355,10 +358,10 @@ export default function CommentData({ commentData, blogId }) {
                                         <div key={reply._id || replyIdx}>
                                             <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                                                 <div style={{
-                                                    width: "24px",
-                                                    height: "24px",
+                                                    width: "18px",
+                                                    height: "18px",
                                                     backgroundColor: "#3498DB",
-                                                    fontSize: "12px",
+                                                    fontSize: "10px",
                                                     borderRadius: "50%",
                                                     color: "#FFFFFF",
                                                     display: "flex",
@@ -368,7 +371,10 @@ export default function CommentData({ commentData, blogId }) {
                                                 }}>
                                                     {reply.user?.user?.[0]?.toUpperCase() || "?"}
                                                 </div>
-                                                <p style={{ margin: "0px", fontSize: "16px", color: "#2C3E50", fontFamily: "'Poppins', sans-serif" }}>{reply.user?.user}</p>
+                                                <div style={{ margin: "0px", fontSize: "14px", color: "#2C3E50", fontFamily: "'Poppins', sans-serif", display: "flex", flexDirection: "row", justifyContent: "center", alignItems: "center", gap: "5px" }}>
+                                                    <p style={{ padding: "0px", margin: "0px" }}>{reply.user?.username || "user"}</p>
+                                                    {reply.user?.role === "admin" && <span style={{ color: "#f0f4faff", backgroundColor: "blue", padding: "1px 5px", borderRadius: "10px", fontSize: "10px" }}>Admin</span>}
+                                                </div>
                                             </div>
                                             <div style={{ marginLeft: "30px" }}>
                                                 <p style={{ margin: "0px", fontSize: "14px", color: "#7F8C8D", fontFamily: "'Poppins', sans-serif" }}>{reply.value}</p>

@@ -201,7 +201,7 @@ export default function Register() {
     if (val.length > 0 && val.length < 3) {
       setError('Too short (min 3 characters)');
     } else if (!regex.test(val) && val.length > 0) {
-      setError('Only letters, numbers, and underscores allowed');
+      setError('Only letters, numbers, dots and underscores allowed');
     } else {
       setError('');
     }

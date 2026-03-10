@@ -38,15 +38,15 @@ const blogController = async (req, res) => {
     const blogs = await Blog.find(filter)
       .populate({
         path: 'user',
-        select: 'user email username',
+        select: 'user email username role',
       })
       .populate({
         path: 'comments.user',
-        select: 'user email',
+        select: 'user email username role',
       })
       .populate({
         path: 'comments.reply.user',
-        select: 'user email',
+        select: 'user email username role',
       })
       .sort(sortOption)
       .lean();
