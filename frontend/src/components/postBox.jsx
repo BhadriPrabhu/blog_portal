@@ -7,7 +7,7 @@ import { useStore } from "../data/zustand";
 import { TagsRefer } from '../data/tagsRefer';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { BeatLoader, ScaleLoader } from 'react-spinners';
-import { addBlog, reportAiFlag } from '../utils/api';
+import { addBlog, notifyBlog, reportAiFlag } from '../utils/api';
 // import OtpSender from "../utils/otp";
 import { ToastContainer, toast } from 'react-toastify';
 import { BadgePlus, Check, Tag, TrendingUpDown, X } from "lucide-react";
@@ -164,7 +164,7 @@ Example Output: ["tech", "programming"]`;
 
       const res = await addBlog(postData);
       const id = res.data.blog?._id;
-      console.log("Blog", id);
+      // console.log("Blog", id);
 
       const prompt = `
 Act as a legal content moderator. Analyze this blog post for violations of government laws and criminal codes.
@@ -189,7 +189,16 @@ Output must be lowercase.
       const isIllegal = aiResponse.includes("true");
 
       if (isIllegal) {
+        const notifyData = {
+          type: "new_post",
+          senderId: profileData._id,
+          recipientId: profileData._id,
+          blogId: id,
+          link: "Link",
+          notifyContent: "Your post has been reported."
+        }
         ToastBlog("Content flagged for Manual review");
+        await notifyBlog(notifyData);
         try {
           await reportAiFlag(id);
         } catch (reportErr) {
@@ -202,6 +211,15 @@ Output must be lowercase.
       setData({ title: "", desc: "", userId: "", email: "", tags: [] });
       setGeneratedTags([]);
       ToastBlog("Posted successfully!");
+      const successNotifyData = {
+        type: "new_post",
+        senderId: profileData._id,
+        recipientId: profileData._id,
+        blogId: id,
+        link: "Link",
+        notifyContent: "Posted Successfully!",
+      }
+      await notifyBlog(successNotifyData);
       setTriggerRefresh();
     } catch (err) {
       console.error("Error adding blog:", err.response?.data || err.message);

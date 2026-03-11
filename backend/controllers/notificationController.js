@@ -3,24 +3,24 @@ const Blog = require("../models/blogSchema");
 
 const notificationAddController = async (req, res) => {
   try {
-    const { type, recipientId, blogId, link, senderId } = req.body;
-    // const senderId = req.user._id; // Assuming you have auth middleware
+    const { type, recipientId, blogId, link, senderId, notifyContent } = req.body;
 
-    // 1. Create the notification document
+
     const newNotification = new Notification({
       recipient: recipientId,
       sender: senderId,
       type,
       blog: blogId,
-      link
+      link,
+      content: notifyContent,
     });
 
     await newNotification.save();
 
 
-    res.status(201).json({ 
-      success: true, 
-      data: newNotification 
+    res.status(201).json({
+      success: true,
+      data: newNotification
     });
   } catch (err) {
     console.error("Notification Error:", err);
@@ -44,4 +44,19 @@ const getNotifications = async (req, res) => {
   }
 };
 
-module.exports = { notificationAddController, getNotifications }
+const DeleteNotification = async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    const result = await Notification.deleteOne({ _id: { $in: id } });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: 'No Notification found' });
+    }
+    res.json({ message: 'Notification Removed' });
+
+  } catch (err) {
+    console.log("Error", err);
+  }
+}
+
+module.exports = { notificationAddController, getNotifications, DeleteNotification }

@@ -104,6 +104,7 @@ import { useStore } from "../data/zustand";
 import { Bell, LogOut, RotateCcw, RotateCw, X } from "lucide-react";
 import ButtonTrans from "./buttonTran";
 import DropBox from "./dropbox";
+import { deleteNotify, getNotify } from "../utils/api";
 
 export default function TopBar() {
   const navigate = useNavigate();
@@ -120,6 +121,9 @@ export default function TopBar() {
   const [hover4, setHover4] = React.useState(false);
   const [hover5, setHover5] = React.useState(false);
   const [hover6, setHover6] = React.useState(false);
+  const [hover7, setHover7] = React.useState(false);
+  const [notifications, setNotifications] = React.useState([]);
+
   const ref = React.useRef();
   const notifyRef = React.useRef();
 
@@ -134,6 +138,16 @@ export default function TopBar() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  const fetchNotifyData = async () => {
+    try {
+      const notifyres = await getNotify(profile._id);
+      setNotifications(notifyres.data.data);
+      console.log("Notify", notifyres.data);
+    } catch (err) {
+      console.log("Error", err);
+    }
+  }
 
   const buttonStyle = {
     backgroundColor: "#EDEFF2",
@@ -185,7 +199,23 @@ export default function TopBar() {
 
   const HandleRefresh = () => {
     setIsLoading(true);
-    setTimeout(() => setIsLoading(false), 2000);
+    try {
+      fetchNotifyData();
+      setIsLoading(false);
+    } catch (err) {
+      console.log("Error", err);
+    }
+  }
+
+  const handleNotifyDelete = async (id) => {
+
+    try{
+      const res = await deleteNotify(id);
+      console.log("Notification Delete", res.data.message)
+      fetchNotifyData();
+    }catch(err){
+      console.log("Error",err);
+    }
   }
 
   return (
@@ -203,10 +233,16 @@ export default function TopBar() {
     >
       <ButtonTrans
         child={<>
-          <Bell color="grey" size="20px" />
+          <Bell color="grey" size="18px" />
         </>}
         ClickEvent={() => {
           setIsNotifyOpen(!isNotifyOpen);
+          try {
+            fetchNotifyData();
+            setIsLoading(false);
+          } catch (err) {
+            console.log("Error", err);
+          }
         }}
         buttonType="button"
         label="Notifications"
@@ -214,14 +250,15 @@ export default function TopBar() {
         mouseLeave={() => setHover4(false)}
         hover={hover4}
         noToolTip="true"
+        paddingEdit="4px 4px"
       />
       {profile?.user ? (
         <Avatar
           sx={{
             bgcolor: "#3498DB",
             cursor: "pointer",
-            width: 36,
-            height: 36,
+            width: 32,
+            height: 32,
             fontSize: "16px",
             fontWeight: "600",
             fontFamily: "'Poppins', sans-serif",
@@ -264,10 +301,10 @@ export default function TopBar() {
           child={<>
             <div style={{ display: "flex", flexDirection: "column", }}>
               <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                <p style={{ margin: "0px", }}>Notification</p>
+                <p style={{ margin: "0px", fontSize: "18px" }}>Notification</p>
                 <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: "2px" }}>
                   <ButtonTrans child={<>
-                    <RotateCw size="18px" color={isLoading ? "red" : "grey"} style={{
+                    <RotateCw size="16px" color={isLoading ? "red" : "grey"} style={{
                       animation: `${isLoading ? "spin 1s linear infinite" : "none"}`,
                     }} />
                   </>}
@@ -290,12 +327,100 @@ export default function TopBar() {
                     hover={hover6}
                     mouseEnter={() => setHover6(true)}
                     mouseLeave={() => setHover6(false)}
-                    paddingEdit="4px 4px"
-                    ClickEvent={() => setIsNotifyOpen(false)}
+                    paddingEdit="2px 2px"
+                    ClickEvent={() => {
+                      setIsNotifyOpen(false)
+                      setHover6(false);
+                    }}
                   />
 
                 </div>
 
+              </div>
+              {/* --- Notification List Content --- */}
+              <div style={{
+                marginTop: "10px",
+                maxHeight: "400px",
+                overflowY: "auto",
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px"
+              }}>
+                {notifications.length > 0 ? (
+                  notifications.map((item) => (
+                    <div
+                      key={item._id} // Using the actual MongoDB _id
+                      style={{
+                        padding: "12px",
+                        borderRadius: "8px",
+                        backgroundColor: item.isRead ? "transparent" : "#f0f7ff",
+                        borderBottom: "1px solid #eee",
+                        cursor: "pointer",
+                        transition: "background 0.2s",
+                        fontFamily: "Poppins, sans-serif"
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px" }}>
+                        <span style={{ fontWeight: "600", fontSize: "14px", color: "#2C3E50", lineHeight: "14px" }}>
+                          {item.content}
+                        </span>
+                        <div style={{color: "grey", whiteSpace: "nowrap", gap: "4px", display: "flex", flexDirection: "row", alignItems: "flex-start" }}>
+                          <p style={{margin: "0px", fontSize: "10px"}}>{new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                          <ButtonTrans
+                            child={<>
+                              <X size="14px" color="grey" />
+                            </>}
+                            noToolTip="true"
+                            paddingEdit="0px 0px"
+                            label="Delete"
+                            hover={hover7}
+                            mouseEnter={() => setHover7(true)}
+                            mouseLeave={() => setHover7(false)}
+                            buttonType="button"
+                            ClickEvent={() => handleNotifyDelete(item._id)}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Showing the Type or Blog ID as secondary info */}
+                      <p style={{ margin: "4px 0 0", fontSize: "12px", color: "#5dade2", fontWeight: "500", lineHeight: "14px" }}>
+                        #{item.type.replace('_', ' ')}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  /* Empty State */
+                  <div style={{
+                    padding: "40px 20px",
+                    textAlign: "center",
+                    color: "grey",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center"
+                  }}>
+                    <p style={{ fontSize: "14px" }}>No new notifications</p>
+                  </div>
+                )}
+              </div>
+
+              {/* --- Optional Footer --- */}
+              <div style={{
+                borderTop: "1px solid #eee",
+                marginTop: "10px",
+                paddingTop: "10px",
+                textAlign: "center"
+              }}>
+                <button style={{
+                  background: "none",
+                  border: "none",
+                  color: "#007bff",
+                  fontSize: "13px",
+                  cursor: "pointer",
+                  fontFamily: "Poppins"
+                }}
+                >
+                  Mark all as read
+                </button>
               </div>
             </div>
           </>}

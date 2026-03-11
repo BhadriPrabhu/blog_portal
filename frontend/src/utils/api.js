@@ -28,7 +28,8 @@ export const fetchSavedBlogs = (userId) => api.get(`/blog/saved?userId=${encodeU
 export const reportAiFlag = (id) => api.post('/blog/report', { ids: [id] });
 export const unReportAiFlag = (id) => api.post('/blog/unreport', { ids: [id] });
 export const fetchSuggestions = (query) => api.get(`/blog/mentions?search=${query}`);
-export const notifyBlog = (data) => api.post(`/blog/notify`, {data});
+export const notifyBlog = (data) => api.post(`/blog/notify`, data);
 export const getNotify = (userId) => api.get(`/blog/getnotify/${userId}`);
+export const deleteNotify = (id) => api.post("/blog/deletenotify", {id})
 
 export default api;
