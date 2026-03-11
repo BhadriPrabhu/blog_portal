@@ -81,4 +81,18 @@ const blogController = async (req, res) => {
   }
 };
 
-module.exports = blogController;
+const findBlog = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+const result = await Blog.findById(id)
+      .populate('user comments.user comments.reply.user', 'user email username role');
+
+    res.status(200).json(result);
+  } catch (err) {
+    console.log("Failed:", err);
+    res.status(500).json({ error: 'Server Error', details: err.message })
+  }
+}
+
+module.exports = { blogController, findBlog };

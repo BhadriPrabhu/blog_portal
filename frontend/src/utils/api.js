@@ -31,5 +31,6 @@ export const fetchSuggestions = (query) => api.get(`/blog/mentions?search=${quer
 export const notifyBlog = (data) => api.post(`/blog/notify`, data);
 export const getNotify = (userId) => api.get(`/blog/getnotify/${userId}`);
 export const deleteNotify = (id) => api.post("/blog/deletenotify", {id})
+export const getBlog = (id) => api.get(`/blog/${id}`);
 
 export default api;

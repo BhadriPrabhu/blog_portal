@@ -202,9 +202,10 @@ import ViewData from './viewdata';
 import axios from 'axios';
 import { useStore } from '../data/zustand.jsx';
 import { useLocation } from 'react-router-dom';
-import api from '../utils/api';
+import api, { getBlog } from '../utils/api';
 import ToastBlog from '../utils/toast.jsx';
-import { motion } from 'framer-motion'
+import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 export default function PostCard({ postsData = null, onReload = null }) {
     const [sampleDatas, setSampleDatas] = React.useState([]);
@@ -221,6 +222,8 @@ export default function PostCard({ postsData = null, onReload = null }) {
     const profileData = useStore((state) => state.profileData);
     const refreshTrigger = useStore((state) => state.refreshTrigger);
     const location = useLocation();
+
+    const navigate = useNavigate();
 
     React.useEffect(() => {
         fetchPosts();
@@ -259,7 +262,7 @@ export default function PostCard({ postsData = null, onReload = null }) {
 
     const likeBlog = async (blogId, idx, userId) => {
         try {
-            console.log("User ID:",userId);
+            console.log("User ID:", userId);
             if (!userId) throw new Error('User ID is missing');
             const res = await api.put('/blog/like', { blogId, userId });
             const { likeCount, liked } = res.data;
@@ -315,6 +318,17 @@ export default function PostCard({ postsData = null, onReload = null }) {
     };
     const hoverStyle = { backgroundColor: '#9637371a' };
 
+    // const handleGetBlog = async (id) => {
+    //     try {
+    //         const result = await getBlog(id);
+    //         setViewData(result.data);
+    //         setOpenModel(true);
+    //     } catch (err) {
+    //         console.log("Error",err);
+    //     }
+
+    // }
+
     return (
         <>
             {sampleDatas.length === 0 && (
@@ -336,10 +350,7 @@ export default function PostCard({ postsData = null, onReload = null }) {
                     }}
                 >
                     <div
-                        onClick={() => {
-                            setViewData(item);
-                            setOpenModel(true);
-                        }}
+                        onClick={() => navigate(`/blog/${item._id}`)}
                         style={{ cursor: 'pointer' }}
                     >
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -425,7 +436,7 @@ export default function PostCard({ postsData = null, onReload = null }) {
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: "5px" }}>
                             <div style={{ display: 'flex', alignItems: 'center', fontSize: '14px', gap: '4px', color: '#100f0fff' }}>
                                 <FavoriteRoundedIcon sx={{ width: '18px', height: '18px', color: 'red' }} />
-                                <motion.p style={{margin: "0px"}}>{item.like}</motion.p> likes
+                                <motion.p style={{ margin: "0px" }}>{item.like}</motion.p> likes
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', color: '#100f0fff' }}>
                                 <ChatRoundedIcon sx={{ width: '18px', height: '18px', color: 'gray' }} />
@@ -442,15 +453,15 @@ export default function PostCard({ postsData = null, onReload = null }) {
                             onMouseLeave={() => setHover1(null)}
                             onClick={() => likeBlog(item._id, idx, profileData._id)}
                             aria-label={item.liked ? 'Unlike post' : 'Like post'}
-                            whileTap={{scale: 0.8}}
+                            whileTap={{ scale: 0.8 }}
                         >
                             <motion.div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
-                            key={item.liked ? "liked" : "unliked"}
-                            initial={{ scale: 1 }}
-                            animate={{
-                                scale: item.liked ? [1, 1.5, 1.2, 1] : 1,
-                            }}
-                            transition={{ duration: 0.4, type: "spring", stiffness: 300 }}
+                                key={item.liked ? "liked" : "unliked"}
+                                initial={{ scale: 1 }}
+                                animate={{
+                                    scale: item.liked ? [1, 1.5, 1.2, 1] : 1,
+                                }}
+                                transition={{ duration: 0.4, type: "spring", stiffness: 300 }}
                             >
                                 {item.liked ? <ThumbUpIcon sx={{ color: '#0a82d2ff' }} /> : <ThumbUpOutlinedIcon sx={{ color: 'gray' }} />}
                             </motion.div>
@@ -462,15 +473,15 @@ export default function PostCard({ postsData = null, onReload = null }) {
                             onMouseLeave={() => setHover2(null)}
                             onClick={() => handleSave(item._id, idx)}
                             aria-label={item.saved ? 'Unsave post' : 'Save post'}
-                            whileTap={{scale: 0.8}}
+                            whileTap={{ scale: 0.8 }}
                         >
                             <motion.div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
-                            key={item.saved ? "saved" : "unsaved" }
-                            initial={{ scale: 1 }}
-                            animate={{
-                                scale: item.saved ? [1, 1.5, 1.2, 1] : 1,
-                            }}
-                            transition={{ duration: 0.4, type: "spring", stiffness: 300 }}
+                                key={item.saved ? "saved" : "unsaved"}
+                                initial={{ scale: 1 }}
+                                animate={{
+                                    scale: item.saved ? [1, 1.5, 1.2, 1] : 1,
+                                }}
+                                transition={{ duration: 0.4, type: "spring", stiffness: 300 }}
                             >
                                 {item.saved ? <BookmarkIcon sx={{ color: '#0a82d2ff' }} /> : <BookmarkBorderOutlinedIcon sx={{ color: 'gray' }} />}
                             </motion.div>
@@ -498,21 +509,23 @@ export default function PostCard({ postsData = null, onReload = null }) {
                             onMouseLeave={() => setHover4(null)}
                             aria-label='Share post'
                             onClick={async () => {
-
-                                const postTitle = item.title;
-                                const postDesc = item.desc;
-                                const postUrl = window.location.href;
+                                const blogUrl = `${window.location.origin}/blog/${item._id}`;
 
                                 const shareData = {
                                     title: item.title,
-                                    text: `*${postTitle}*\n${postDesc}\n${"URL: " + postUrl}`,
-                                    // url: window.location.href
-                                }
+                                    text: `Check out this post: ${item.title}`,
+                                    url: blogUrl
+                                };
 
                                 try {
-                                    await navigator.share(shareData);
+                                    if (navigator.share) {
+                                        await navigator.share(shareData);
+                                    } else {
+                                        await navigator.clipboard.writeText(blogUrl);
+                                        ToastBlog("Link copied to clipboard!");
+                                    }
                                 } catch (err) {
-                                    console.log("Error", err);
+                                    console.log("Error sharing", err);
                                 }
                             }}
                         >
@@ -524,8 +537,8 @@ export default function PostCard({ postsData = null, onReload = null }) {
                 </div>
             ))}
 
-            <Comment opened={isOpen} isClose={() => setIsOpen(false)} commentData={selectedComments} userId={selectedId} />
-            <ViewData isOpen={openModel} isClose={() => setOpenModel(false)} viewValue={[viewData]} />
+            {/* <Comment opened={isOpen} isClose={() => setIsOpen(false)} commentData={selectedComments} userId={selectedId} /> */}
+            {/* <ViewData isOpen={openModel} isClose={() => setOpenModel(false)} viewValue={[viewData]} /> */}
         </>
     );
 }

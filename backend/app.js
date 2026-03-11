@@ -6,7 +6,7 @@ const PORT = process.env.PORT || 3000;
 const mongoose = require('mongoose');
 const authController = require("./controllers/authController.js");
 const registerController = require('./controllers/registerController.js');
-const blogController = require('./controllers/blogController.js');
+const { blogController, findBlog } = require('./controllers/blogController.js');
 const blogAddController = require('./controllers/blogAddController.js');
 const likeController = require('./controllers/likeController.js');
 const { addCommentBlog, addReplyComment } = require('./controllers/blogCommentController.js');
@@ -46,6 +46,7 @@ app.post("/", authController);
 app.post("/register", registerController);
 app.put("/blog/like", likeController);
 app.get("/blog", blogController);
+
 app.post("/blog/add", blogAddController);
 app.post("/blog/:id/comment", addCommentBlog);
 app.post("/blog/:id/comment/:commentId/reply", addReplyComment);
@@ -68,7 +69,7 @@ app.get("/blog/mentions", mentionController);
 app.post("/blog/notify", notificationAddController);
 app.get("/blog/getnotify/:userId", getNotifications);
 app.post("/blog/deletenotify", DeleteNotification);
-
+app.get("/blog/:id", findBlog);
 
 app.listen(PORT, () => {
   connectDB();
