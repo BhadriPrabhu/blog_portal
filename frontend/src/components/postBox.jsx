@@ -197,6 +197,7 @@ Output must be lowercase.
           link: "Link",
           notifyContent: "Your post has been reported."
         }
+        
         ToastBlog("Content flagged for Manual review");
         await notifyBlog(notifyData);
         try {

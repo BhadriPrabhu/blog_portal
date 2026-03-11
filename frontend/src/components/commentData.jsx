@@ -7,7 +7,7 @@ import ThumbDownOutlinedIcon from '@mui/icons-material/ThumbDownOutlined';
 import ReplyIcon from '@mui/icons-material/Reply';
 import { useStore } from "../data/zustand";
 import axios from "axios";
-import { addComment, addReply, fetchSuggestions } from '../utils/api';
+import { addComment, addReply, fetchSuggestions, notifyBlog } from '../utils/api';
 
 export default function CommentData({ commentData, blogId }) {
     const [comments, setComments] = React.useState(commentData);
@@ -16,7 +16,10 @@ export default function CommentData({ commentData, blogId }) {
     const [hover, setHover] = React.useState({});
     const [newComment, setNewComment] = React.useState("");
     const [suggestions, setSuggestions] = React.useState([]);
-    const users = ["Bhadri_Prabhu", "Keshav", "Prabhu_k", "Bhadri_k", "Rahul"];
+    const [mentionSelected, setMentionSelected] = React.useState([]);
+
+    const inputRef = React.useRef();
+
 
     React.useEffect(() => {
         const enriched = commentData.map(c => ({
@@ -60,7 +63,7 @@ export default function CommentData({ commentData, blogId }) {
         }
         setIsLoading(true);
         try {
-            const result = await addComment(blogId, profileData._id, newComment.trim());
+            const result = await addComment(blogId, profileData._id, newComment.trim(), mentionSelected);
             setComments((prev) => [...prev, { ...result.data.newComment, isReply: false, replyText: "" }]);
             setNewComment("");
         } catch (err) {
@@ -91,16 +94,33 @@ export default function CommentData({ commentData, blogId }) {
         }
     };
 
-    const handleSelect = (username) => {
-        const atIndex = newComment.lastIndexOf("@");
-        const before = newComment.slice(0, atIndex + 1);
-        setNewComment(before + username + " ");
-        setSuggestions([]);
-    };
+const handleSelect = (username) => {
+    setMentionSelected((prev) => [...prev, username]);
+
+    const cursorPosition = inputRef.current.selectionStart;
+    const textBeforeCursor = newComment.slice(0, cursorPosition);
+    const textAfterCursor = newComment.slice(cursorPosition);
+
+    const lastAtIndex = textBeforeCursor.lastIndexOf("@");
+
+    if (lastAtIndex !== -1) {
+        const beforeMention = textBeforeCursor.slice(0, lastAtIndex + 1);
+        const updatedText = beforeMention + username + " " + textAfterCursor;
+        
+        setNewComment(updatedText);
+    }
+    console.log(mentionSelected);
+    setSuggestions([]);
+    inputRef.current.focus();
+};
 
     const handleChange = async (e) => {
         const val = e.target.value;
         setNewComment(val);
+
+        if(inputRef.current.selectionStart <= 1){
+            setMentionSelected([]);
+        }
 
         const lastAtIndex = val.lastIndexOf("@");
         const isMentioning = lastAtIndex !== -1 && (lastAtIndex === 0 || val[lastAtIndex - 1] === " ");
@@ -118,7 +138,8 @@ export default function CommentData({ commentData, blogId }) {
 
             try {
                 const result = await fetchSuggestions(query);
-                setSuggestions(result.data.message || []);
+                const filteredUsers = result.data.message.filter((u) => u.username !== profileData.username && !mentionSelected.includes(u.username));
+                setSuggestions(filteredUsers || []);
             } catch (err) {
                 console.log("Error:", err);
             }
@@ -183,6 +204,7 @@ export default function CommentData({ commentData, blogId }) {
                     type="text"
                     value={newComment}
                     onChange={handleChange}
+                    ref={inputRef}
                     style={{
                         height: "32px",
                         width: "83%",

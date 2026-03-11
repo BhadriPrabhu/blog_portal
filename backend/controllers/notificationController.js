@@ -1,6 +1,25 @@
 const Notification = require("../models/notificationSchema");
 const Blog = require("../models/blogSchema");
 
+const createNotification = async (data ,res) => {
+  try {
+    const newNotification = new Notification({
+      recipient: data.recipientId,
+      sender: data.senderId,
+      type: data.type,
+      blog: data.blogId,
+      link: data.link,
+      content: data.notifyContent,
+    });
+
+    const savednotification = await newNotification.save();
+    return savednotification;
+  } catch (err) {
+    console.error("Notification Error:", err);
+    throw new Error("Failed to create notification: " + err.message);
+  }
+}
+
 const notificationAddController = async (req, res) => {
   try {
     const { type, recipientId, blogId, link, senderId, notifyContent } = req.body;
@@ -59,4 +78,4 @@ const DeleteNotification = async (req, res) => {
   }
 }
 
-module.exports = { notificationAddController, getNotifications, DeleteNotification }
+module.exports = { notificationAddController, getNotifications, DeleteNotification, createNotification }

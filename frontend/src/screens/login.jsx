@@ -71,6 +71,7 @@ export default function Login() {
         user: res.data.user,
         email: res.data.email,
         role: res.data.role || "user",
+        username: res.data.username,
       });
       setIsAuth(true);
       console.log("Profile:", useStore.getState().profileData);

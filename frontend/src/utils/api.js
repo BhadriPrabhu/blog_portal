@@ -11,7 +11,7 @@ const api = axios.create({
 
 export const unarchivePost = (id) => api.post('/blog/unarchive', { ids: [id] });
 export const permanentDeletePost = (id) => api.post('/blog/permanent-delete', { ids: [id] });
-export const addComment = (blogId, userId, value) => api.post(`/blog/${blogId}/comment`, { userId, value });
+export const addComment = (blogId, userId, value, mention) => api.post(`/blog/${blogId}/comment`, { userId, value, mention });
 export const addReply = (blogId, commentId, userId, value) => api.post(`/blog/${blogId}/comment/${commentId}/reply`, { userId, value });
 export const likeBlog = (blogId, userId) => api.put('/blog/like', { blogId, userId });
 export const saveBlog = (blogId, userId) => api.post('/blog/save', { blogId, userId });
