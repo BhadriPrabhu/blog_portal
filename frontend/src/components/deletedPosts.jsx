@@ -1,7 +1,8 @@
 import React, { useState, memo, useCallback } from 'react';
-import { Trash2, XCircle } from 'lucide-react';
+import { ArchiveRestore, Trash2, X, XCircle } from 'lucide-react';
 import PopupPostDetails from './popupPostDetails';
 import { restorePost, permanentDeletePost } from '../utils/api';
+import ButtonTrans from './buttonTran';
 
 // --- Static Styles (Defined outside to prevent re-creation) ---
 const MODAL_OVERLAY_STYLE = {
@@ -24,53 +25,18 @@ const TABLE_STYLE = {
   fontFamily: "'Poppins', sans-serif",
 };
 
-// --- Memoized Row Component ---
-const PostRow = memo(({ post, onSelect }) => {
-  return (
-    <tr
-      style={{
-        backgroundColor: '#FFFFFF',
-        cursor: 'pointer',
-        borderBottom: '1px solid #D5DBDB',
-        transition: 'background-color 0.2s ease-in-out',
-      }}
-      onClick={(e) => {
-        e.stopPropagation(); // Prevents triggering handlePopupToggle
-        onSelect(post);
-      }}
-      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F7F9FA')}
-      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFFFFF')}
-    >
-      <td style={{ padding: '12px 16px' }}>
-        <div style={{
-          width: '32px', height: '32px',
-          backgroundColor: '#3498DB', borderRadius: '50%',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: '#FFFFFF', fontWeight: '600', fontSize: '14px',
-        }}>
-          {post.user?.user?.charAt(0)?.toUpperCase() || 'U'}
-        </div>
-      </td>
-      <td style={{ padding: '12px 16px', color: '#2C3E50' }}>
-        {new Date(post.date).toLocaleDateString()}
-      </td>
-      <td style={{ padding: '12px 16px', color: '#2C3E50' }}>{post.user?.user || 'Unknown'}</td>
-      <td style={{ padding: '12px 16px', color: '#2C3E50' }}>{post.title}</td>
-      <td style={{ padding: '12px 16px', color: '#2C3E50' }}>
-        {post.desc.substring(0, 50)}...
-      </td>
-      <td style={{ padding: '12px 16px', color: '#2C3E50' }}>{post.like}</td>
-      <td style={{ padding: '12px 16px', color: '#2C3E50' }}>{post.comments.length}</td>
-    </tr>
-  );
-});
-
 export default function DeletedPosts({ posts, onRestore, onError }) {
-  const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const [selectedPost, setSelectedPost] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPopupOpen, setIsPopupOpen] = React.useState(false);
+  const [selectedPost, setSelectedPost] = React.useState(null);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [hover1, setHover1] = React.useState(null);
+  const [hover2, setHover2] = React.useState(null);
+  const [hover3, setHover3] = React.useState(false);
 
-  const handlePopupToggle = () => setIsPopupOpen((prev) => !prev);
+  const handlePopupToggle = () => {
+    setIsPopupOpen((prev) => !prev)
+    setHover3(false);
+  };
 
   // Callback memoization for selected post
   const handleSelectPost = useCallback((post) => {
@@ -139,16 +105,22 @@ export default function DeletedPosts({ posts, onRestore, onError }) {
             {/* Modal Header */}
             <div style={{ backgroundColor: '#EDEFF2', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10 }}>
               <h3 style={{ margin: 0, fontSize: '16px', color: '#2C3E50' }}>Deleted Post Management</h3>
-              <button
-                onClick={handlePopupToggle}
-                disabled={isLoading}
-                style={{
-                  backgroundColor: '#3498DB', color: '#FFFFFF', border: 'none', borderRadius: '6px',
-                  padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
-                }}
-              >
-                <XCircle size={16} /> Close
-              </button>
+              <ButtonTrans
+                child={<>
+                  <X size={18} />
+                </>}
+                buttonType="button"
+                disable={isLoading}
+                isLoading={isLoading}
+                label="Close"
+                noToolTip="true"
+                paddingEdit="4px 4px"
+                ClickEvent={handlePopupToggle}
+                hover={hover3}
+                mouseEnter={() => setHover3(true)}
+                mouseLeave={() => setHover3(false)}
+
+              />
             </div>
 
             {/* Table Content */}
@@ -163,11 +135,74 @@ export default function DeletedPosts({ posts, onRestore, onError }) {
                     <th style={{ padding: '12px 16px', textAlign: 'left' }}>Content</th>
                     <th style={{ padding: '12px 16px', textAlign: 'left' }}>Likes</th>
                     <th style={{ padding: '12px 16px', textAlign: 'left' }}>Comments</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left' }}>Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {posts.map((post) => (
-                    <PostRow key={post._id} post={post} onSelect={handleSelectPost} />
+                    <tr
+                      style={{
+                        backgroundColor: '#FFFFFF',
+                        cursor: 'pointer',
+                        borderBottom: '1px solid #D5DBDB',
+                        transition: 'background-color 0.2s ease-in-out',
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevents triggering handlePopupToggle
+                        handleSelectPost(post);
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F7F9FA')}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFFFFF')}
+                    >
+                      <td style={{ padding: '12px 16px' }}>
+                        <div style={{
+                          width: '32px', height: '32px',
+                          backgroundColor: '#3498DB', borderRadius: '50%',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          color: '#FFFFFF', fontWeight: '600', fontSize: '14px',
+                        }}>
+                          {post.user?.user?.charAt(0)?.toUpperCase() || 'U'}
+                        </div>
+                      </td>
+                      <td style={{ padding: '12px 16px', color: '#2C3E50' }}>
+                        {new Date(post.date).toLocaleDateString()}
+                      </td>
+                      <td style={{ padding: '12px 16px', color: '#2C3E50' }}>{post.user?.user || 'Unknown'}</td>
+                      <td style={{ padding: '12px 16px', color: '#2C3E50' }}>{post.title}</td>
+                      <td style={{ padding: '12px 16px', color: '#2C3E50' }}>
+                        {post.desc.substring(0, 50)}...
+                      </td>
+                      <td style={{ padding: '12px 16px', color: '#2C3E50' }}>{post.like}</td>
+                      <td style={{ padding: '12px 16px', color: '#2C3E50' }}>{post.comments.length}</td>
+                      <td style={{ padding: '12px 16px', color: '#2C3E50', display: "flex", flexDirection: "row", }}>
+                        <ButtonTrans
+                          child={<>
+                            <ArchiveRestore size="16px" />
+                          </>}
+                          noToolTip={true}
+                          buttonType="button"
+                          label="Retore"
+                          paddingEdit="4px 4px"
+                          hover={hover1 === post._id}
+                          mouseEnter={() => setHover1(post._id)}
+                          mouseLeave={() => setHover1(null)}
+                          ClickEvent={() => handleRestorePost(post._id)}
+                        />
+                        <ButtonTrans
+                          child={<>
+                            <Trash2 size="16px" />
+                          </>}
+                          noToolTip={true}
+                          buttonType="button"
+                          label="Permanent Delete"
+                          hover={hover2 === post._id}
+                          mouseEnter={() => setHover2(post._id)}
+                          mouseLeave={() => setHover2(null)}
+                          paddingEdit="4px 4px"
+                          ClickEvent={() => handlePermanentDelete(post._id)}
+                        />
+                      </td>
+                    </tr>
                   ))}
                 </tbody>
               </table>

@@ -457,7 +457,7 @@ export default function AdminHome() {
               {paginatedPosts.map(post => (
                 <tr
                   key={post._id}
-                  style={{ borderBottom: '1px solid #D5DBDB', cursor: 'pointer' }}
+                  style={{ borderBottom: '1px solid #D5DBDB', cursor: 'pointer', zIndex: "1" }}
                   onClick={() => setSelectedPost(post)}
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F7F9FA'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
@@ -499,7 +499,7 @@ export default function AdminHome() {
                   <td style={{ padding: '10px', fontSize: '14px', color: '#2C3E50' }}>{post.desc.substring(0, 60)}...</td>
                   <td style={{ padding: '10px', fontSize: '14px', color: '#2C3E50' }}>{post.like}</td>
                   <td style={{ padding: '10px', fontSize: '14px', color: '#2C3E50' }}>{post.comments.length}</td>
-                  <td style={{ padding: '10px', fontSize: '14px', color: '#2C3E50', display: "flex", flexDirection: "row" }}>
+                  <td style={{ padding: '10px', fontSize: '14px', color: '#2C3E50', display: "flex", flexDirection: "row", zIndex: "10" }}>
                     <ButtonTrans
                       child={
                         <>
@@ -516,6 +516,7 @@ export default function AdminHome() {
                       label="Flag the Post"
                       tooltipContent="Flag/Report"
                       font="10px"
+                      paddingEdit="4px 4px"
                     />
                     <ButtonTrans
                       child={
@@ -528,6 +529,7 @@ export default function AdminHome() {
                         if (!window.confirm(`Are you sure you want to delete the post?`)) return;
                         try{   
                           await bulkAction("delete", ids);
+                          setSelectedPost(null);
                           ToastBlog("Post Deleted");
                           await fetchData();
                         }catch(err){
@@ -543,6 +545,7 @@ export default function AdminHome() {
                       label="Delete the Post"
                       tooltipContent="Delete"
                       font="10px"
+                      paddingEdit="4px 4px"
                     />
                   </td>
                 </tr>
