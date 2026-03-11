@@ -1,13 +1,16 @@
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-export default function ToastBlog(item){
+const ToastBlog = (message) => {
+    toast(message, {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "light",
+    });
+};
 
-    const notify = () => toast(item);
-    notify();
-
-    return(
-    <>
-        <ToastContainer />
-    </>
-    );
-}
+export default ToastBlog;

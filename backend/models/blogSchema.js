@@ -29,6 +29,7 @@ const blogSchema = new mongoose.Schema({
       disliked: { type: Boolean, default: false },
       isReply: { type: Boolean, default: false },
       replyText: { type: String },
+      mention: [{ type: String }],
       status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
       reply: [
         {

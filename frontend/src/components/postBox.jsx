@@ -194,10 +194,10 @@ Output must be lowercase.
           senderId: profileData._id,
           recipientId: profileData._id,
           blogId: id,
-          link: "Link",
+          link: `/blog/${id}`,
           notifyContent: "Your post has been reported."
         }
-        
+
         ToastBlog("Content flagged for Manual review");
         await notifyBlog(notifyData);
         try {
@@ -217,7 +217,7 @@ Output must be lowercase.
         senderId: profileData._id,
         recipientId: profileData._id,
         blogId: id,
-        link: "Link",
+        link: `/blog/${id}`,
         notifyContent: "Posted Successfully!",
       }
       await notifyBlog(successNotifyData);
@@ -336,6 +336,7 @@ Output must be lowercase.
         aria-label="Challenge description"
       />
       <div style={{ display: "flex", flexDirection: "row", justifyContent: "flex-end", margin: "0px", padding: "0px" }}>
+
         <ButtonTrans
           child={
             <>
@@ -355,7 +356,19 @@ Output must be lowercase.
           noToolTip={true}
         />
       </div>
-
+      {isLoading && (
+        <div style={{
+          backgroundColor: "transparent",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          zIndex: 10,
+          padding: "10px",
+          borderRadius: "8px",
+        }}>
+          <ScaleLoader color="#2C3E50" size={10} />
+        </div>
+      )}
       {generatedTags.length > 0 && (
         <div style={{ display: "flex", flexDirection: 'row', justifyContent: "flex-start", alignItems: "flex-start", gap: "8px" }}>
           <p style={{ margin: "0px", padding: "0px", width: "110px" }}>Select Tags:</p>
@@ -564,23 +577,7 @@ Output must be lowercase.
         }}>Generate</button>
       </div> */}
 
-      {isLoading && (
-        <div style={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          backgroundColor: "transparent",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          zIndex: 10,
-          padding: "10px",
-          borderRadius: "8px",
-        }}>
-          <ScaleLoader color="#2C3E50" size={10} />
-        </div>
-      )}
+
       <style jsx>{`
         @media (max-width: 768px) {
           div[style*="maxWidth: 600px"] {
