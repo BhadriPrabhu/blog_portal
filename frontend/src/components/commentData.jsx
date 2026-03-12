@@ -149,6 +149,37 @@ export default function CommentData({ commentData, blogId }) {
         }
     }
 
+    const renderCommentWithMentions = (text) => {
+        if (!text) return "";
+
+        const parts = text.split(/(@\w+)/g);
+
+        return parts.map((part, index) => {
+            if (part.startsWith("@")) {
+                const username = part.substring(1); // Remove '@' for the URL
+                return (
+                    <span
+                        key={index}
+                        onClick={() => navigate(`/profile/${username}`)}
+                        style={{
+                            color: "#0062ff",
+                            cursor: "pointer",
+                            fontWeight: "500",
+                            transition: "color 0.2s"
+                        }}
+                        // Simple inline hover effect
+                        onMouseOver={(e) => (e.target.style.textDecoration = "underline")}
+                        onMouseOut={(e) => (e.target.style.textDecoration = "none")}
+                    >
+                        {part}
+                    </span>
+                );
+            }
+            // Return plain text for parts that aren't mentions
+            return part;
+        });
+    };
+
     return (
         <div style={{ display: "flex", flexDirection: "column", backgroundColor: "#F7F9FA", borderRadius: "8px", padding: "10px" }}>
             {isLoading && (
@@ -277,7 +308,7 @@ export default function CommentData({ commentData, blogId }) {
                             </div>
                         </div>
                         <div style={{ marginLeft: "25px" }}>
-                            <p style={{ margin: "0px", fontSize: "14px", color: "#7F8C8D", fontFamily: "'Poppins', sans-serif", lineHeight: "16px" }}>{item.value}</p>
+                            <p style={{ margin: "0px", fontSize: "14px", color: "#7F8C8D", fontFamily: "'Poppins', sans-serif", lineHeight: "16px" }}>{renderCommentWithMentions(item.value)}</p>
                             <div style={{ display: "flex", gap: "8px" }}>
                                 <ButtonTrans
                                     child={<>
