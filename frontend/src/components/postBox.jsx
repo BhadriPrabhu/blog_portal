@@ -10,7 +10,7 @@ import { BeatLoader, ScaleLoader } from 'react-spinners';
 import { addBlog, notifyBlog, reportAiFlag } from '../utils/api';
 // import OtpSender from "../utils/otp";
 import { ToastContainer, toast } from 'react-toastify';
-import { BadgePlus, Check, Tag, TrendingUpDown, X } from "lucide-react";
+import { BadgePlus, Check, Image, Tag, TrendingUpDown, Video, X } from "lucide-react";
 import GenAI from "../utils/AI";
 import ToastBlog from "../utils/toast";
 import ButtonTrans from "./buttonTran";
@@ -25,6 +25,7 @@ export default function PostBox() {
   const [hover4, setHover4] = React.useState(false);
   const [hover5, setHover5] = React.useState(false);
   const [hover6, setHover6] = React.useState(false);
+  const [hoverImage, setHoverImage] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState("");
   const [generatedTags, setGeneratedTags] = React.useState([]);
@@ -466,6 +467,9 @@ Output must be lowercase.
                 tooltipContent="Click to Preview Image"
                 font="12px"
                 noToolTip={true}
+                hover={hoverImage}
+                mouseEnter={() => setHoverImage(true)}
+                mouseLeave={() => setHoverImage(false)}
               />
 
             </div>
@@ -503,8 +507,8 @@ Output must be lowercase.
         <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", flexWrap: "wrap" }}>
           <ButtonTrans
             child={
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <Insert size={16} />
+              <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                <Image  size={16} />
                 Image
               </div>
             }
@@ -522,8 +526,8 @@ Output must be lowercase.
           />
           <ButtonTrans
             child={
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <Insert size={16} />
+              <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                <Video size={18} />
                 Video
               </div>
             }

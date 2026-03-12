@@ -359,7 +359,10 @@ export default function TopBar() {
                         transition: "background 0.2s",
                         fontFamily: "Poppins, sans-serif"
                       }}
-                      onClick={() => navigate(item.link)}
+                      onClick={() => {
+                        navigate(item.link)
+                        setIsNotifyOpen(false);
+                      }}
                     >
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px" }}>
                         <span style={{ fontWeight: "600", fontSize: "14px", color: "#2C3E50", lineHeight: "14px" }}>

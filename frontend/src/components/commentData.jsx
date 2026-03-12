@@ -8,6 +8,7 @@ import ReplyIcon from '@mui/icons-material/Reply';
 import { useStore } from "../data/zustand";
 import axios from "axios";
 import { addComment, addReply, fetchSuggestions, notifyBlog } from '../utils/api';
+import ButtonTrans from "./buttonTran";
 
 export default function CommentData({ commentData, blogId }) {
     const [comments, setComments] = React.useState(commentData);
@@ -34,14 +35,14 @@ export default function CommentData({ commentData, blogId }) {
         backgroundColor: "transparent",
         border: "none",
         borderRadius: "12px",
-        height: "26px",
+        height: "24px",
         display: "flex",
         justifyContent: "start",
         alignItems: "center",
         fontFamily: "'Poppins', sans-serif",
         cursor: isLoading ? "not-allowed" : "pointer",
         color: "#2C3E50",
-        fontSize: "14px",
+        fontSize: "12px",
         transition: "background-color 0.2s ease-in-out",
     };
 
@@ -94,31 +95,31 @@ export default function CommentData({ commentData, blogId }) {
         }
     };
 
-const handleSelect = (username) => {
-    setMentionSelected((prev) => [...prev, username]);
+    const handleSelect = (username) => {
+        setMentionSelected((prev) => [...prev, username]);
 
-    const cursorPosition = inputRef.current.selectionStart;
-    const textBeforeCursor = newComment.slice(0, cursorPosition);
-    const textAfterCursor = newComment.slice(cursorPosition);
+        const cursorPosition = inputRef.current.selectionStart;
+        const textBeforeCursor = newComment.slice(0, cursorPosition);
+        const textAfterCursor = newComment.slice(cursorPosition);
 
-    const lastAtIndex = textBeforeCursor.lastIndexOf("@");
+        const lastAtIndex = textBeforeCursor.lastIndexOf("@");
 
-    if (lastAtIndex !== -1) {
-        const beforeMention = textBeforeCursor.slice(0, lastAtIndex + 1);
-        const updatedText = beforeMention + username + " " + textAfterCursor;
-        
-        setNewComment(updatedText);
-    }
-    console.log(mentionSelected);
-    setSuggestions([]);
-    inputRef.current.focus();
-};
+        if (lastAtIndex !== -1) {
+            const beforeMention = textBeforeCursor.slice(0, lastAtIndex + 1);
+            const updatedText = beforeMention + username + " " + textAfterCursor;
+
+            setNewComment(updatedText);
+        }
+        console.log(mentionSelected);
+        setSuggestions([]);
+        inputRef.current.focus();
+    };
 
     const handleChange = async (e) => {
         const val = e.target.value;
         setNewComment(val);
 
-        if(inputRef.current.selectionStart <= 1){
+        if (inputRef.current.selectionStart <= 1) {
             setMentionSelected([]);
         }
 
@@ -257,10 +258,10 @@ const handleSelect = (username) => {
                     <div key={item._id} style={{ padding: "3px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                             <div style={{
-                                width: "18px",
-                                height: "18px",
+                                width: "20px",
+                                height: "20px",
                                 backgroundColor: "#3498DB",
-                                fontSize: "10px",
+                                fontSize: "12px",
                                 borderRadius: "50%",
                                 color: "#FFFFFF",
                                 display: "flex",
@@ -272,62 +273,78 @@ const handleSelect = (username) => {
                             </div>
                             <div style={{ margin: "0px", fontSize: "14px", color: "#2C3E50", fontFamily: "'Poppins', sans-serif", display: "flex", flexDirection: "row", justifyContent: "center", alignItems: "center", gap: "5px" }}>
                                 <p style={{ padding: "0px", margin: "0px" }}>{item.user?.username}</p>
-                                {item.user?.role === "admin" && <span style={{ color: "#f0f4faff", backgroundColor: "blue", padding: "1px 5px", borderRadius: "10px", fontSize: "10px" }}>Admin</span>}
+                                {item.user?.role === "admin" && <span style={{ color: "#f0f4faff", backgroundColor: "blue", padding: "1px 5px", borderRadius: "10px", fontSize: "10px", fontWeight: "bold" }}>Admin</span>}
                             </div>
                         </div>
-                        <div style={{ marginLeft: "30px" }}>
-                            <p style={{ margin: "0px", fontSize: "14px", color: "#7F8C8D", fontFamily: "'Poppins', sans-serif" }}>{item.value}</p>
+                        <div style={{ marginLeft: "25px" }}>
+                            <p style={{ margin: "0px", fontSize: "14px", color: "#7F8C8D", fontFamily: "'Poppins', sans-serif", lineHeight: "16px" }}>{item.value}</p>
                             <div style={{ display: "flex", gap: "8px" }}>
-                                <button
-                                    style={hover[`like-${item._id}`] ? { ...buttonStyle, ...hoverStyle } : buttonStyle}
-                                    onMouseEnter={() => setHover({ ...hover, [`like-${item._id}`]: true })}
-                                    onMouseLeave={() => setHover({ ...hover, [`like-${item._id}`]: false })}
-                                    onClick={() =>
+                                <ButtonTrans
+                                    child={<>
+                                        {item.liked ? (
+                                            <ThumbUpIcon sx={{ width: "20px", height: "20px", color: "#3498DB" }} />
+                                        ) : (
+                                            <ThumbUpOutlinedIcon sx={{ width: "20px", height: "20px", color: "#2C3E50" }} />
+                                        )}
+                                    </>}
+                                    buttonType="button"
+                                    label="Like Comment"
+                                    disable={isLoading}
+                                    isLoading={isLoading}
+                                    noToolTip={true}
+                                    paddingEdit="2px 2px"
+                                    mouseEnter={() => setHover({ ...hover, [`like-${item._id}`]: true })}
+                                    mouseLeave={() => setHover({ ...hover, [`like-${item._id}`]: false })}
+                                    hover={hover[`like-${item._id}`]}
+                                    ClickEvent={() =>
                                         setComments((prev) =>
                                             prev.map((d) =>
                                                 d._id === item._id ? { ...d, liked: true, disliked: false } : d
                                             )
-                                        )
-                                    }
-                                    disabled={isLoading}
-                                    aria-label="Like comment"
-                                >
-                                    {item.liked ? (
-                                        <ThumbUpIcon sx={{ width: "20px", height: "20px", color: "#3498DB" }} />
-                                    ) : (
-                                        <ThumbUpOutlinedIcon sx={{ width: "20px", height: "20px", color: "#2C3E50" }} />
-                                    )}
-                                </button>
-                                <button
-                                    style={hover[`dislike-${item._id}`] ? { ...buttonStyle, ...hoverStyle } : buttonStyle}
-                                    onMouseEnter={() => setHover({ ...hover, [`dislike-${item._id}`]: true })}
-                                    onMouseLeave={() => setHover({ ...hover, [`dislike-${item._id}`]: false })}
-                                    onClick={() =>
+                                        )}
+                                />
+                                <ButtonTrans
+                                    child={<>
+                                        {item.disliked ? (
+                                            <ThumbDownIcon sx={{ width: "20px", height: "20px", color: "#E74C3C" }} />
+                                        ) : (
+                                            <ThumbDownOutlinedIcon sx={{ width: "20px", height: "20px", color: "#2C3E50" }} />
+                                        )}
+                                    </>}
+                                    buttonType="button"
+                                    label="Dislike Comment"
+                                    disable={isLoading}
+                                    isLoading={isLoading}
+                                    noToolTip={true}
+                                    hover={hover[`dislike-${item._id}`]}
+                                    mouseEnter={() => setHover({ ...hover, [`dislike-${item._id}`]: true })}
+                                    mouseLeave={() => setHover({ ...hover, [`dislike-${item._id}`]: false })}
+                                    paddingEdit="2px 2px"
+                                    ClickEvent={() =>
                                         setComments((prev) =>
                                             prev.map((d) =>
                                                 d._id === item._id ? { ...d, liked: false, disliked: true } : d
                                             )
-                                        )
-                                    }
-                                    disabled={isLoading}
-                                    aria-label="Dislike comment"
-                                >
-                                    {item.disliked ? (
-                                        <ThumbDownIcon sx={{ width: "20px", height: "20px", color: "#E74C3C" }} />
-                                    ) : (
-                                        <ThumbDownOutlinedIcon sx={{ width: "20px", height: "20px", color: "#2C3E50" }} />
-                                    )}
-                                </button>
-                                <button
-                                    style={hover[`reply-${item._id}`] ? { ...buttonStyle, ...hoverStyle } : buttonStyle}
-                                    onMouseEnter={() => setHover({ ...hover, [`reply-${item._id}`]: true })}
-                                    onMouseLeave={() => setHover({ ...hover, [`reply-${item._id}`]: false })}
-                                    onClick={() => handleReply(item._id)}
-                                    disabled={isLoading}
-                                    aria-label="Reply to comment"
-                                >
-                                    <ReplyIcon sx={{ width: "20px", height: "20px", color: hover[`reply-${item._id}`] ? "#2ECC71" : "#2C3E50" }} />
-                                </button>
+                                        )}
+                                />
+                                <ButtonTrans
+                                    child={<>
+                                        <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: "2px" }}>
+                                            <ReplyIcon sx={{ width: "22px", height: "22px", color: hover[`reply-${item._id}`] ? "#2ECC71" : "#2C3E50" }} />
+                                            <span style={{ fontSize: "12px" }}>Reply</span>
+                                        </div>
+                                    </>}
+                                    buttonType="button"
+                                    disable={isLoading}
+                                    isLoading={isLoading}
+                                    label="Reply to comment"
+                                    noToolTip={true}
+                                    paddingEdit="2px 2px"
+                                    hover={hover[`reply-${item._id}`]}
+                                    mouseEnter={() => setHover({ ...hover, [`reply-${item._id}`]: true })}
+                                    mouseLeave={() => setHover({ ...hover, [`reply-${item._id}`]: false })}
+                                    ClickEvent={() => handleReply(item._id)}
+                                />
                             </div>
                             {item.isReply && (
                                 <div style={{ display: "flex", justifyContent: "center", margin: "0px 0px 5px 0px", gap: "12px" }}>
@@ -375,15 +392,15 @@ const handleSelect = (username) => {
                                 </div>
                             )}
                             {item.reply.length > 0 && (
-                                <div style={{ marginLeft: "10px" }}>
+                                <div style={{ marginLeft: "2px", marginBottom: "4px" }}>
                                     {item.reply.map((reply, replyIdx) => (
-                                        <div key={reply._id || replyIdx}>
-                                            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                        <div key={reply._id || replyIdx} style={{ borderLeft: "solid 2px #dbdee1", paddingTop: "4px", paddingBottom: "2px" }}>
+                                            <div style={{ display: "flex", alignItems: "center", gap: "4px", marginLeft: "6px" }}>
                                                 <div style={{
-                                                    width: "18px",
-                                                    height: "18px",
+                                                    width: "20px",
+                                                    height: "20px",
                                                     backgroundColor: "#3498DB",
-                                                    fontSize: "10px",
+                                                    fontSize: "12px",
                                                     borderRadius: "50%",
                                                     color: "#FFFFFF",
                                                     display: "flex",
@@ -395,17 +412,31 @@ const handleSelect = (username) => {
                                                 </div>
                                                 <div style={{ margin: "0px", fontSize: "14px", color: "#2C3E50", fontFamily: "'Poppins', sans-serif", display: "flex", flexDirection: "row", justifyContent: "center", alignItems: "center", gap: "5px" }}>
                                                     <p style={{ padding: "0px", margin: "0px" }}>{reply.user?.username || "user"}</p>
-                                                    {reply.user?.role === "admin" && <span style={{ color: "#f0f4faff", backgroundColor: "blue", padding: "1px 5px", borderRadius: "10px", fontSize: "10px" }}>Admin</span>}
+                                                    {reply.user?.role === "admin" && <span style={{ color: "#f0f4faff", backgroundColor: "blue", padding: "1px 5px", borderRadius: "10px", fontSize: "10px", fontWeight: "bold" }}>Admin</span>}
                                                 </div>
                                             </div>
                                             <div style={{ marginLeft: "30px" }}>
                                                 <p style={{ margin: "0px", fontSize: "14px", color: "#7F8C8D", fontFamily: "'Poppins', sans-serif" }}>{reply.value}</p>
                                                 <div style={{ display: "flex", gap: "8px" }}>
-                                                    <button
-                                                        style={hover[`like-reply-${reply._id}`] ? { ...buttonStyle, ...hoverStyle } : buttonStyle}
-                                                        onMouseEnter={() => setHover({ ...hover, [`like-reply-${reply._id}`]: true })}
-                                                        onMouseLeave={() => setHover({ ...hover, [`like-reply-${reply._id}`]: false })}
-                                                        onClick={() =>
+
+                                                    <ButtonTrans
+                                                        child={<>
+                                                            {reply.liked ? (
+                                                                <ThumbUpIcon sx={{ width: "20px", height: "20px", color: "#3498DB" }} />
+                                                            ) : (
+                                                                <ThumbUpOutlinedIcon sx={{ width: "20px", height: "20px", color: "#2C3E50" }} />
+                                                            )}
+                                                        </>}
+                                                        buttonType="button"
+                                                        label="Like Reply"
+                                                        noToolTip={true}
+                                                        hover={hover[`like-reply-${reply._id}`]}
+                                                        mouseEnter={() => setHover({ ...hover, [`like-reply-${reply._id}`]: true })}
+                                                        mouseLeave={() => setHover({ ...hover, [`like-reply-${reply._id}`]: false })}
+                                                        disable={isLoading}
+                                                        isLoading={isLoading}
+                                                        paddingEdit="2px 2px"
+                                                        ClickEvent={() =>
                                                             setComments((prev) =>
                                                                 prev.map((c) =>
                                                                     c._id === item._id
@@ -417,22 +448,26 @@ const handleSelect = (username) => {
                                                                         }
                                                                         : c
                                                                 )
-                                                            )
-                                                        }
-                                                        disabled={isLoading}
-                                                        aria-label="Like reply"
-                                                    >
-                                                        {reply.liked ? (
-                                                            <ThumbUpIcon sx={{ width: "20px", height: "20px", color: "#3498DB" }} />
-                                                        ) : (
-                                                            <ThumbUpOutlinedIcon sx={{ width: "20px", height: "20px", color: "#2C3E50" }} />
-                                                        )}
-                                                    </button>
-                                                    <button
-                                                        style={hover[`dislike-reply-${reply._id}`] ? { ...buttonStyle, ...hoverStyle } : buttonStyle}
-                                                        onMouseEnter={() => setHover({ ...hover, [`dislike-reply-${reply._id}`]: true })}
-                                                        onMouseLeave={() => setHover({ ...hover, [`dislike-reply-${reply._id}`]: false })}
-                                                        onClick={() =>
+                                                            )}
+                                                    />
+                                                    <ButtonTrans
+                                                        child={<>
+                                                            {reply.disliked ? (
+                                                                <ThumbDownIcon sx={{ width: "20px", height: "20px", color: "#E74C3C" }} />
+                                                            ) : (
+                                                                <ThumbDownOutlinedIcon sx={{ width: "20px", height: "20px", color: "#2C3E50" }} />
+                                                            )}
+                                                        </>}
+                                                        buttonType="button"
+                                                        disable={isLoading}
+                                                        isLoading={isLoading}
+                                                        label="Dislike Reply"
+                                                        noToolTip={true}
+                                                        paddingEdit="2px 2px"
+                                                        hover={hover[`dislike-reply-${reply._id}`]}
+                                                        mouseEnter={() => setHover({ ...hover, [`dislike-reply-${reply._id}`]: true })}
+                                                        mouseLeave={() => setHover({ ...hover, [`dislike-reply-${reply._id}`]: false })}
+                                                        ClickEvent={() =>
                                                             setComments((prev) =>
                                                                 prev.map((c) =>
                                                                     c._id === item._id
@@ -444,17 +479,8 @@ const handleSelect = (username) => {
                                                                         }
                                                                         : c
                                                                 )
-                                                            )
-                                                        }
-                                                        disabled={isLoading}
-                                                        aria-label="Dislike reply"
-                                                    >
-                                                        {reply.disliked ? (
-                                                            <ThumbDownIcon sx={{ width: "20px", height: "20px", color: "#E74C3C" }} />
-                                                        ) : (
-                                                            <ThumbDownOutlinedIcon sx={{ width: "20px", height: "20px", color: "#2C3E50" }} />
-                                                        )}
-                                                    </button>
+                                                            )}
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
@@ -462,7 +488,7 @@ const handleSelect = (username) => {
                                 </div>
                             )}
                         </div>
-                        <hr style={{ border: "1px solid #D5DBDB", margin: "0px" }} />
+                        <hr style={{ border: "1px solid #D5DBDB", marginTop: "2px", marginBottom: "6px" }} />
                     </div>
                 )
             })}

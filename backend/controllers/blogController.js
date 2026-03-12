@@ -84,9 +84,22 @@ const blogController = async (req, res) => {
 const findBlog = async (req, res) => {
   try {
     const { id } = req.params;
+    const { userId } = req.query;
 
-const result = await Blog.findById(id)
-      .populate('user comments.user comments.reply.user', 'user email username role');
+    const blog = await Blog.findById(id)
+      .populate('user comments.user comments.reply.user', 'user email username role').lean();
+
+    if (!blog) return res.status(404).json({ error: "Blog not found" });
+
+    const likedByArray = blog.likedBy || [];
+    const savedByArray = blog.savedBy || [];
+
+    const result = {
+      ...blog,
+      liked: userId ? likedByArray.some(id => id.toString() === userId) : false,
+      saved: userId ? savedByArray.some(id => id.toString() === userId) : false,
+      like: likedByArray.length
+    };
 
     res.status(200).json(result);
   } catch (err) {
