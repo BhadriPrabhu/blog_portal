@@ -180,7 +180,7 @@
 import React from 'react';
 import { useState } from 'react';
 import SearchBar from './searchbar';
-import { Home, Settings, LogOut, HelpCircle, Heart } from 'lucide-react';
+import { Home, Settings, LogOut, HelpCircle, Heart, User } from 'lucide-react';
 import Post from '@mui/icons-material/ArticleOutlined';
 import Bookmark from '@mui/icons-material/BookmarkBorderOutlined';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -280,6 +280,7 @@ export default function SideBar() {
                 <SearchBar value={searchTerm} onChange={handleSearch} />
                 <div>
                     <NavItem Click={() => navigate(`/blog?userId=${encodeURIComponent(profileData?.email || '')}`)} icon={<Home size={18} />} label='Home' />
+                    <NavItem Click={() => navigate(`/blog/profile/${profileData.username}`)} icon={<User size={18} />} label='Profile' />
                     <NavItem Click={() => navigate('/blog/mypost')} icon={<Post fontSize='small' />} label='My Posts' />
                     <NavItem
                         Click={() => navigate(`/blog/saved?userId=${encodeURIComponent(profileData?.email || '')}`)}

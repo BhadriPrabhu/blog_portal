@@ -9,6 +9,7 @@ import { useStore } from "../data/zustand";
 import axios from "axios";
 import { addComment, addReply, fetchSuggestions, notifyBlog } from '../utils/api';
 import ButtonTrans from "./buttonTran";
+import { useNavigate } from "react-router-dom";
 
 export default function CommentData({ commentData, blogId }) {
     const [comments, setComments] = React.useState(commentData);
@@ -20,6 +21,7 @@ export default function CommentData({ commentData, blogId }) {
     const [mentionSelected, setMentionSelected] = React.useState([]);
 
     const inputRef = React.useRef();
+    const navigate = useNavigate();
 
 
     React.useEffect(() => {
@@ -160,7 +162,7 @@ export default function CommentData({ commentData, blogId }) {
                 return (
                     <span
                         key={index}
-                        onClick={() => navigate(`/profile/${username}`)}
+                        onClick={() => navigate(`/blog/profile/${username}`)}
                         style={{
                             color: "#0062ff",
                             cursor: "pointer",

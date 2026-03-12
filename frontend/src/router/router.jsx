@@ -74,6 +74,7 @@ import LikedBlogs from '../screens/likedBlogs';
 import MyPost from '../screens/myPost';
 import React from 'react';
 import ViewData from '../components/viewdata';
+import ProfilePage from '../screens/profile';
 
 export default function Router() {
   const isAuth = useStore((state) => state.isAuth);
@@ -98,6 +99,7 @@ export default function Router() {
             <Route path="liked" element={<LikedBlogs />} />
             <Route path="mypost" element={<MyPost />} />
             <Route path=":id" element={<ViewData />} />
+            <Route path="profile/:username" element={<ProfilePage />} />
           </Route>
           {/* <Route path="*" element={<Navigate to="/blog" />} /> */}
           <Route path="*" element={<Navigate to={isAuth ? "/blog" : "/"} replace />} />

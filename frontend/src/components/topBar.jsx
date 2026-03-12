@@ -106,6 +106,14 @@ import ButtonTrans from "./buttonTran";
 import DropBox from "./dropbox";
 import { deleteNotify, getNotify } from "../utils/api";
 
+
+import ReactDOM from "react-dom";
+
+const Portal = ({ children }) => {
+  // This teleports the dropdown to document.body, outside the Z-index mess
+  return ReactDOM.createPortal(children, document.body);
+};
+
 export default function TopBar() {
   const navigate = useNavigate();
   const profile = useStore((state) => state.profileData);
@@ -209,12 +217,12 @@ export default function TopBar() {
 
   const handleNotifyDelete = async (id) => {
 
-    try{
+    try {
       const res = await deleteNotify(id);
       console.log("Notification Delete", res.data.message)
       fetchNotifyData();
-    }catch(err){
-      console.log("Error",err);
+    } catch (err) {
+      console.log("Error", err);
     }
   }
 
@@ -229,6 +237,7 @@ export default function TopBar() {
         width: "100%",
         padding: "12px 60px",
         backgroundColor: "#F7F9FA",
+        zIndex: 9999,
       }}
     >
       <ButtonTrans
@@ -368,8 +377,8 @@ export default function TopBar() {
                         <span style={{ fontWeight: "600", fontSize: "14px", color: "#2C3E50", lineHeight: "14px" }}>
                           {item.content}
                         </span>
-                        <div style={{color: "grey", whiteSpace: "nowrap", gap: "4px", display: "flex", flexDirection: "row", alignItems: "flex-start" }}>
-                          <p style={{margin: "0px", fontSize: "10px"}}>{new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                        <div style={{ color: "grey", whiteSpace: "nowrap", gap: "4px", display: "flex", flexDirection: "row", alignItems: "flex-start" }}>
+                          <p style={{ margin: "0px", fontSize: "10px" }}>{new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                           <ButtonTrans
                             child={<>
                               <X size="14px" color="grey" />
