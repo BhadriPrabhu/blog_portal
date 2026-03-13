@@ -1,26 +1,44 @@
 const mongoose = require("mongoose");
-// const blogSchema = require("./blogSchema");
 
 const AuthSchema = new mongoose.Schema({
-    user: String,
-    email: String,
-    password: {
+    // --- AUTHENTICATION CORE ---
+    user: { type: String, required: true, trim: true }, // Full Name
+    username: { type: String, unique: true, required: true, lowercase: true, trim: true },
+    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    password: { type: String, required: true },
+    role: { type: String, enum: ["user", "admin", "moderator"], default: "user" },
+
+    // --- PROFILE INFO ---
+    avatar: {
         type: String,
-        required: true,
-        lowercase: true,
+        default: ""
     },
-    role: {
-        type: String,
-        default: "user",
+    bio: { type: String, maxlength: 250 },
+    location: { type: String },
+    website: { type: String },
+    socials: {
+        twitter: String,
+        github: String,
+        linkedin: String
     },
-    createdAt: {
-        type: Date,
-        immutable: true,
-        default: () => Date.now(),
-    },
-})
 
+    // --- ACCOUNT STATUS ---
+    isVerified: { type: Boolean, default: false },
+    isActive: { type: Boolean, default: true }, // For deactivating accounts
+    lastLogin: Date,
 
-const AuthSchemaModel = mongoose.model("auth",AuthSchema);
+    followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "auth" }],
+    following: [{ type: mongoose.Schema.Types.ObjectId, ref: "auth" }],
 
+    coverImage: { type: String, default: "" },
+
+    // --- SECURITY ---
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
+
+}, {
+    timestamps: true
+});
+
+const AuthSchemaModel = mongoose.model("auth", AuthSchema);
 module.exports = AuthSchemaModel;
