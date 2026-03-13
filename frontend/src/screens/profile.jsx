@@ -344,7 +344,7 @@ export default function ProfilePage() {
                 }}>
                     <StatItem count={displayUser.followers || 0} label="Followers" onClick={() => navigate(`/profile/${displayUser.username}/followers`)} />
                     <StatItem count={displayUser.following || 0} label="Following" onClick={() => navigate(`/profile/${displayUser.username}/following`)} />
-                    <StatItem count={displayUser.posts?.length || 0} label="Posts" />
+                    <StatItem count={myPost?.length || 0} label="Posts" />
                 </div>
 
                 {/* Tabs – horizontal scroll support */}
@@ -395,7 +395,7 @@ export default function ProfilePage() {
                         transition={{ duration: 0.25 }}
                         style={{ minHeight: "40vh" }}
                     >
-                        {activeTab === "Posts" && <PostGrid posts={myPost || []} />}
+                        {activeTab === "Posts" && <PostGrid posts={myPost || []} navigate={navigate} />}
                         {activeTab === "Saved" && <EmptyState icon={<Bookmark size={48} />} message="No saved posts yet" />}
                         {activeTab === "Liked" && <EmptyState icon={<Heart size={48} />} message="No liked posts yet" />}
                     </motion.div>
@@ -461,7 +461,7 @@ const StatItem = ({ count, label, onClick }) => (
     </div>
 );
 
-const PostGrid = ({ posts }) => {
+const PostGrid = ({ posts, navigate }) => {
     if (!posts?.length) {
         return <EmptyState icon={<Grid size={48} />} message="No posts yet" />;
     }
@@ -484,6 +484,9 @@ const PostGrid = ({ posts }) => {
                         boxShadow: "0 4px 16px rgba(0,0,0,0.06)",
                         transition: "all 0.22s ease",
                     }}
+                    onClick={() => {
+                        navigate(`/blog/${post._id}`);
+                    }}
                 >
                     <div style={{ height: "160px", background: "linear-gradient(135deg, #a5b4fc, #c084fc)" }} />
                     <div style={{ padding: "20px" }}>
@@ -493,7 +496,7 @@ const PostGrid = ({ posts }) => {
                         <div style={{ display: "flex", justifyContent: "space-between", color: "#64748b", fontSize: "13px" }}>
                             <span>{new Date(post.date).toLocaleDateString()}</span>
                             <div style={{ display: "flex", gap: "16px" }}>
-                                <span>{typeof post.likes === 'object' ? post.likes.length : post.likes} likes</span>
+                                <span>{typeof post.likes === 'object' ? post.like.length : post.like} likes</span>
                                 <span>{typeof post.comments === 'object' ? post.comments.length : post.comments} comments</span>
                             </div>
                         </div>

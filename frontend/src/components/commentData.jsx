@@ -305,7 +305,13 @@ export default function CommentData({ commentData, blogId }) {
                                 {item.user?.user?.[0]?.toUpperCase() || "?"}
                             </div>
                             <div style={{ margin: "0px", fontSize: "14px", color: "#2C3E50", fontFamily: "'Poppins', sans-serif", display: "flex", flexDirection: "row", justifyContent: "center", alignItems: "center", gap: "5px" }}>
-                                <p style={{ padding: "0px", margin: "0px" }}>{item.user?.username}</p>
+                                <p
+                                    style={{ margin: "0px", fontSize: "14px", fontFamily: "'Poppins', sans-serif", lineHeight: "16px", cursor: "pointer", fontWeight: "500", transition: "color 0.2s" }}
+                                    onMouseOver={(e) => (e.target.style.textDecoration = "underline")}
+                                    onMouseOut={(e) => (e.target.style.textDecoration = "none")}
+                                    onClick={() => navigate(`/blog/profile/${item.user?.username}`)}>
+                                    {item.user?.username}
+                                </p>
                                 {item.user?.role === "admin" && <span style={{ color: "#f0f4faff", backgroundColor: "blue", padding: "1px 5px", borderRadius: "10px", fontSize: "10px", fontWeight: "bold" }}>Admin</span>}
                             </div>
                         </div>
@@ -432,7 +438,7 @@ export default function CommentData({ commentData, blogId }) {
                                                 <div style={{
                                                     width: "20px",
                                                     height: "20px",
-                                                    backgroundColor: "#3498DB",
+                                                    backgroundColor: "#7F8C8D",
                                                     fontSize: "12px",
                                                     borderRadius: "50%",
                                                     color: "#FFFFFF",
@@ -444,7 +450,13 @@ export default function CommentData({ commentData, blogId }) {
                                                     {reply.user?.user?.[0]?.toUpperCase() || "?"}
                                                 </div>
                                                 <div style={{ margin: "0px", fontSize: "14px", color: "#2C3E50", fontFamily: "'Poppins', sans-serif", display: "flex", flexDirection: "row", justifyContent: "center", alignItems: "center", gap: "5px" }}>
-                                                    <p style={{ padding: "0px", margin: "0px" }}>{reply.user?.username || "user"}</p>
+                                                    <p
+                                                        style={{ margin: "0px", fontSize: "14px", color: "#2C3E50", fontFamily: "'Poppins', sans-serif", lineHeight: "16px", cursor: "pointer", fontWeight: "500", transition: "color 0.2s" }}
+                                                        onMouseOver={(e) => (e.target.style.textDecoration = "underline")}
+                                                        onMouseOut={(e) => (e.target.style.textDecoration = "none")}
+                                                        onClick={() => { reply.user.username && navigate(`/blog/profile/${reply.user.username}`) }}>
+                                                        {reply.user?.username || "user"}
+                                                    </p>
                                                     {reply.user?.role === "admin" && <span style={{ color: "#f0f4faff", backgroundColor: "blue", padding: "1px 5px", borderRadius: "10px", fontSize: "10px", fontWeight: "bold" }}>Admin</span>}
                                                 </div>
                                             </div>
