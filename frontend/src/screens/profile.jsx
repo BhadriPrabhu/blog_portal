@@ -221,14 +221,14 @@ export default function ProfilePage() {
                                         url: ShareURL,
                                     };
 
-                                    try{
-                                        if(navigator.share){
+                                    try {
+                                        if (navigator.share) {
                                             await navigator.share(shareData);
-                                        }else{
+                                        } else {
                                             await navigator.clipboard.writeText(ShareURL);
                                             ToastBlog("Link copied to Clipboard!");
                                         }
-                                    }catch(err){
+                                    } catch (err) {
                                         console.log("Error", err);
                                     }
                                 }}
