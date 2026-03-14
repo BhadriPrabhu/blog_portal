@@ -1,4 +1,5 @@
 import React from "react";
+import ReactDOM from "react-dom";
 
 export default function Dialog({ children, onclose, opened, width, height }) {
   React.useEffect(() => {
@@ -27,7 +28,7 @@ export default function Dialog({ children, onclose, opened, width, height }) {
     border: "1px solid #D5DBDB",
   };
 
-  return (
+  return ReactDOM.createPortal(
     <div
       onClick={onclose}
       style={{
@@ -43,6 +44,7 @@ export default function Dialog({ children, onclose, opened, width, height }) {
       <div onClick={(e) => e.stopPropagation()} style={styled}>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -207,6 +207,32 @@ export default function ViewData() {
                 {blog.title}
             </h1>
 
+            {blog.image && (
+                <div style={{
+                    width: "100%",
+                    maxHeight: "450px",
+                    overflow: "hidden",
+                    borderRadius: "12px",
+                    marginBottom: "24px",
+                    backgroundColor: "#F8FAFC" // Light placeholder color
+                }}>
+                    <img
+                        src={blog.image}
+                        alt={blog.title}
+                        style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover", // Ensures the image fills the area beautifully
+                            display: "block"
+                        }}
+                        onError={(e) => {
+                            // Fallback if Cloudinary link is broken
+                            e.target.style.display = 'none';
+                        }}
+                    />
+                </div>
+            )}
+
             <p style={{
                 fontSize: "14px",
                 color: "#34495E",

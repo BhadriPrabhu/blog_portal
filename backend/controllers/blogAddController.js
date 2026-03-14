@@ -3,7 +3,7 @@ const Blog = require("../models/blogSchema");
 
 const blogAddController = async (req, res) => {
   try {
-    const { title, desc, userId, email, tags } = req.body;
+    const { title, desc, userId, email, tags, image } = req.body;
 
     // Validate required fields
     if (!title || !desc || !userId || !email) {
@@ -26,6 +26,7 @@ const blogAddController = async (req, res) => {
       date: new Date(),
       tags,
       status: "active",
+      image: image || "https://res.cloudinary.com/dw3ksypom/image/upload/v1773495536/undraw_images_v4j9_poeelm.png",
     });
 
     await newBlog.save();

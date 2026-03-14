@@ -66,36 +66,42 @@ export default function Login() {
     }
     try {
       const res = await login(loginData);
+
+      // 1. Store the token!
+      localStorage.setItem("token", res.data.token);
+
+      // 2. Map correctly from res.data.result
+      const userData = res.data.result;
+
       setProfileData({
-        _id: res.data._id,
-        user: res.data.user,
-        email: res.data.email,
-        role: res.data.role || "user",
-        username: res.data.username,
+        _id: userData._id,
+        user: userData.user,
+        email: userData.email,
+        role: userData.role || "user",
+        username: userData.username,
       });
+
       setIsAuth(true);
-      console.log("Profile:", useStore.getState().profileData);
-      ToastBlog("Login was Successfull");
+      ToastBlog("Login was Successful");
       navigate("/blog");
     } catch (err) {
-      console.error("Login error:", err.response?.data || err.message);
       setError(err.response?.data?.message || "Login failed. Try again.");
     }
   };
 
   return (
     <div
-      style={{display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: "50px", margin: "150px 0px" }}
+      style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: "50px", margin: "150px 0px" }}
     >
       <img
         src={loginIcon}
         alt="OTP Illustration"
         style={{ width: '400px', height: 'auto' }}
       />
-      <div 
-      style={hover ? { ...cardStyle, ...hoverStyle } : cardStyle}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}>
+      <div
+        style={hover ? { ...cardStyle, ...hoverStyle } : cardStyle}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}>
         <h1
           style={{
             margin: "0",

@@ -137,10 +137,6 @@ export default function Register() {
   };
 
   const handleRegister = async () => {
-    // if (!registerData.user || !registerData.email || !registerData.password) {
-    //   setError("Name, email, and password are required");
-    //   return;
-    // }
     setError("");
     if (activeOtp !== otp.join('')) {
       setError("Please Enter the valid OTP.");
@@ -148,18 +144,25 @@ export default function Register() {
     }
     try {
       const res = await register(registerData);
+
+      // Save the token to localStorage immediately!
+      localStorage.setItem("token", res.data.token);
+
+      // Access data through res.data.result (based on your controller)
+      const userData = res.data.result;
+
       setProfileData({
-        _id: res.data._id,
-        user: res.data.user,
-        email: res.data.email,
-        role: res.data.role || "user",
-        username: res.data.username,
+        _id: userData._id,
+        user: userData.user,
+        email: userData.email,
+        role: userData.role || "user",
+        username: userData.username,
       });
+
       setIsAuth(true);
-      // console.log("Profile:", useStore.getState().profileData);
+      ToastBlog("Registration Successful!");
       navigate("/blog");
     } catch (err) {
-      console.error("Register error:", err.response?.data || err.message);
       setError(err.response?.data?.message || "Registration failed. Try again.");
     }
   };

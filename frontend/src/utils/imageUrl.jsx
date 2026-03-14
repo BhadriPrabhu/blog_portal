@@ -1,0 +1,34 @@
+export const uploadImageToCloudinary = async (file) => {
+    if (!file) return null;
+
+    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "dw3ksypom"; // Default to your Cloudinary cloud name if env var is missing
+    const uploadPreset = import.meta.env.VITE_CLOUDINARY_PRESET_NAME || "blog_portal";
+
+    if (!cloudName || !uploadPreset) {
+        console.error("Cloudinary config missing! Check your .env file.");
+        return null;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", uploadPreset);
+
+    try {
+        const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+            method: "POST",
+            body: formData,
+        });
+        // console.log("Cloudinary upload response:", response);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error.message || "Upload failed");
+        }
+
+        const data = await response.json();
+        return data.secure_url; // This is the string URL you save to your DB
+
+    } catch (err) {
+        console.error("Cloudinary Upload Error:", err);
+        return null;
+    }
+};

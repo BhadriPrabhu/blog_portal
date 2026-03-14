@@ -1,544 +1,315 @@
-// import React from 'react';
-// import { MessageSquareText, Share2 } from 'lucide-react'
-// // import { ThumbsUp } from 'lucide-react'
-// import ThumbUpOutlinedIcon from '@mui/icons-material/ThumbUpOutlined';
-// import ThumbUpIcon from '@mui/icons-material/ThumbUp';
-// import ThumbDownIcon from '@mui/icons-material/ThumbDown';
-// import ThumbDownOutlinedIcon from '@mui/icons-material/ThumbDownOutlined';
-// import FavoriteRoundedIcon from '@mui/icons-material/FavoriteRounded';
-// import ChatRoundedIcon from '@mui/icons-material/ChatRounded';
-// import Comment from './comment';
-// // import Avatar from '@mui/material/Avatar';
-// import { data } from '../data/data.jsx'
-// import ViewData from './viewdata.jsx';
-// import axios from 'axios';
-// import BookmarkBorderOutlinedIcon from '@mui/icons-material/BookmarkBorderOutlined';
-// import BookmarkIcon from '@mui/icons-material/Bookmark';
-// import { useStore } from '../data/zustand.jsx';
-
-
-
-// export default function PostCard() {
-
-//     const [sampleDatas, setSampleDatas] = React.useState([]);
-//     const [selectedComments, setSelectedComments] = React.useState([]);
-//     const [selectedId,setSelectedId] = React.useState("");
-
-
-//     const profileData = useStore((state) => state.profileData)
-
-//     React.useEffect(() => {
-//         const result = axios.get("http://localhost:3000/blog")
-
-//         result.then((res) => {
-//             setSampleDatas(res.data);
-//             console.log("Sample", res.data);
-//         }).catch((err) => {
-//             console.log(err);
-//         })
-
-//     }, []);
-
-//     React.useEffect(() => {
-//         console.log(sampleDatas, "sampleDatas")
-//     }, [sampleDatas])
-
-//     const likeBlog = async (blogId, idx, userId) => {
-//         try {
-//             const result = await axios.put("http://localhost:3000/blog/like", {blogId,userId});
-
-//             const updatedLikeCount = result.data.likeCount;
-
-//             setSampleDatas(prev =>
-//                 prev.map((item, i) =>
-//                     i === idx
-//                         ? {
-//                             ...item,
-//                             like: updatedLikeCount,
-//                             liked: !item.liked,
-//                         }
-//                         : item
-//                 )
-//             );
-
-//             console.log("Like updated:", result.data);
-//         } catch (error) {
-//             console.error("Error liking blog:", error);
-//         }
-//     };
-
-//     const handleSave = async (blogId,index) => {
-//         const result = axios.post("http://localhost:3000/blog/save",{blogId})
-
-//         result.then((res) => {
-//             setSampleDatas((data) => data.map((d,i) => {
-//                 return i === index ? {...d, saved: res.data.saved} : d;
-//             }))
-//         }).catch((err) => {
-//             console.log(err);
-//         })
-//     }
-
-//     const [hover1, setHover1] = React.useState(null);
-//     const [hover2, setHover2] = React.useState(null);
-//     const [hover3, setHover3] = React.useState(null);
-//     const [hover4, setHover4] = React.useState(null);
-//     const [isOpen, setIsOpen] = React.useState(false);
-//     const [openModel, setOpenModel] = React.useState(false);
-//     const [viewData, setViewData] = React.useState({});
-
-//     // const isProfile = true;
-
-//     const buttonStyle = { backgroundColor: "transparent", border: "0px", borderRadius: "15px", height: "30px", display: "flex", justifyContent: "start", alignItems: "center", fontfamily: "poppins", cursor: "pointer" };
-
-//     const hoverStyle = { backgroundColor: "#9637371a", }
-
-//     return (
-//         <>
-//             {sampleDatas.map((item, idx) => {
-//                 // console.log(item);
-//                 return (
-//                     <div key={item.id || idx} style={{ width: "360px", border: "solid 2px #767676", padding: "10px", borderRadius: "10px", backgroundColor: "#f6e9e9ff", margin: "5px" }}>
-//                         <div onClick={() => {
-//                             setViewData(item);
-//                             setOpenModel(true);
-//                         }} style={{ cursor: "pointer" }} >
-//                             <div style={{ display: "flex", justifyContent: "space-between", }}>
-//                                 <p style={{ margin: "4px 0px", padding: "4px 6px", fontSize: "14px" }}>{new Date(item.date).toLocaleDateString("en-US", {
-//                                     year: "numeric",
-//                                     month: "long",
-//                                     day: "numeric",
-//                                 })}</p>
-//                                 <div style={{ backgroundColor: "azure", margin: '4px 0px', padding: "4px 6px", borderRadius: '6px', display: "flex", gap: "5px", justifyContent: "center", alignItems: "center", fontSize: "14px" }}><div style={{ width: "20px", height: "20px", backgroundColor: "#0c5686ff", fontSize: "12px", borderRadius: "50%", color: "white", display: "flex", justifyContent: "center", alignItems: "center" }} >{item.user?.user?.toUpperCase()?.charAt(0)}</div>{item.user?.user}</div>
-//                             </div>
-//                             <h3 style={{ margin: "0px", padding: "0px", height: "30px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.title}</h3>
-//                             <p style={{ margin: "5px 0px", height: "70px", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{item.desc}</p>
-//                             <div style={{ display: "flex", justifyContent: "space-between" }}>
-//                                 <div style={{ display: "flex", alignItems: "center", fontSize: "14px", gap: "4px" }}><FavoriteRoundedIcon sx={{ width: "18px", height: "18px" }} />{item.like} likes</div>
-//                                 <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "14px" }}><ChatRoundedIcon sx={{ width: "18px", height: "18px" }} /> {item.comments.length} comments</div>
-//                             </div>
-//                         </div>
-
-//                         <hr />
-//                         <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-around", marginTop: "10px" }}>
-//                             <button style={hover1 === idx ? { ...buttonStyle, ...hoverStyle } : buttonStyle}
-//                                 onMouseEnter={() => setHover1(idx)}
-//                                 onMouseLeave={() => setHover1(null)}
-//                                 onClick={() => {
-//                                     likeBlog(item._id, idx, profileData.email)
-//                                     // setSampleDatas((data) =>
-//                                     //     data.map((d, i) => i === idx ? { ...d, liked: !d.liked } : d)
-//                                     // )
-//                                     // setSampleDatas((data) => data.map((d, i) => {
-//                                     //     if (i === idx) {
-//                                     //         return {
-//                                     //             ...d,
-//                                     //             disliked: false
-//                                     //         }
-//                                     //     }
-//                                     //     else {
-//                                     //         return {
-//                                     //             ...d
-//                                     //         }
-//                                     //     }
-//                                     // }
-//                                     // ))
-//                                     // setSampleDatas({ ...sampleDatas, disliked: false })
-//                                 }}
-//                             >
-//                                 <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "4px" }}>{item.liked ? <ThumbUpIcon /> : <ThumbUpOutlinedIcon />}</div>
-//                             </button>
-
-
-//                             <button style={hover2 === idx ? { ...buttonStyle, ...hoverStyle } : buttonStyle}
-//                                 onMouseEnter={() => setHover2(idx)}
-//                                 onMouseLeave={() => setHover2(null)}
-//                                 onClick={() => handleSave(item._id,idx)}
-//                             >
-//                                 <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "4px" }}>{item.saved ? <BookmarkIcon /> : <BookmarkBorderOutlinedIcon />}</div>
-//                             </button>
-//                             <button style={hover3 === idx ? { ...buttonStyle, ...hoverStyle } : buttonStyle}
-//                                 onMouseEnter={() => setHover3(idx)}
-//                                 onMouseLeave={() => setHover3(null)}
-//                                 onClick={() => {
-//                                     setIsOpen(true)
-//                                     setSelectedComments(item.comments || [])
-//                                     setSelectedId(item._id);
-//                                     console.log("Id",item._id);
-//                                 }}
-//                             >
-//                                 <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "4px" }}><MessageSquareText /></div>
-//                             </button>
-//                             <button style={hover4 === idx ? { ...buttonStyle, ...hoverStyle } : buttonStyle}
-//                                 onMouseEnter={() => setHover4(idx)}
-//                                 onMouseLeave={() => setHover4(null)}
-//                             >
-//                                 <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "4px" }}><Share2 /></div>
-//                             </button>
-//                         </div>
-
-//                     </div >
-//                 );
-//             })}
-
-//             <Comment opened={isOpen} isClose={() => setIsOpen(false)} commentData={selectedComments} userId={selectedId} />
-
-//             <ViewData isOpen={openModel} isClose={() => setOpenModel(false)} viewValue={[viewData]} />
-//         </>
-//     );
-// }
-
-
-import React from 'react';
-import { MessageSquareText, Share2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { MessageSquareText, Share2, MoreVertical, Trash2, Edit2, X, Grid, Bookmark, Heart, Flag } from 'lucide-react';
 import ThumbUpOutlinedIcon from '@mui/icons-material/ThumbUpOutlined';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
-import FavoriteRoundedIcon from '@mui/icons-material/FavoriteRounded';
-import ChatRoundedIcon from '@mui/icons-material/ChatRounded';
 import BookmarkBorderOutlinedIcon from '@mui/icons-material/BookmarkBorderOutlined';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
-import Comment from './comment';
-import ViewData from './viewdata';
-import axios from 'axios';
 import { useStore } from '../data/zustand.jsx';
-import { useLocation } from 'react-router-dom';
-import api, { getBlog } from '../utils/api';
+import { useLocation, useNavigate } from 'react-router-dom';
+import api, { bulkAction } from '../utils/api';
 import ToastBlog from '../utils/toast.jsx';
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence, hover } from 'framer-motion';
+import ButtonTrans from './buttonTran.jsx';
+import BlogImage from '../assets/icons/blogImage.jsx';
 
 export default function PostCard({ postsData = null, onReload = null }) {
     const [sampleDatas, setSampleDatas] = React.useState([]);
-    const [selectedComments, setSelectedComments] = React.useState([]);
-    const [selectedId, setSelectedId] = React.useState('');
-    const [hover1, setHover1] = React.useState(null);
-    const [hover2, setHover2] = React.useState(null);
-    const [hover3, setHover3] = React.useState(null);
-    const [hover4, setHover4] = React.useState(null);
-    const [isOpen, setIsOpen] = React.useState(false);
-    const [openModel, setOpenModel] = React.useState(false);
-    const [viewData, setViewData] = React.useState({});
+    const [activeMenu, setActiveMenu] = React.useState(null);
+    const [hoverMenu, setHoverMenu] = useState({ hover1: false, hover2: false, hover3: false });
+    const [hover, setHover] = useState({ hoverLike: null, hoverComment: null, hoverShare: null, hoverSave: null });
+    const [hover1, setHover1] = useState(false);
 
     const profileData = useStore((state) => state.profileData);
     const refreshTrigger = useStore((state) => state.refreshTrigger);
     const location = useLocation();
-
     const navigate = useNavigate();
 
     React.useEffect(() => {
         fetchPosts();
     }, [postsData, location.search, profileData, refreshTrigger]);
 
-
     const fetchPosts = async () => {
         if (postsData) {
             setSampleDatas(postsData);
             return;
         }
-
         const urlParams = new URLSearchParams(location.search);
         const sortBy = urlParams.get('sortBy') || 'newest';
         const search = urlParams.get('search') || '';
         const userId = profileData?._id || '';
-        if (!userId) {
-            console.error('No userId found for fetching posts');
-            return;
-        }
+        if (!userId) return;
 
         const endpoint = sortBy === 'saved' ? '/blog/saved' : sortBy === 'liked' ? '/blog/liked' : '/blog';
         let query = sortBy === 'saved' || sortBy === 'liked'
             ? `?userId=${encodeURIComponent(userId)}`
             : `?sortBy=${sortBy}&userId=${encodeURIComponent(userId)}${search ? `&search=${encodeURIComponent(search)}` : ''}`;
 
-        console.log('Fetching posts:', { endpoint, query, userId });
         try {
             const res = await api.get(`${endpoint}${query}`);
-            console.log('Fetched posts:', res.data);
             setSampleDatas(res.data);
         } catch (err) {
-            console.error('Fetch posts error:', err.response?.data || err.message);
+            console.error('Fetch posts error:', err.message);
         }
     };
 
-    const likeBlog = async (blogId, idx, userId) => {
+    const likeBlog = async (e, blogId, idx, userId) => {
+        e.stopPropagation();
         try {
-            console.log("User ID:", userId);
             if (!userId) throw new Error('User ID is missing');
             const res = await api.put('/blog/like', { blogId, userId });
             const { likeCount, liked } = res.data;
-
-            console.log('Like response:', res.data);
-            setSampleDatas(prev =>
-                prev.map((item, i) =>
-                    i === idx ? { ...item, like: likeCount, liked } : item
-                )
-            );
-
+            setSampleDatas(prev => prev.map((item, i) => i === idx ? { ...item, like: likeCount, liked } : item));
             if (onReload) onReload();
-            fetchPosts();
         } catch (error) {
-            console.error('Error liking blog:', error.response?.data || error.message);
+            console.error('Error liking blog:', error.message);
         }
     };
 
-    const handleSave = async (blogId, idx) => {
+    const handleSave = async (e, blogId, idx) => {
+        e.stopPropagation();
         try {
-
             if (!profileData._id) throw new Error('User ID is missing');
             const res = await api.post('/blog/save', { blogId, userId: profileData._id });
-
-            if (res.data.saved) {
-                ToastBlog("Saved Post");
-            }
-
-            console.log('Save response:', res.data);
-            setSampleDatas((data) => data.map((d, i) =>
-                i === idx ? { ...d, saved: res.data.saved } : d
-            ));
-
+            if (res.data.saved) ToastBlog("Saved Post");
+            setSampleDatas((data) => data.map((d, i) => i === idx ? { ...d, saved: res.data.saved } : d));
             if (onReload) onReload();
-            fetchPosts();
         } catch (err) {
-            console.error('Error saving blog:', err.response?.data || err.message);
+            console.error('Error saving blog:', err.message);
         }
     };
 
-
-    const buttonStyle = {
-        backgroundColor: 'transparent',
-        border: '0px',
-        borderRadius: '15px',
-        height: '30px',
-        display: 'flex',
-        justifyContent: 'start',
-        alignItems: 'center',
-        fontFamily: 'Poppins, sans-serif',
-        cursor: 'pointer',
-        color: '#2C3E50',
+    const toggleHover = (key, value) => {
+        setHoverMenu(prev => ({ ...prev, [key]: value }));
     };
-    const hoverStyle = { backgroundColor: '#9637371a' };
 
-    // const handleGetBlog = async (id) => {
-    //     try {
-    //         const result = await getBlog(id);
-    //         setViewData(result.data);
-    //         setOpenModel(true);
-    //     } catch (err) {
-    //         console.log("Error",err);
-    //     }
+    const getHoverStyle = (isHovered) => ({
+        display: 'flex',
+        alignItems: 'center',
+        padding: '8px 12px',
+        cursor: 'pointer',
+        transition: 'background 0.2s',
+        backgroundColor: isHovered ? '#f1f5f9' : 'transparent',
+        borderRadius: '8px',
+        fontSize: '14px'
+    });
 
-    // }
+    const dropdownContainer = {
+        position: "absolute",
+        top: "35px",
+        right: "0",
+        backgroundColor: "white",
+        borderRadius: "12px",
+        boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+        border: "1px solid #e2e8f0",
+        width: "160px",
+        padding: "4px",
+        zIndex: 100
+    };
+
+    if (sampleDatas.length === 0) {
+        return <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>No posts to show.</div>;
+    }
 
     return (
-        <>
-            {sampleDatas.length === 0 && (
-                <div style={{ padding: '20px', textAlign: 'center', color: '#888' }}>
-                    No posts to show.
-                </div>
-            )}
+        <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+            gap: "24px",
+            padding: "10px"
+        }}>
+            {sampleDatas.map((item, idx) => {
+                const isOwnProfile = item.user?._id === profileData?._id;
 
-            {sampleDatas.map((item, idx) => (
-                <div
-                    key={item._id || idx}
-                    style={{
-                        width: '360px',
-                        border: 'solid 2px #767676',
-                        padding: '10px',
-                        borderRadius: '10px',
-                        backgroundColor: '#E8ECEF',
-                        margin: '5px',
-                    }}
-                >
-                    <div
+                return (
+                    <motion.div
+                        key={item._id || idx}
+                        whileHover={{ y: -4, boxShadow: "0 20px 40px -12px rgba(0,0,0,0.12)" }}
+                        style={{
+                            background: "white",
+                            borderRadius: "16px",
+                            overflow: "hidden",
+                            border: "1px solid #e2e8f0",
+                            boxShadow: "0 4px 16px rgba(0,0,0,0.06)",
+                            transition: "all 0.22s ease",
+                            position: "relative",
+                            cursor: "pointer"
+                        }}
                         onClick={() => navigate(`/blog/${item._id}`)}
-                        style={{ cursor: 'pointer' }}
                     >
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <p style={{ margin: '4px 0px', padding: '4px 6px', fontSize: '14px' }}>
-                                {new Date(item.date).toLocaleDateString('en-US', {
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric',
-                                })}
-                            </p>
-                            <div
-                                style={{
-                                    backgroundColor: 'azure',
-                                    margin: '4px 0px',
-                                    padding: '4px 6px',
-                                    borderRadius: '6px',
-                                    display: 'flex',
-                                    gap: '5px',
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    fontSize: '14px',
+                        {/* --- MENU BUTTON --- */}
+                        <div style={{ position: "absolute", top: "10px", right: "10px", zIndex: 10 }}>
+                            <ButtonTrans
+                                child={<MoreVertical size={22} strokeWidth="2px" color={item.image ? "white" : "#3e4b5d"} />}
+                                buttonType="button"
+                                noToolTip={true}
+                                paddingEdit="1px"
+                                ClickEvent={(e) => {
+                                    e.stopPropagation();
+                                    setActiveMenu(activeMenu === item._id ? null : item._id);
                                 }}
-                            >
-                                <div
-                                    style={{
-                                        width: '20px',
-                                        height: '20px',
-                                        backgroundColor: '#0c5686ff',
-                                        fontSize: '12px',
-                                        borderRadius: '50%',
-                                        color: 'white',
-                                        display: 'flex',
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                    }}
-                                >
-                                    {item.user?.user?.toUpperCase()?.charAt(0) || 'U'}
+                                hover={hover1 === item._id}
+                                label="Post options"
+                                mouseEnter={() => setHover1(item._id)}
+                                mouseLeave={() => setHover1(null)}
+
+                            />
+
+                            <AnimatePresence>
+                                {activeMenu === item._id && (
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.95, y: -5 }}
+                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.95, y: -5 }}
+                                        style={dropdownContainer}
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        {isOwnProfile ? (
+                                            <>
+                                                <div style={getHoverStyle(hoverMenu.hover1)} onMouseEnter={() => toggleHover('hover1', true)} onMouseLeave={() => toggleHover('hover1', false)}>
+                                                    <Edit2 size={16} style={{ marginRight: '8px' }} />
+                                                    <span>Edit Post</span>
+                                                </div>
+                                                <div style={{ ...getHoverStyle(hoverMenu.hover2), color: "#e74c3c" }}
+                                                    onClick={async () => {
+                                                        const ids = item._id;
+                                                        if (!window.confirm(`Are you sure you want to delete the post?`)) return;
+                                                        try {
+                                                            await bulkAction("delete", ids);
+                                                            ToastBlog("Post Deleted");
+                                                            await fetchPosts();
+                                                        } catch (err) {
+                                                            console.log("Failed to Delete:", err);
+                                                        }
+                                                    }}
+                                                    onMouseEnter={() => toggleHover('hover2', true)} onMouseLeave={() => toggleHover('hover2', false)}>
+                                                    <Trash2 size={16} style={{ marginRight: '8px' }} />
+                                                    <span>Delete</span>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div style={{ ...getHoverStyle(hoverMenu.hover2), color: "#e74c3c" }} onMouseEnter={() => toggleHover('hover2', true)} onMouseLeave={() => toggleHover('hover2', false)}>
+                                                <Flag size={16} style={{ marginRight: '8px' }} />
+                                                <span>Report</span>
+                                            </div>
+                                        )}
+                                        <div style={{ height: '1px', backgroundColor: '#eee', margin: '2px 0' }} />
+                                        <div style={getHoverStyle(hoverMenu.hover3)} onMouseEnter={() => toggleHover('hover3', true)} onMouseLeave={() => toggleHover('hover3', false)} onClick={() => setActiveMenu(null)}>
+                                            <X size={16} style={{ marginRight: '8px' }} />
+                                            <span>Close</span>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
+                        {/* --- IMAGE SECTION --- */}
+                        <div style={{
+                            height: "160px",
+                            background: item.image ? `url(${item.image}) center/cover` : "linear-gradient(135deg, #eddddd, #cca7f1)",
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}>
+                            {!item.image && <BlogImage style={{ width: '80%', height: '80%' }} />}
+                        </div>
+
+                        {/* --- CONTENT SECTION --- */}
+                        <div style={{ padding: "16px" }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                                <div style={{ width: '24px', height: '24px', backgroundColor: '#0c5686', borderRadius: '50%', color: 'white', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '12px', fontWeight: 'bold' }}>
+                                    {item.user?.user?.charAt(0).toUpperCase() || 'U'}
                                 </div>
-                                {item.user?.username || 'Unknown'}
+                                <span style={{ fontSize: '15px', color: '#64748b', fontWeight: '500' }} onClick={() => navigate(`/blog/profile/${item.user.username}`)}>{item.user?.username || 'user'}</span>
+                            </div>
+
+                            <h3 style={{ margin: "0 0 4px", fontSize: '18px', fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', }}>
+                                {item.title}
+                            </h3>
+
+                            <p style={{ margin: '0 0 10px', fontSize: '14px', color: '#556884', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', height: '40px', lineHeight: '1.5' }}>
+                                {item.desc}
+                            </p>
+
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: '1.5px solid #cfe0f1', paddingTop: '10px' }}>
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <ButtonTrans
+                                        ClickEvent={(e) => likeBlog(e, item._id, idx, profileData._id)}
+                                        child={<>
+                                            {item.liked ? <ThumbUpIcon sx={{ fontSize: 20, color: '#3b82f6' }} /> : <ThumbUpOutlinedIcon sx={{ fontSize: 20, color: '#94a3b8' }} />}
+                                            <span style={{ fontSize: '14px', fontWeight: '600', color: item.liked ? '#3b82f6' : '#64748b' }}>{item.like}</span>
+                                        </>}
+                                        buttonType="button"
+                                        noToolTip={true}
+                                        hover={hover.hoverLike === item._id}
+                                        label="Like post"
+                                        mouseEnter={() => setHover(prev => ({ ...prev, hoverLike: item._id }))}
+                                        mouseLeave={() => setHover(prev => ({ ...prev, hoverLike: null }))}
+                                        paddingEdit="2px 6px"
+                                    />
+                                    <ButtonTrans
+                                        ClickEvent={(e) => { e.stopPropagation(); navigate(`/blog/${item._id}#comments`); }}
+                                        child={<>
+                                            <MessageSquareText size={18} />
+                                            <span style={{ fontSize: '14px', fontWeight: '600' }}>{item.comments?.length || 0}</span>
+                                        </>}
+                                        buttonType="button"
+                                        noToolTip={true}
+                                        label="View comments"
+                                        hover={hover.hoverComment === item._id}
+                                        mouseEnter={() => setHover(prev => ({ ...prev, hoverComment: item._id }))}
+                                        mouseLeave={() => setHover(prev => ({ ...prev, hoverComment: null }))}
+                                        paddingEdit="2px 6px"
+                                    />
+                                    <ButtonTrans
+                                        ClickEvent={async () => {
+                                            const blogUrl = `${window.location.origin}/blog/${item._id}`;
+
+                                            const shareData = {
+                                                title: item.title,
+                                                text: `Check out this post: ${item.title}`,
+                                                url: blogUrl
+                                            };
+
+                                            try {
+                                                if (navigator.share) {
+                                                    await navigator.share(shareData);
+                                                } else {
+                                                    await navigator.clipboard.writeText(blogUrl);
+                                                    ToastBlog("Link copied to clipboard!");
+                                                }
+                                            } catch (err) {
+                                                console.log("Error sharing", err);
+                                            }
+                                        }}
+                                        child={<>
+                                            <Share2 size={18} color='#8497b1' />
+                                        </>}
+                                        buttonType={"button"}
+                                        noToolTip={true}
+                                        label={"Share Post"}
+                                        paddingEdit="4px"
+                                        hover={hover.hoverShare === item._id}
+                                        mouseEnter={() => setHover(prev => ({ ...prev, hoverShare: item._id }))}
+                                        mouseLeave={() => setHover(prev => ({ ...prev, hoverShare: null }))}
+                                    />
+                                </div>
+
+                                <ButtonTrans
+                                    ClickEvent={(e) => handleSave(e, item._id, idx)}
+                                    child={item.saved ? <BookmarkIcon sx={{ fontSize: 20, color: '#3b82f6' }} /> : <BookmarkBorderOutlinedIcon sx={{ fontSize: 20, color: '#94a3b8' }} />}
+                                    buttonType={"button"}
+                                    noToolTip={true}
+                                    label={item.saved ? "Unsave Post" : "Save Post"}
+                                    paddingEdit="4px"
+                                    hover={hover.hoverSave === item._id}
+                                    mouseEnter={() => setHover(prev => ({ ...prev, hoverSave: item._id }))}
+                                    mouseLeave={() => setHover(prev => ({ ...prev, hoverSave: null }))}
+                                />
                             </div>
                         </div>
-
-                        <h3
-                            style={{
-                                margin: 0,
-                                padding: 0,
-                                height: '30px',
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                            }}
-                        >
-                            {item.title}
-                        </h3>
-                        <p
-                            style={{
-                                margin: '0px',
-                                height: '70px',
-                                display: '-webkit-box',
-                                WebkitLineClamp: 3,
-                                WebkitBoxOrient: 'vertical',
-                                overflow: 'hidden',
-                            }}
-                        >
-                            {item.desc}
-                        </p>
-                        {/* <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginTop: '5px' }}>
-                            {item.tags?.map((tag, index) => (
-                                <span
-                                    key={index}
-                                    style={{
-                                        backgroundColor: 'gray',
-                                        color: 'white',
-                                        padding: '2px 8px',
-                                        borderRadius: '12px',
-                                        fontSize: '12px',
-                                    }}
-                                >
-                                    {tag}
-                                </span>
-                            ))}
-                        </div> */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: "5px" }}>
-                            <div style={{ display: 'flex', alignItems: 'center', fontSize: '14px', gap: '4px', color: '#100f0fff' }}>
-                                <FavoriteRoundedIcon sx={{ width: '18px', height: '18px', color: 'red' }} />
-                                <motion.p style={{ margin: "0px" }}>{item.like}</motion.p> likes
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', color: '#100f0fff' }}>
-                                <ChatRoundedIcon sx={{ width: '18px', height: '18px', color: 'gray' }} />
-                                {item.comments?.length || 0} comments
-                            </div>
-                        </div>
-                    </div>
-
-                    <hr />
-                    <div style={{ display: 'flex', justifyContent: 'space-around' }}>
-                        <motion.button
-                            style={hover1 === idx ? { ...buttonStyle, ...hoverStyle } : buttonStyle}
-                            onMouseEnter={() => setHover1(idx)}
-                            onMouseLeave={() => setHover1(null)}
-                            onClick={() => likeBlog(item._id, idx, profileData._id)}
-                            aria-label={item.liked ? 'Unlike post' : 'Like post'}
-                            whileTap={{ scale: 0.8 }}
-                        >
-                            <motion.div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
-                                key={item.liked ? "liked" : "unliked"}
-                                initial={{ scale: 1 }}
-                                animate={{
-                                    scale: item.liked ? [1, 1.5, 1.2, 1] : 1,
-                                }}
-                                transition={{ duration: 0.4, type: "spring", stiffness: 300 }}
-                            >
-                                {item.liked ? <ThumbUpIcon sx={{ color: '#0a82d2ff' }} /> : <ThumbUpOutlinedIcon sx={{ color: 'gray' }} />}
-                            </motion.div>
-                        </motion.button>
-
-                        <motion.button
-                            style={hover2 === idx ? { ...buttonStyle, ...hoverStyle } : buttonStyle}
-                            onMouseEnter={() => setHover2(idx)}
-                            onMouseLeave={() => setHover2(null)}
-                            onClick={() => handleSave(item._id, idx)}
-                            aria-label={item.saved ? 'Unsave post' : 'Save post'}
-                            whileTap={{ scale: 0.8 }}
-                        >
-                            <motion.div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
-                                key={item.saved ? "saved" : "unsaved"}
-                                initial={{ scale: 1 }}
-                                animate={{
-                                    scale: item.saved ? [1, 1.5, 1.2, 1] : 1,
-                                }}
-                                transition={{ duration: 0.4, type: "spring", stiffness: 300 }}
-                            >
-                                {item.saved ? <BookmarkIcon sx={{ color: '#0a82d2ff' }} /> : <BookmarkBorderOutlinedIcon sx={{ color: 'gray' }} />}
-                            </motion.div>
-                        </motion.button>
-
-                        <motion.button
-                            style={hover3 === idx ? { ...buttonStyle, ...hoverStyle } : buttonStyle}
-                            onMouseEnter={() => setHover3(idx)}
-                            onMouseLeave={() => setHover3(null)}
-                            onClick={() => {
-                                setIsOpen(true);
-                                setSelectedComments(item.comments || []);
-                                setSelectedId(item._id);
-                            }}
-                            aria-label='View comments'
-                        >
-                            <motion.div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <MessageSquareText color={hover3 === idx ? '#2ECC71' : 'gray'} />
-                            </motion.div>
-                        </motion.button>
-
-                        <button
-                            style={hover4 === idx ? { ...buttonStyle, ...hoverStyle } : buttonStyle}
-                            onMouseEnter={() => setHover4(idx)}
-                            onMouseLeave={() => setHover4(null)}
-                            aria-label='Share post'
-                            onClick={async () => {
-                                const blogUrl = `${window.location.origin}/blog/${item._id}`;
-
-                                const shareData = {
-                                    title: item.title,
-                                    text: `Check out this post: ${item.title}`,
-                                    url: blogUrl
-                                };
-
-                                try {
-                                    if (navigator.share) {
-                                        await navigator.share(shareData);
-                                    } else {
-                                        await navigator.clipboard.writeText(blogUrl);
-                                        ToastBlog("Link copied to clipboard!");
-                                    }
-                                } catch (err) {
-                                    console.log("Error sharing", err);
-                                }
-                            }}
-                        >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <Share2 color={hover4 === idx ? '#3498DB' : 'gray'} />
-                            </div>
-                        </button>
-                    </div>
-                </div>
-            ))}
-
-            {/* <Comment opened={isOpen} isClose={() => setIsOpen(false)} commentData={selectedComments} userId={selectedId} /> */}
-            {/* <ViewData isOpen={openModel} isClose={() => setOpenModel(false)} viewValue={[viewData]} /> */}
-        </>
+                    </motion.div>
+                );
+            })}
+        </div>
     );
 }

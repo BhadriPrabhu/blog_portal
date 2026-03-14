@@ -7,7 +7,7 @@ export const Layout = () => {
         <div style={{ display: "flex", flexDirection: "row", backgroundColor: "aliceblue", }}>
             <SideBar />
             <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
-                <div style={{ display: "flex", flexDirection: "row", justifyContent: "end", position: "sticky", top: '0px', zIndex: 9999 }}>
+                <div style={{ display: "flex", flexDirection: "row", justifyContent: "end", position: "sticky", top: '0px', zIndex: 100 }}>
                     <TopBar />
                 </div>
                 <div style={{ zIndex: 1}}>

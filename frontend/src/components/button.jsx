@@ -2,10 +2,10 @@ import React from 'react';
 
 export default function Button({ value, onClick, disabled = false, normalField }) {
   const buttonStyle = {
-    backgroundColor: disabled ? '#D5DBDB' : normalField ? "#95A5A6" :'#2b7fff',
-    color: '#FFFFFF',
+    backgroundColor: disabled ? '#D5DBDB' : normalField ? "#E5E7EB" : '#3498DB',
+    color: normalField ? '#4B5563' : '#FFFFFF',
     padding: '10px 20px',
-    border: 'none',
+    border: normalField ? '1px solid #D1D5DB' : 'none',
     borderRadius: '4px',
     fontSize: '14px',
     fontWeight: '500',
@@ -17,7 +17,7 @@ export default function Button({ value, onClick, disabled = false, normalField }
   };
 
   const hoverStyle = {
-    backgroundColor: disabled ? '#D5DBDB' : normalField ? "#7F8C8D" :'#2980B9',
+    backgroundColor: disabled ? '#D5DBDB' : normalField ? "#ccdee0" : '#2980B9',
     transform: disabled ? 'none' : 'translateY(-2px)',
   };
 

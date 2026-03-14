@@ -20,6 +20,8 @@ const Blog = require('./models/blogSchema.js');
 const { reportAiFlag, UnreportAiFlag } = require('./controllers/reportController.js');
 const { mentionController } = require('./controllers/mentionController.js');
 const { notificationAddController, getNotifications, DeleteNotification } = require('./controllers/notificationController.js');
+const { getProfileData, editProfileData, toggleFollow } = require('./controllers/profileController.js');
+const verifyToken = require('./middleware/authMiddleware.js');
 
 const corsOptions = {
   origin: '*', 
@@ -70,6 +72,9 @@ app.post("/blog/notify", notificationAddController);
 app.get("/blog/getnotify/:userId", getNotifications);
 app.post("/blog/deletenotify", DeleteNotification);
 app.get("/blog/:id", findBlog);
+app.get("/blog/profile/:username", verifyToken, getProfileData);
+app.put("/blog/profile/edit", verifyToken, editProfileData);
+app.post("/blog/profile/follow/:targetUserId", verifyToken, toggleFollow);
 
 app.listen(PORT, () => {
   connectDB();
