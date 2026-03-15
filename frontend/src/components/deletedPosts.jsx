@@ -90,10 +90,14 @@ export default function DeletedPosts({ posts, onRestore, onError }) {
       }}
       onClick={handlePopupToggle}
     >
-      <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#2C3E50', display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <Trash2 size={18} color="#FF6B6B" />
-        Deleted Posts
-      </h2>
+      <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+        <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#2C3E50', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Trash2 size={18} color="#FF6B6B" />
+          Deleted Posts
+        </h2>
+        <span style={{ color: '#2C3E50', fontSize: '14px' }}>{posts.length} deleted {posts.length <= 1 ? 'post' : 'posts'}</span>
+      </div>
+
 
       {posts.length === 0 && (
         <p style={{ color: '#2C3E50', fontSize: '14px', textAlign: 'center' }}>No deleted posts available.</p>
@@ -219,7 +223,7 @@ export default function DeletedPosts({ posts, onRestore, onError }) {
                           ClickEvent={(e) => {
                             e.stopPropagation();
                             handleRestorePost(post._id)
-                          
+
                           }}
                         />
                         <ButtonTrans
