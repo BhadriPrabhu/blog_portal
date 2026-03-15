@@ -3,6 +3,7 @@ import { Flag, FlagOff, Trash2, X, XCircle } from 'lucide-react';
 import PopupPostDetails from './popupPostDetails';
 import { restorePost, permanentDeletePost } from '../utils/api';
 import ButtonTrans from './buttonTran';
+import { useNavigate } from 'react-router-dom';
 
 // --- Static Styles (Defined outside to prevent re-creation) ---
 const MODAL_OVERLAY_STYLE = {
@@ -33,6 +34,8 @@ export default function ReportedPosts({ posts, onRestore, onError }) {
   const [hover2, setHover2] = React.useState(false);
   const [hover3, setHover3] = React.useState(false);
   const [hover4, setHover4] = React.useState(false);
+
+  const navigate = useNavigate();
 
   const handlePopupToggle = () => {
     setIsPopupOpen((prev) => !prev)
@@ -105,7 +108,7 @@ export default function ReportedPosts({ posts, onRestore, onError }) {
           }}>
             {/* Modal Header */}
             <div style={{ backgroundColor: '#EDEFF2', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10 }}>
-              <h3 style={{ margin: 0, fontSize: '16px', color: '#2C3E50' }}>Deleted Post Management</h3>
+              <h3 style={{ margin: 0, fontSize: '16px', color: '#2C3E50' }}>Reported Post Management</h3>
               <ButtonTrans
                 child={<>
                   <X size={18} />
@@ -115,7 +118,7 @@ export default function ReportedPosts({ posts, onRestore, onError }) {
                 isLoading={isLoading}
                 noToolTip={true}
                 label="Close"
-                paddingEdit="4px 4px"
+                paddingEdit="4px"
                 ClickEvent={handlePopupToggle}
                 hover={hover1}
                 mouseEnter={() => setHover1(true)}
@@ -168,7 +171,34 @@ export default function ReportedPosts({ posts, onRestore, onError }) {
                       <td style={{ padding: '12px 16px', color: '#2C3E50' }}>
                         {new Date(post.date).toLocaleDateString()}
                       </td>
-                      <td style={{ padding: '12px 16px', color: '#2C3E50' }}>{post.user?.user || 'Unknown'}</td>
+                      <td
+                        style={{ padding: '12px 16px' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (post.user?.username) {
+                            navigate(`/blog/profile/${post.user.username}`);
+                          }
+                        }}
+                      >
+                        <span
+                          style={{
+                            cursor: 'pointer',
+                            color: '#3498DB',
+                            fontWeight: '500',
+                            transition: 'all 0.2s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.textDecoration = 'underline';
+                            e.target.style.color = '#2980B9';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.textDecoration = 'none';
+                            e.target.style.color = '#3498DB';
+                          }}
+                        >
+                          {post.user?.user || 'Unknown'}
+                        </span>
+                      </td>
                       <td style={{ padding: '12px 16px', color: '#2C3E50' }}>{post.title}</td>
                       <td style={{ padding: '12px 16px', color: '#2C3E50' }}>
                         {post.desc.substring(0, 50)}...
@@ -187,7 +217,10 @@ export default function ReportedPosts({ posts, onRestore, onError }) {
                           hover={hover3 === post._id}
                           mouseEnter={() => setHover3(post._id)}
                           mouseLeave={() => setHover3(null)}
-                          ClickEvent={() => handleRestorePost(post._id)}
+                          ClickEvent={(e) => {
+                            e.stopPropagation();
+                            handleRestorePost(post._id)
+                          }}
                         />
                         <ButtonTrans
                           child={<>
@@ -200,7 +233,10 @@ export default function ReportedPosts({ posts, onRestore, onError }) {
                           mouseEnter={() => setHover4(post._id)}
                           mouseLeave={() => setHover4(null)}
                           paddingEdit="4px 4px"
-                          ClickEvent={() => handlePermanentDelete(post._id)}
+                          ClickEvent={(e) => {
+                            e.stopPropagation();
+                            handlePermanentDelete(post._id)
+                          }}
                         />
                       </td>
                     </tr>

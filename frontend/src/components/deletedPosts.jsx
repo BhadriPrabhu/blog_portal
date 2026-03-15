@@ -3,6 +3,7 @@ import { ArchiveRestore, Trash2, X, XCircle } from 'lucide-react';
 import PopupPostDetails from './popupPostDetails';
 import { restorePost, permanentDeletePost } from '../utils/api';
 import ButtonTrans from './buttonTran';
+import { useNavigate } from 'react-router-dom';
 
 // --- Static Styles (Defined outside to prevent re-creation) ---
 const MODAL_OVERLAY_STYLE = {
@@ -32,6 +33,8 @@ export default function DeletedPosts({ posts, onRestore, onError }) {
   const [hover1, setHover1] = React.useState(null);
   const [hover2, setHover2] = React.useState(null);
   const [hover3, setHover3] = React.useState(false);
+
+  const navigate = useNavigate();
 
   const handlePopupToggle = () => {
     setIsPopupOpen((prev) => !prev)
@@ -148,7 +151,7 @@ export default function DeletedPosts({ posts, onRestore, onError }) {
                         transition: 'background-color 0.2s ease-in-out',
                       }}
                       onClick={(e) => {
-                        e.stopPropagation(); // Prevents triggering handlePopupToggle
+                        e.stopPropagation();
                         handleSelectPost(post);
                       }}
                       onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F7F9FA')}
@@ -167,7 +170,34 @@ export default function DeletedPosts({ posts, onRestore, onError }) {
                       <td style={{ padding: '12px 16px', color: '#2C3E50' }}>
                         {new Date(post.date).toLocaleDateString()}
                       </td>
-                      <td style={{ padding: '12px 16px', color: '#2C3E50' }}>{post.user?.user || 'Unknown'}</td>
+                      <td
+                        style={{ padding: '12px 16px' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (post.user?.username) {
+                            navigate(`/blog/profile/${post.user.username}`);
+                          }
+                        }}
+                      >
+                        <span
+                          style={{
+                            cursor: 'pointer',
+                            color: '#3498DB',
+                            fontWeight: '500',
+                            transition: 'all 0.2s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.textDecoration = 'underline';
+                            e.target.style.color = '#2980B9';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.textDecoration = 'none';
+                            e.target.style.color = '#3498DB';
+                          }}
+                        >
+                          {post.user?.user || 'Unknown'}
+                        </span>
+                      </td>
                       <td style={{ padding: '12px 16px', color: '#2C3E50' }}>{post.title}</td>
                       <td style={{ padding: '12px 16px', color: '#2C3E50' }}>
                         {post.desc.substring(0, 50)}...
@@ -186,7 +216,11 @@ export default function DeletedPosts({ posts, onRestore, onError }) {
                           hover={hover1 === post._id}
                           mouseEnter={() => setHover1(post._id)}
                           mouseLeave={() => setHover1(null)}
-                          ClickEvent={() => handleRestorePost(post._id)}
+                          ClickEvent={(e) => {
+                            e.stopPropagation();
+                            handleRestorePost(post._id)
+                          
+                          }}
                         />
                         <ButtonTrans
                           child={<>
@@ -199,7 +233,10 @@ export default function DeletedPosts({ posts, onRestore, onError }) {
                           mouseEnter={() => setHover2(post._id)}
                           mouseLeave={() => setHover2(null)}
                           paddingEdit="4px 4px"
-                          ClickEvent={() => handlePermanentDelete(post._id)}
+                          ClickEvent={(e) => {
+                            e.stopPropagation();
+                            handlePermanentDelete(post._id)
+                          }}
                         />
                       </td>
                     </tr>

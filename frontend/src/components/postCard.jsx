@@ -249,7 +249,7 @@ export default function PostCard({ postsData = null, onReload = null }) {
                                     <ButtonTrans
                                         ClickEvent={(e) => { e.stopPropagation(); navigate(`/blog/${item._id}#comments`); }}
                                         child={<>
-                                            <MessageSquareText size={18} />
+                                            <MessageSquareText size={20} />
                                             <span style={{ fontSize: '14px', fontWeight: '600' }}>{item.comments?.length || 0}</span>
                                         </>}
                                         buttonType="button"

@@ -1,7 +1,9 @@
 import React, { useState, memo, useCallback } from 'react';
-import { Archive, XCircle } from 'lucide-react';
+import { Archive, ArchiveRestore, Trash2, X, XCircle } from 'lucide-react';
 import PopupPostDetails from './popupPostDetails';
 import { unarchivePost, permanentDeletePost } from '../utils/api';
+import ButtonTrans from './buttonTran';
+import { useNavigate } from 'react-router-dom';
 
 // --- Static Styles (Defined outside to prevent re-creation on every render) ---
 const MODAL_OVERLAY_STYLE = {
@@ -24,53 +26,18 @@ const TABLE_STYLE = {
   fontFamily: "'Poppins', sans-serif",
 };
 
-// --- Memoized Row Component to prevent full table re-renders ---
-const PostRow = memo(({ post, onSelect }) => {
-  return (
-    <tr
-      style={{
-        backgroundColor: '#FFFFFF',
-        cursor: 'pointer',
-        borderBottom: '1px solid #D5DBDB',
-        transition: 'background-color 0.2s ease-in-out',
-      }}
-      onClick={(e) => {
-        e.stopPropagation(); // Prevents parent handlePopupToggle from firing
-        onSelect(post);
-      }}
-      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F7F9FA')}
-      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFFFFF')}
-    >
-      <td style={{ padding: '12px 16px' }}>
-        <div style={{
-          width: '32px', height: '32px',
-          backgroundColor: '#3498DB', borderRadius: '50%',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: '#FFFFFF', fontWeight: '600', fontSize: '14px',
-        }}>
-          {post.user?.user?.charAt(0)?.toUpperCase() || 'U'}
-        </div>
-      </td>
-      <td style={{ padding: '12px 16px', color: '#2C3E50' }}>
-        {new Date(post.date).toLocaleDateString()}
-      </td>
-      <td style={{ padding: '12px 16px', color: '#2C3E50' }}>{post.user?.user || 'Unknown'}</td>
-      <td style={{ padding: '12px 16px', color: '#2C3E50' }}>{post.title}</td>
-      <td style={{ padding: '12px 16px', color: '#2C3E50' }}>
-        {post.desc.substring(0, 50)}...
-      </td>
-      <td style={{ padding: '12px 16px', color: '#2C3E50' }}>{post.like}</td>
-      <td style={{ padding: '12px 16px', color: '#2C3E50' }}>{post.comments.length}</td>
-    </tr>
-  );
-});
-
 export default function ArchivedPosts({ posts, onUnarchive, onError }) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  const [hover1, setHover1] = useState(false);
+  const [hover2, setHover2] = useState(false);
+  const [hover3, setHover3] = useState(false);
+
   const handlePopupToggle = () => setIsPopupOpen((prev) => !prev);
+
+  const navigate = useNavigate();
 
   // Memoized selection handler
   const handleSelectPost = useCallback((post) => {
@@ -139,16 +106,24 @@ export default function ArchivedPosts({ posts, onUnarchive, onError }) {
             {/* Modal Header */}
             <div style={{ backgroundColor: '#EDEFF2', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10 }}>
               <h3 style={{ margin: 0, fontSize: '16px', color: '#2C3E50' }}>Archived Post Management</h3>
-              <button
-                onClick={handlePopupToggle}
-                disabled={isLoading}
-                style={{
-                  backgroundColor: '#3498DB', color: '#FFFFFF', border: 'none', borderRadius: '6px',
-                  padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
+              <ButtonTrans
+                ClickEvent={() => {
+                  handlePopupToggle()
+                  setHover1(false);
                 }}
-              >
-                <XCircle size={16} /> Close
-              </button>
+                isLoading={isLoading}
+                child={<>
+                  <X size={18} />
+                </>}
+                buttonType={"button"}
+                label={"Close"}
+                disable={isLoading}
+                noToolTip={true}
+                paddingEdit={"4px"}
+                hover={hover1}
+                mouseEnter={() => setHover1(true)}
+                mouseLeave={() => setHover1(false)}
+              />
             </div>
 
             {/* Table Content */}
@@ -163,11 +138,108 @@ export default function ArchivedPosts({ posts, onUnarchive, onError }) {
                     <th style={{ padding: '12px 16px', textAlign: 'left' }}>Content</th>
                     <th style={{ padding: '12px 16px', textAlign: 'left' }}>Likes</th>
                     <th style={{ padding: '12px 16px', textAlign: 'left' }}>Comments</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {posts.map((post) => (
-                    <PostRow key={post._id} post={post} onSelect={handleSelectPost} />
+                    <tr
+                      key={post._id}
+                      style={{
+                        backgroundColor: '#FFFFFF',
+                        cursor: 'pointer',
+                        borderBottom: '1px solid #D5DBDB',
+                        transition: 'background-color 0.2s ease-in-out',
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevents parent handlePopupToggle from firing
+                        handleSelectPost(post);
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F7F9FA')}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFFFFF')}
+                    >
+                      <td style={{ padding: '12px 16px' }}>
+                        <div style={{
+                          width: '32px', height: '32px',
+                          backgroundColor: '#3498DB', borderRadius: '50%',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          color: '#FFFFFF', fontWeight: '600', fontSize: '14px',
+                        }}>
+                          {post.user?.user?.charAt(0)?.toUpperCase() || 'U'}
+                        </div>
+                      </td>
+                      <td style={{ padding: '12px 16px', color: '#2C3E50' }}>
+                        {new Date(post.date).toLocaleDateString()}
+                      </td>
+                      <td
+                        style={{ padding: '12px 16px' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (post.user?.username) {
+                            navigate(`/blog/profile/${post.user.username}`);
+                          }
+                        }}
+                      >
+                        <span
+                          style={{
+                            cursor: 'pointer',
+                            color: '#3498DB',
+                            fontWeight: '500',
+                            transition: 'all 0.2s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.textDecoration = 'underline';
+                            e.target.style.color = '#2980B9';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.textDecoration = 'none';
+                            e.target.style.color = '#3498DB';
+                          }}
+                        >
+                          {post.user?.user || 'Unknown'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px 16px', color: '#2C3E50' }}>{post.title}</td>
+                      <td style={{ padding: '12px 16px', color: '#2C3E50' }}>
+                        {post.desc.substring(0, 50)}...
+                      </td>
+                      <td style={{ padding: '12px 16px', color: '#2C3E50' }}>{post.like}</td>
+                      <td style={{ padding: '12px 16px', color: '#2C3E50' }}>{post.comments.length}</td>
+                      <td style={{ padding: '12px 16px', color: '#2C3E50', display: "flex", flexDirection: "row", }}>
+                        <ButtonTrans
+                          child={<>
+                            <ArchiveRestore size={16} />
+                          </>}
+                          noToolTip={true}
+                          buttonType="button"
+                          label="Retore"
+                          paddingEdit="4px 4px"
+                          hover={hover2 === post._id}
+                          mouseEnter={() => setHover2(post._id)}
+                          mouseLeave={() => setHover2(null)}
+                          ClickEvent={(e) => {
+                            e.stopPropagation();
+                            handleUnarchivePost(post._id)
+                          }}
+                        />
+                        <ButtonTrans
+                          child={<>
+                            <Trash2 size="16px" />
+                          </>}
+                          noToolTip={true}
+                          buttonType="button"
+                          label="Permanent Delete"
+                          hover={hover3 === post._id}
+                          mouseEnter={() => setHover3(post._id)}
+                          mouseLeave={() => setHover3(null)}
+                          paddingEdit="4px 4px"
+                          ClickEvent={(e) => {
+                            e.stopPropagation();
+                            handlePermanentDelete(post._id)
+                          }}
+                        />
+                      </td>
+                    </tr>
                   ))}
                 </tbody>
               </table>
