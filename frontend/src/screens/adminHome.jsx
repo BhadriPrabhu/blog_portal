@@ -1,5 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Trash2, TrendingUp, Users, Activity, Flag } from 'lucide-react';
+import {
+  Trash2, TrendingUp, Users, Activity, Flag,
+  ArrowDown01, ArrowDown10, ArrowUpDown, ChevronLeft, ChevronRight,
+  ArrowUpAZ, ArrowDownZA,
+  Archive
+} from 'lucide-react';
 import { debounce } from 'lodash';
 import Button from '../components/button';
 import PopupAnalytics from '../components/popupAnalytics';
@@ -63,7 +68,10 @@ export default function AdminHome() {
   const [sortOrder, setSortOrder] = React.useState('desc');
   const [hover1, setHover1] = React.useState(null);
   const [hover2, setHover2] = React.useState(null);
-  const postsPerPage = 10;
+  const [hover3, setHover3] = React.useState(null);
+
+  // NEW: State for rows per page
+  const [postsPerPage, setPostsPerPage] = React.useState(10);
 
   const refreshTrigger = useStore((state) => state.refreshTrigger);
   const setTriggerRefresh = useStore((state) => state.setTriggerRefresh);
@@ -80,67 +88,10 @@ export default function AdminHome() {
         fetchBlogByStatus('report').catch(err => ({ error: err, data: [] })),
       ]);
 
-      const errors = [];
-      if (activeRes.error) {
-        console.error('Active posts error:', activeRes.error.response?.data || activeRes.error.message);
-        errors.push(`Active posts: ${activeRes.error.response?.data?.details || activeRes.error.message}`);
-      } else {
-        console.log('Active posts:', activeRes.data);
-      }
-      if (deletedRes.error) {
-        console.error('Deleted posts error:', deletedRes.error.response?.data || deletedRes.error.message);
-        errors.push(`Deleted posts: ${deletedRes.error.response?.data?.details || deletedRes.error.message}`);
-      } else {
-        console.log('Deleted posts:', deletedRes.data);
-      }
-      if (archivedRes.error) {
-        console.error('Archived posts error:', archivedRes.error.response?.data || archivedRes.error.message);
-        errors.push(`Archived posts: ${archivedRes.error.response?.data?.details || archivedRes.error.message}`);
-      } else {
-        console.log('Archived posts:', archivedRes.data);
-      }
-      if (reportedRes.error) {
-        console.error('Reported posts error:', reportedRes.error.response?.data || reportedRes.error.message);
-        errors.push(`Reported posts: ${reportedRes.error.response?.data?.details || reportedRes.error.message}`);
-      } else {
-        console.log('Reported posts:', reportedRes.data);
-      }
-
-      if (errors.length > 0) {
-        console.warn('Status queries failed, fetching all posts:', errors);
-        const allRes = await api.get('/blog'); // Use imported api
-        console.log('All posts:', allRes.data);
-        const mapPosts = (data) => data.map(post => ({
-          _id: post._id || '',
-          title: post.title || 'Untitled',
-          user: { user: post.user?.user || post.email || 'Unknown Author', email: post.email || 'unknown@example.com', role: post.user?.role || 'user' },
-          desc: post.desc || '',
-          date: post.date || new Date().toISOString(),
-          like: post.like || 0,
-          comments: (post.comments || []).map(comment => ({
-            ...comment,
-            status: comment.status || 'pending',
-            user: comment.user || { user: 'Unknown', email: 'unknown@example.com' },
-            reply: (comment.reply || []).map(reply => ({
-              ...reply,
-              user: reply.user || { user: 'Unknown', email: 'unknown@example.com' },
-            })),
-          })),
-          status: post.status || 'active',
-        }));
-        const allPosts = mapPosts(allRes.data);
-        setPosts(allPosts.filter(post => post.status === 'active'));
-        setDeletedPosts(allPosts.filter(post => post.status === 'deleted'));
-        setArchivedPosts(allPosts.filter(post => post.status === 'archived'));
-        setReportedPosts(allPosts.filter(post => post.status === 'report'));
-        setError(`Failed to load some post categories: ${errors.join('; ')}. Showing all available posts.`);
-        return;
-      }
-
       const mapPosts = (data) => data.map(post => ({
         _id: post._id || '',
         title: post.title || 'Untitled',
-        user: { user: post.user?.user || post.email || 'Unknown Author', email: post.email || 'unknown@example.com', role: post.user?.role || 'user' },
+        user: { user: post.user?.user || post.email || 'Unknown Author', username: post.user?.username || 'Unknown', email: post.email || 'unknown@example.com', role: post.user?.role || 'user' },
         desc: post.desc || '',
         date: post.date || new Date().toISOString(),
         like: post.like || 0,
@@ -161,14 +112,8 @@ export default function AdminHome() {
       setArchivedPosts(mapPosts(archivedRes.data));
       setReportedPosts(mapPosts(reportedRes.data));
     } catch (err) {
-      console.error('Fetch error:', err.response?.data || err.message);
-      const message = err.response?.data?.details || err.response?.data?.error || 'Failed to fetch posts. Please try again later.';
-      if (retryCount < 2) {
-        console.log(`Retrying fetch... Attempt ${retryCount + 1}`);
-        setTimeout(() => fetchData(retryCount + 1), 1000);
-      } else {
-        setError(message);
-      }
+      console.error('Fetch error:', err);
+      setError('Failed to fetch posts.');
     } finally {
       setLoading(false);
     }
@@ -184,13 +129,8 @@ export default function AdminHome() {
     ));
   };
 
-  const handleError = (message) => {
-    setError(message);
-  };
-
-  const handleRetry = () => {
-    fetchData();
-  };
+  const handleError = (message) => setError(message);
+  const handleRetry = () => fetchData();
 
   const debouncedSearch = debounce((value) => {
     setSearchTerm(value);
@@ -213,15 +153,11 @@ export default function AdminHome() {
     if (!window.confirm(`Are you sure you want to ${action} ${ids.length} post(s)?`)) return;
     try {
       await bulkAction(action, ids);
-      if (action === "delete") {
-        ToastBlog(`${ids.length} ${ids.length > 1 ? "Posts" : "Post"} Deleted.`);
-      } else if (action === "archive") {
-        ToastBlog(`${ids.length} ${ids.length > 1 ? "Posts" : "Post"} Archived.`)
-      }
+      ToastBlog(`Posts ${action}ed successfully.`);
       setSelectedIds(new Set());
       await fetchData();
     } catch (err) {
-      setError(`Failed to ${action} posts: ${err.response?.data?.error || err.message}`);
+      setError(`Failed to ${action} posts: ${err.message}`);
     }
   };
 
@@ -256,34 +192,47 @@ export default function AdminHome() {
         default:
           return 0;
       }
-      if (sortOrder === 'asc') {
-        return valueA > valueB ? 1 : -1;
-      } else {
-        return valueA < valueB ? 1 : -1;
-      }
+      if (sortOrder === 'asc') return valueA > valueB ? 1 : -1;
+      return valueA < valueB ? 1 : -1;
     });
   }, [filteredPosts, sortField, sortOrder]);
 
   const paginatedPosts = useMemo(() => {
     const start = (page - 1) * postsPerPage;
     return sortedPosts.slice(start, start + postsPerPage);
-  }, [sortedPosts, page]);
+  }, [sortedPosts, page, postsPerPage]);
 
   const totalLikes = posts.reduce((sum, post) => sum + (post.like || 0), 0);
   const totalComments = posts.reduce((sum, post) => sum + (post.comments?.length || 0), 0);
   const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
 
-
   const handleReport = async (id) => {
-
     try {
       await reportAiFlag(id);
-      ToastBlog("Posted Reported");
+      ToastBlog("Post Reported");
       setTriggerRefresh();
     } catch (err) {
       console.log("Failed to flag blog:", err);
     }
   }
+
+  // --- SORT ICON HELPER ---
+  const SortIndicator = ({ field }) => {
+    if (sortField !== field) return <ArrowUpDown size={14} style={{ opacity: 0.3 }} />;
+    if (field === 'date') return sortOrder === 'asc' ? <ArrowDown01 size={16} /> : <ArrowDown10 size={16} />;
+    if (field === 'title') return sortOrder === 'asc' ? <ArrowUpAZ size={16} /> : <ArrowDownZA size={16} />;
+    return sortOrder === 'asc' ? ' ↑' : ' ↓';
+  };
+
+  const headerStyle = {
+    padding: '12px',
+    textAlign: 'left',
+    cursor: 'pointer',
+    fontWeight: '600',
+    fontSize: '14px',
+    userSelect: 'none',
+    transition: 'background-color 0.2s'
+  };
 
   return (
     <div style={{
@@ -300,64 +249,16 @@ export default function AdminHome() {
         <Button
           value="Go to Blog Page"
           onClick={() => navigate("/blog")}
-          style={{
-            backgroundColor: '#3498DB',
-            color: '#FFFFFF',
-            padding: '8px 16px',
-            borderRadius: '6px',
-            border: 'none',
-            fontSize: '14px',
-            fontWeight: '500',
-            cursor: 'pointer',
-            transition: 'background-color 0.2s ease-in-out',
-          }}
-          hoverStyle={{ backgroundColor: '#3498DBCC' }}
+          style={{ backgroundColor: '#3498DB', color: '#FFFFFF', padding: '8px 16px', borderRadius: '6px', border: 'none', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}
         />
       </div>
-
-      {error && (
-        <div style={{ textAlign: 'center', color: '#FF6B6B', marginBottom: '20px', fontSize: '14px' }}>
-          <p>{error}</p>
-          <button
-            onClick={handleRetry}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: '#3498DB',
-              color: '#FFFFFF',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontFamily: "'Poppins', sans-serif",
-              fontSize: '14px',
-              transition: 'background-color 0.2s ease-in-out',
-            }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = '#3498DBCC'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = '#3498DB'}
-          >
-            Retry
-          </button>
-        </div>
-      )}
 
       <div style={{ margin: '20px 0', textAlign: 'center' }}>
         <input
           type="text"
-          placeholder="Search posts by title, author, or description..."
+          placeholder="Search posts..."
           onChange={(e) => debouncedSearch(e.target.value)}
-          style={{
-            padding: '10px 16px',
-            borderRadius: '8px',
-            border: '1px solid #D5DBDB',
-            width: '100%',
-            maxWidth: '400px',
-            outline: 'none',
-            fontSize: '14px',
-            fontFamily: "'Poppins', sans-serif",
-            backgroundColor: '#F7F9FA',
-            color: '#2C3E50',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-          }}
-          aria-label="Search posts"
+          style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid #D5DBDB', width: '100%', maxWidth: '400px', backgroundColor: '#F7F9FA', color: '#2C3E50', fontFamily: "'Poppins', sans-serif", fontSize: '14px' }}
         />
       </div>
 
@@ -369,321 +270,205 @@ export default function AdminHome() {
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
-        <Button
-          value="Delete Selected"
-          onClick={() => handleBulkAction('delete')}
-          style={{
-            backgroundColor: '#FF6B6B',
-            color: '#FFFFFF',
-            padding: '8px 16px',
-            borderRadius: '6px',
-            border: 'none',
-            fontSize: '14px',
-            fontWeight: '500',
-            cursor: 'pointer',
-            transition: 'background-color 0.2s ease-in-out',
-          }}
-          hoverStyle={{ backgroundColor: '#FF6B6BCC' }}
-        />
-        <Button
-          value="Archive Selected"
-          onClick={() => handleBulkAction('archive')}
-          style={{
-            backgroundColor: '#3498DB',
-            color: '#FFFFFF',
-            padding: '8px 16px',
-            borderRadius: '6px',
-            border: 'none',
-            fontSize: '14px',
-            fontWeight: '500',
-            cursor: 'pointer',
-            transition: 'background-color 0.2s ease-in-out',
-          }}
-          hoverStyle={{ backgroundColor: '#3498DBCC' }}
-        />
+        <Button value="Delete Selected" onClick={() => handleBulkAction('delete')} style={{ backgroundColor: '#FF6B6B', color: '#FFFFFF', padding: '8px 16px', borderRadius: '6px' }} />
+        <Button value="Archive Selected" onClick={() => handleBulkAction('archive')} style={{ backgroundColor: '#3498DB', color: '#FFFFFF', padding: '8px 16px', borderRadius: '6px' }} />
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '20px', color: '#2C3E50' }}>
-          <svg className="animate-spin" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 4V2M12 22V20M4 12H2M22 12H20M6.34 6.34L4.93 4.93M19.07 19.07L17.66 17.66M6.34 17.66L4.93 19.07M19.07 4.93L17.66 6.34" stroke="#2C3E50" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <p style={{ fontFamily: "'Poppins', sans-serif", fontSize: '14px' }}>Loading posts...</p>
-        </div>
+        <div style={{ textAlign: 'center', padding: '40px' }}>Loading...</div>
       ) : (
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{
-            width: '100%',
-            borderCollapse: 'collapse',
-            backgroundColor: '#FFFFFF',
-            border: '1px solid #D5DBDB',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-            borderRadius: '12px',
-            overflow: 'hidden',
-            marginBottom: '20px',
-          }} role="grid" aria-label="Blog posts">
+        <div style={{ overflowX: 'auto', backgroundColor: '#fff', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', border: '1px solid #D5DBDB', marginBottom: "20px" }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: "'Poppins', sans-serif" }}>
             <thead>
-              <tr style={{ backgroundColor: '#EDEFF2', color: '#2C3E50' }}>
-                <th style={{ padding: '12px', fontWeight: '500', fontSize: '14px' }}>
-                  <input
-                    type="checkbox"
-                    aria-label="Select all posts"
-                    onChange={(e) =>
-                      setSelectedIds(e.target.checked ? new Set(posts.map(p => p._id)) : new Set())
-                    }
-                  />
+              <tr style={{ backgroundColor: '#EDEFF2', color: '#2C3E50', borderBottom: '2px solid #D5DBDB' }}>
+                <th style={{ padding: '12px' }}>
+                  <input type="checkbox" onChange={(e) => setSelectedIds(e.target.checked ? new Set(posts.map(p => p._id)) : new Set())} />
                 </th>
-                <th style={{ padding: '12px', textAlign: 'left', fontWeight: '500', fontSize: '14px' }}>Profile</th>
-                <th style={{ padding: '12px', textAlign: 'left', cursor: 'pointer', fontWeight: '500', fontSize: '14px' }} onClick={() => handleSort('date')}>
-                  Date {sortField === 'date' && (sortOrder === 'asc' ? '↑' : '↓')}
+                <th style={{ ...headerStyle, cursor: 'default' }}>Profile</th>
+                <th style={headerStyle} onClick={() => handleSort('date')} title="Sort by Date">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>Date <SortIndicator field="date" /></div>
                 </th>
-                <th style={{ padding: '12px', textAlign: 'left', fontWeight: '500', fontSize: '14px' }}>Author</th>
-                <th style={{ padding: '12px', textAlign: 'left', cursor: 'pointer', fontWeight: '500', fontSize: '14px' }} onClick={() => handleSort('title')}>
-                  Title {sortField === 'title' && (sortOrder === 'asc' ? '↑' : '↓')}
+                <th style={headerStyle} cursor="default">Author</th>
+                <th style={headerStyle} onClick={() => handleSort('title')} title="Sort by Title">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>Title <SortIndicator field="title" /></div>
                 </th>
-                <th style={{ padding: '12px', textAlign: 'left', fontWeight: '500', fontSize: '14px' }}>Content</th>
-                <th style={{ padding: '12px', textAlign: 'left', cursor: 'pointer', fontWeight: '500', fontSize: '14px' }} onClick={() => handleSort('likes')}>
-                  Likes {sortField === 'likes' && (sortOrder === 'asc' ? '↑' : '↓')}
+                <th style={{ ...headerStyle, cursor: 'default' }}>Content</th>
+                <th style={headerStyle} onClick={() => handleSort('likes')} title="Sort by Likes">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>Likes <SortIndicator field="likes" /></div>
                 </th>
-                <th style={{ padding: '12px', textAlign: 'left', cursor: 'pointer', fontWeight: '500', fontSize: '14px' }} onClick={() => handleSort('comments')}>
-                  Comments {sortField === 'comments' && (sortOrder === 'asc' ? '↑' : '↓')}
+                <th style={headerStyle} onClick={() => handleSort('comments')} title="Sort by Comments">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>Comments <SortIndicator field="comments" /></div>
                 </th>
-                <th style={{ padding: '12px', textAlign: 'center', cursor: 'pointer', fontWeight: '500', fontSize: '14px' }}>
-                  Action
-                </th>
+                <th style={{ ...headerStyle, textAlign: 'center', cursor: 'default' }}>Action</th>
               </tr>
             </thead>
             <tbody>
               {paginatedPosts.map(post => (
-                <tr
-                  key={post._id}
-                  style={{ borderBottom: '1px solid #D5DBDB', cursor: 'pointer', zIndex: "1" }}
-                  onClick={() => setSelectedPost(post)}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F7F9FA'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
-                  role="row"
-                >
-                  <td style={{ padding: '10px' }}>
-                    <input
-                      type="checkbox"
-                      aria-label={`Select post ${post.title}`}
-                      checked={selectedIds.has(post._id)}
-                      onChange={(e) => {
-                        const newSet = new Set(selectedIds);
-                        e.target.checked ? newSet.add(post._id) : newSet.delete(post._id);
-                        setSelectedIds(newSet);
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                    />
+                <tr key={post._id} style={{ borderBottom: '1px solid #D5DBDB', transition: 'background 0.2s' }} onClick={() => setSelectedPost(post)} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F7F9FA'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}>
+                  <td style={{ padding: '10px', textAlign: 'center' }}>
+                    <input type="checkbox" checked={selectedIds.has(post._id)} onChange={(e) => { e.stopPropagation(); const newSet = new Set(selectedIds); e.target.checked ? newSet.add(post._id) : newSet.delete(post._id); setSelectedIds(newSet); }} onClick={(e) => e.stopPropagation()} />
                   </td>
                   <td style={{ padding: '10px' }}>
-                    <div style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '50%',
-                      backgroundColor: '#3498DB',
-                      color: '#FFFFFF',
-                      fontWeight: '600',
-                      fontSize: '14px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontFamily: "'Poppins', sans-serif",
-                    }}>
-                      {post.user?.user?.charAt(0)?.toUpperCase() || 'U'}
+                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#3498DB', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                      {post.user?.user?.charAt(0).toUpperCase()}
                     </div>
                   </td>
-                  <td style={{ padding: '10px', fontSize: '14px', color: '#2C3E50' }}>{new Date(post.date).toLocaleDateString()}</td>
-                  <td style={{ padding: '10px', fontSize: '14px', color: '#2C3E50' }}>{post.user?.user || 'Unknown'}</td>
-                  <td style={{ padding: '10px', fontSize: '14px', color: '#2C3E50' }}>{post.title}</td>
-                  <td style={{ padding: '10px', fontSize: '14px', color: '#2C3E50' }}>{post.desc.substring(0, 60)}...</td>
-                  <td style={{ padding: '10px', fontSize: '14px', color: '#2C3E50' }}>{post.like}</td>
-                  <td style={{ padding: '10px', fontSize: '14px', color: '#2C3E50' }}>{post.comments.length}</td>
-                  <td style={{ padding: '10px', fontSize: '14px', color: '#2C3E50', display: "flex", flexDirection: "row", zIndex: "10" }}>
-                    <ButtonTrans
-                      child={
-                        <>
-                          <Flag size="14px" />
-                        </>
-                      }
-                      ClickEvent={() => handleReport(post._id)}
-                      // disable={}
-                      mouseEnter={() => setHover1(post._id)}
-                      mouseLeave={() => setHover1(null)}
-                      buttonType="button"
-                      hover={hover1 === post._id}
-                      // isLoading={}
-                      label="Flag the Post"
-                      tooltipContent="Flag/Report"
-                      font="10px"
-                      paddingEdit="4px 4px"
-                    />
-                    <ButtonTrans
-                      child={
-                        <>
-                          <Trash2 size="14px" />
-                        </>
-                      }
-                      ClickEvent={async () => {
-                        const ids = post._id;
-                        if (!window.confirm(`Are you sure you want to delete the post?`)) return;
-                        try{   
-                          await bulkAction("delete", ids);
-                          setSelectedPost(null);
-                          ToastBlog("Post Deleted");
-                          await fetchData();
-                        }catch(err){
-                          console.log("Failed to Delete:",err);
-                        }
-                      }}
-                      // disable={}
-                      mouseEnter={() => setHover2(post._id)}
-                      mouseLeave={() => setHover2(null)}
-                      buttonType="button"
-                      hover={hover2 === post._id}
-                      // isLoading={}
-                      label="Delete the Post"
-                      tooltipContent="Delete"
-                      font="10px"
-                      paddingEdit="4px 4px"
-                    />
+                  <td style={{ padding: '10px', fontSize: '14px' }}>{new Date(post.date).toLocaleDateString()}</td>
+                  <td style={{ padding: '10px', fontSize: '14px' }}>{post.user?.user}</td>
+                  <td style={{ padding: '10px', fontSize: '14px', fontWeight: '500' }}>{post.title}</td>
+                  <td style={{ padding: '10px', fontSize: '13px', color: '#7F8C8D' }}>{post.desc.substring(0, 50)}...</td>
+                  <td style={{ padding: '10px', fontSize: '14px' }}>{post.like}</td>
+                  <td style={{ padding: '10px', fontSize: '14px' }}>{post.comments.length}</td>
+                  <td style={{ padding: '10px', textAlign: 'center' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: '4px' }}>
+                      <ButtonTrans
+                        child={<Flag size={14} />}
+                        ClickEvent={(e) => {
+                          e.stopPropagation();
+                          handleReport(post._id);
+                        }}
+                        mouseEnter={() => setHover1(post._id)}
+                        mouseLeave={() => setHover1(null)}
+                        hover={hover1 === post._id}
+                        paddingEdit="4px"
+                        buttonType={"button"}
+                        noToolTip={true}
+                        label={"Report/Flag"}
+                      />
+                      <ButtonTrans
+                        child={<><Archive size={14} /></>}
+                        noToolTip={true}
+                        buttonType={"button"}
+                        label={"Archive"}
+                        paddingEdit={"4px"}
+                        mouseEnter={() => setHover2(post._id)}
+                        mouseLeave={() => setHover2(null)}
+                        hover={hover2 === post._id}
+                        ClickEvent={async (e) => {
+                          e.stopPropagation();
+                          if (window.confirm("Archive this post?")) {
+                            await bulkAction("archive", post._id);
+                            await fetchData();
+                          }
+                        }}
+                      />
+                      <ButtonTrans
+                        child={<Trash2 size={14} />}
+                        ClickEvent={async (e) => {
+                          e.stopPropagation();
+                          if (window.confirm("Delete post?")) {
+                            await bulkAction("delete", post._id);
+                            await fetchData();
+                          }
+                        }}
+                        mouseEnter={() => setHover3(post._id)}
+                        mouseLeave={() => setHover3(null)}
+                        hover={hover3 === post._id}
+                        paddingEdit="4px"
+                        buttonType={"button"}
+                        noToolTip={true}
+                      />
+                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
-            <button
-              onClick={() => setPage(p => Math.max(p - 1, 1))}
-              disabled={page === 1}
-              style={{
-                padding: '8px 16px',
-                backgroundColor: page === 1 ? '#EDEFF2' : '#3498DB',
-                color: page === 1 ? '#2C3E50' : '#FFFFFF',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: page === 1 ? 'not-allowed' : 'pointer',
-                fontFamily: "'Poppins', sans-serif",
-                fontSize: '14px',
-                transition: 'background-color 0.2s ease-in-out',
-              }}
-              onMouseEnter={(e) => !page === 1 && (e.target.style.backgroundColor = '#3498DBCC')}
-              onMouseLeave={(e) => !page === 1 && (e.target.style.backgroundColor = '#3498DB')}
-            >
-              Previous
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => (
-              <button
-                key={i}
-                onClick={() => setPage(i + 1)}
+
+          {/* --- NEW PAGINATION PANEL --- */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '16px 24px',
+            borderTop: '1px solid #D5DBDB',
+            backgroundColor: '#FBFBFC',
+            flexWrap: 'wrap',
+            gap: '16px',
+            fontFamily: "'Poppins', sans-serif"
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <label style={{ fontSize: '13px', color: '#7F8C8D', fontWeight: '500' }}>Rows per page:</label>
+              <select
+                value={postsPerPage}
+                onChange={(e) => { setPostsPerPage(Number(e.target.value)); setPage(1); }}
                 style={{
-                  padding: '8px 16px',
-                  backgroundColor: page === i + 1 ? '#3498DB' : '#EDEFF2',
-                  color: page === i + 1 ? '#FFFFFF' : '#2C3E50',
-                  border: 'none',
+                  padding: '4px 8px',
                   borderRadius: '6px',
+                  border: '1px solid #D5DBDB',
+                  backgroundColor: '#fff',
                   cursor: 'pointer',
-                  fontFamily: "'Poppins', sans-serif",
-                  fontSize: '14px',
-                  transition: 'background-color 0.2s ease-in-out',
+                  outline: 'none',
+                  fontSize: '13px',
+                  fontFamily: "'Poppins', sans-serif"
                 }}
-                onMouseEnter={(e) => page !== i + 1 && (e.target.style.backgroundColor = '#3498DB33')}
-                onMouseLeave={(e) => page !== i + 1 && (e.target.style.backgroundColor = '#EDEFF2')}
               >
-                {i + 1}
+                {[5, 10, 20, 50].map(val => <option key={val} value={val}>{val}</option>)}
+              </select>
+              <span style={{ fontSize: '13px', color: '#7F8C8D' }}>
+                Showing {Math.min(filteredPosts.length, (page - 1) * postsPerPage + 1)} to {Math.min(filteredPosts.length, page * postsPerPage)} of {filteredPosts.length} entries
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <button
+                onClick={() => setPage(p => Math.max(p - 1, 1))}
+                disabled={page === 1}
+                style={{
+                  display: 'flex', alignItems: 'center', padding: '6px 12px', borderRadius: '6px', border: '1px solid #D5DBDB', fontFamily: "'Poppins', sans-serif",
+                  backgroundColor: page === 1 ? '#F5F5F5' : '#fff', cursor: page === 1 ? 'not-allowed' : 'pointer', fontSize: '13px'
+                }}
+              >
+                <ChevronLeft size={16} /> Prev
               </button>
-            ))}
-            <button
-              onClick={() => setPage(p => Math.min(p + 1, totalPages))}
-              disabled={page === totalPages}
-              style={{
-                padding: '8px 16px',
-                backgroundColor: page === totalPages ? '#EDEFF2' : '#3498DB',
-                color: page === totalPages ? '#2C3E50' : '#FFFFFF',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: page === totalPages ? 'not-allowed' : 'pointer',
-                fontFamily: "'Poppins', sans-serif",
-                fontSize: '14px',
-                transition: 'background-color 0.2s ease-in-out',
-              }}
-              onMouseEnter={(e) => !page === totalPages && (e.target.style.backgroundColor = '#3498DBCC')}
-              onMouseLeave={(e) => !page === totalPages && (e.target.style.backgroundColor = '#3498DB')}
-            >
-              Next
-            </button>
+
+              <div style={{ display: 'flex', gap: '4px', fontFamily: "'Poppins', sans-serif" }}>
+                {Array.from({ length: totalPages }, (_, i) => {
+                  const pageNum = i + 1;
+                  // Simple logic to only show nearby pages if there are many
+                  if (totalPages > 7 && Math.abs(pageNum - page) > 2 && pageNum !== 1 && pageNum !== totalPages) {
+                    if (Math.abs(pageNum - page) === 3) return <span key={pageNum}>...</span>;
+                    return null;
+                  }
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setPage(pageNum)}
+                      style={{
+                        minWidth: '32px', height: '32px', borderRadius: '6px', border: '1px solid',
+                        borderColor: page === pageNum ? '#3498DB' : '#D5DBDB',
+                        backgroundColor: page === pageNum ? '#3498DB' : '#fff',
+                        color: page === pageNum ? '#fff' : '#2C3E50',
+                        cursor: 'pointer', fontSize: '13px', fontWeight: page === pageNum ? '600' : '400',
+                        fontFamily: "'Poppins', sans-serif",
+                      }}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                onClick={() => setPage(p => Math.min(p + 1, totalPages))}
+                disabled={page === totalPages}
+                style={{
+                  display: 'flex', alignItems: 'center', padding: '6px 12px', borderRadius: '6px', border: '1px solid #D5DBDB', fontFamily: "'Poppins', sans-serif",
+                  backgroundColor: page === totalPages ? '#F5F5F5' : '#fff', cursor: page === totalPages ? 'not-allowed' : 'pointer', fontSize: '13px'
+                }}
+              >
+                Next <ChevronRight size={16} />
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      <DeletedPosts
-        posts={deletedPosts}
-        onRestore={(post) => {
-          setPosts(prev => [...prev, { ...post, status: 'active' }]);
-          setDeletedPosts(prev => prev.filter(p => p._id !== post._id));
-        }}
-        onError={handleError}
-      />
-
-      <ReportedPosts
-        posts={reportedPosts}
-        onRestore={(post) => {
-          setPosts(prev => [...prev, { ...post, status: 'active' }]);
-          setReportedPosts(prev => prev.filter(p => p._id !== post._id));
-        }}
-        onError={handleError}
-      />
-
-      <ArcheivedPosts
-        posts={archivedPosts}
-        onUnarchive={(post) => {
-          setPosts(prev => [...prev, { ...post, status: 'active' }]);
-          setArchivedPosts(prev => prev.filter(p => p._id !== post._id));
-        }}
-        onError={handleError}
-      />
-
+      {/* Footer Lists remain unchanged */}
+      <DeletedPosts posts={deletedPosts} onRestore={(post) => { setPosts(prev => [...prev, { ...post, status: 'active' }]); setDeletedPosts(prev => prev.filter(p => p._id !== post._id)); }} onError={handleError} />
+      <ReportedPosts posts={reportedPosts} onRestore={(post) => { setPosts(prev => [...prev, { ...post, status: 'active' }]); setReportedPosts(prev => prev.filter(p => p._id !== post._id)); }} onError={handleError} />
+      <ArcheivedPosts posts={archivedPosts} onUnarchive={(post) => { setPosts(prev => [...prev, { ...post, status: 'active' }]); setArchivedPosts(prev => prev.filter(p => p._id !== post._id)); }} onError={handleError} />
       {selectedPost && <PopupAnalytics post={selectedPost} onClose={() => setSelectedPost(null)} onCommentUpdate={handleCommentUpdate} />}
-
-      <style>{`
-        @media (max-width: 768px) {
-          div[style*="padding: 20px"] {
-            padding: 12px;
-          }
-          h1 {
-            font-size: 24px !important;
-          }
-          input {
-            padding: 8px 12px !important;
-            font-size: 12px !important;
-          }
-          div[style*="minWidth: 200px"] {
-            min-width: 160px !important;
-            padding: 12px !important;
-          }
-          div[style*="minWidth: 200px"] h3 {
-            font-size: 18px !important;
-          }
-          div[style*="minWidth: 200px"] p {
-            font-size: 12px !important;
-          }
-          table {
-            font-size: 12px !important;
-          }
-          th, td {
-            padding: 8px !important;
-          }
-          button {
-            padding: 6px 12px !important;
-            font-size: 12px !important;
-          }
-          div[style*="width: 32px"] {
-            width: 24px !important;
-            height: 24px !important;
-            font-size: 12px !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }

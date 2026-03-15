@@ -88,7 +88,7 @@ export default function ArchivedPosts({ posts, onUnarchive, onError }) {
       }}
       onClick={handlePopupToggle}
     >
-      <h2 style={{ margin: '0 0 12px 0', fontSize: '20px', fontWeight: '600', color: '#2C3E50', display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#2C3E50', display: 'flex', alignItems: 'center', gap: '8px' }}>
         <Archive size={18} color="#3498DB" />
         Archived Posts
       </h2>
