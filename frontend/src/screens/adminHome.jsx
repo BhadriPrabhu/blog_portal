@@ -18,39 +18,71 @@ import { useStore } from '../data/zustand';
 import ButtonTrans from '../components/buttonTran';
 import ToastBlog from '../utils/toast';
 
-const StatsCard = ({ title, value, icon: Icon, color, bgColor }) => (
-  <div style={{
-    backgroundColor: bgColor,
-    padding: '16px',
-    borderRadius: '12px',
-    border: '1px solid #D5DBDB',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    minWidth: '200px',
-    transition: 'transform 0.2s ease-in-out, background-color 0.2s ease-in-out',
-  }}
-    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
-    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-  >
-    <div style={{
-      backgroundColor: color,
-      padding: '10px',
-      borderRadius: '50%',
-      color: '#FFFFFF',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-    }}>
-      <Icon size={20} />
+const StatsCard = ({ title, value, icon: Icon, color, bgColor }) => {
+  const [isHovered, setIsHovered] = React.useState(false);
+
+  return (
+    <div
+      style={{
+        backgroundColor: '#FFFFFF',
+        padding: '20px',
+        borderRadius: '16px', // Matches your PostCard and Table border radius
+        border: '1px solid #e2e8f0', // Thinner, softer border like the table
+        boxShadow: isHovered
+          ? '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+          : '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '16px',
+        minWidth: '220px',
+        flex: '1', // Allows cards to grow equally in the row
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        cursor: 'default',
+        transform: isHovered ? 'translateY(-4px)' : 'translateY(0)',
+      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div style={{
+        backgroundColor: `${color}15`, // Dynamic color with 15% opacity for a soft background
+        padding: '12px',
+        borderRadius: '12px',
+        color: color, // Sharp color for the icon itself
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transition: 'transform 0.3s ease',
+        transform: isHovered ? 'rotate(-15deg) scale(1.1)' : 'rotate(0deg) scale(1)',
+      }}>
+        <Icon size={24} strokeWidth={2.5} />
+      </div>
+
+      <div>
+        <h3 style={{
+          margin: 0,
+          fontSize: '24px',
+          fontWeight: '700',
+          color: '#1e293b', // Deep slate from table text
+          fontFamily: "'Poppins', sans-serif",
+          letterSpacing: '-0.5px'
+        }}>
+          {value.toLocaleString()}
+        </h3>
+        <p style={{
+          margin: 0,
+          fontSize: '13px',
+          color: '#64748b', // Slate gray from table headers
+          fontWeight: '600',
+          fontFamily: "'Poppins', sans-serif",
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px'
+        }}>
+          {title}
+        </p>
+      </div>
     </div>
-    <div>
-      <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '600', color: '#2C3E50', fontFamily: "'Poppins', sans-serif" }}>{value}</h3>
-      <p style={{ margin: 0, fontSize: '14px', color: '#2C3E50', fontWeight: '500', fontFamily: "'Poppins', sans-serif" }}>{title}</p>
-    </div>
-  </div>
-);
+  );
+};
 
 export default function AdminHome() {
   const navigate = useNavigate();
@@ -267,6 +299,8 @@ export default function AdminHome() {
         <StatsCard title="Total Likes" value={totalLikes} icon={TrendingUp} color="#3498DB" bgColor="#FFFFFF" />
         <StatsCard title="Total Comments" value={totalComments} icon={Users} color="#3498DB" bgColor="#FFFFFF" />
         <StatsCard title="Deleted Posts" value={deletedPosts.length} icon={Trash2} color="#FF6B6B" bgColor="#FFFFFF" />
+        <StatsCard title="Reported Posts" value={reportedPosts.length} icon={Flag} color="#FF6B6B" bgColor="#FFFFFF" />
+        <StatsCard title="Archived Posts" value={archivedPosts.length} icon={Flag} color="#FF6B6B" bgColor="#FFFFFF" />
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
@@ -314,7 +348,35 @@ export default function AdminHome() {
                     </div>
                   </td>
                   <td style={{ padding: '10px', fontSize: '14px' }}>{new Date(post.date).toLocaleDateString()}</td>
-                  <td style={{ padding: '10px', fontSize: '14px' }}>{post.user?.user}</td>
+                  {/* <td style={{ padding: '10px', fontSize: '14px' }}>{post.user?.user}</td> */}
+                  <td
+                    style={{ padding: '12px 16px' }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (post.user?.username) {
+                        navigate(`/blog/profile/${post.user.username}`);
+                      }
+                    }}
+                  >
+                    <span
+                      style={{
+                        cursor: 'pointer',
+                        color: '#3498DB',
+                        fontWeight: '500',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.textDecoration = 'underline';
+                        e.target.style.color = '#2980B9';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.textDecoration = 'none';
+                        e.target.style.color = '#3498DB';
+                      }}
+                    >
+                      {post.user?.user || 'Unknown'}
+                    </span>
+                  </td>
                   <td style={{ padding: '10px', fontSize: '14px', fontWeight: '500' }}>{post.title}</td>
                   <td style={{ padding: '10px', fontSize: '13px', color: '#7F8C8D' }}>{post.desc.substring(0, 50)}...</td>
                   <td style={{ padding: '10px', fontSize: '14px' }}>{post.like}</td>
