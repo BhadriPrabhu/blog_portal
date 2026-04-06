@@ -89,16 +89,18 @@ export default function ArchivedPosts({ posts, onUnarchive, onError }) {
       onClick={handlePopupToggle}
     >
       <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-        <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#2C3E50', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#2C3E50', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
           <Archive size={18} color="#3498DB" />
           Archived Posts
         </h2>
-        <span style={{ color: '#2C3E50', fontSize: '14px' }}>{posts.length} archived {posts.length <= 1 ? 'post' : 'posts'}</span>
+        {posts.length > 0 && (
+          <span style={{ color: '#2C3E50', fontSize: '14px' }}>{posts.length} archived {posts.length === 1 ? 'post' : 'posts'}</span>
+        )}
       </div>
 
 
       {posts.length === 0 && (
-        <p style={{ color: '#2C3E50', fontSize: '14px', textAlign: 'center' }}>No archived posts available.</p>
+        <p style={{ color: '#2C3E50', fontSize: '14px', textAlign: 'center', margin: "0px" }}>No archived posts available.</p>
       )}
 
       {isPopupOpen && (

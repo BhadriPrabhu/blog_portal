@@ -10,11 +10,12 @@ import {
     MoreVertical,
     Edit2,
     Trash2,
-    Flag
+    Flag,
+    Activity
 } from "lucide-react";
 import ButtonTrans from "../components/buttonTran";
 import ToastBlog from "../utils/toast";
-import { bulkAction, editProfileData, fetchLikedBlogs, fetchMyPosts, fetchSavedBlogs, getProfileData, toggleFollow } from "../utils/api";
+import { bulkAction, editProfileData, fetchLikedBlogs, fetchMyPosts, fetchSavedBlogs, getProfileData, incrementShareCount, incrementViewCount, toggleFollow } from "../utils/api";
 import Button from "../components/button";
 import EditProfileModal from "../components/editProfileModal";
 import { uploadImageToCloudinary } from "../utils/imageUrl";
@@ -692,7 +693,16 @@ const PostGrid = ({ posts, navigate, tab, ownProfile, onRefresh }) => {
                         position: "relative", // Required for absolute positioning of the dots
                         cursor: "pointer"
                     }}
-                    onClick={() => navigate(`/blog/${post._id}`)}
+                    onClick={async () => {
+                        navigate(`/blog/${post._id}`)
+                        if(!ownProfile){
+                            try {
+                                await incrementViewCount(post._id);
+                            } catch (err) {
+                                console.error("Error incrementing view count:", err);
+                            }
+                        }
+                    }}
                 >
                     {/* --- THREE DOTS MENU --- */}
                     <div style={{ position: "absolute", top: "10px", right: "10px", zIndex: 10 }}>
@@ -788,6 +798,12 @@ const PostGrid = ({ posts, navigate, tab, ownProfile, onRefresh }) => {
                                                         };
 
                                                         try {
+                                                            await incrementShareCount(post._id); 
+                                                        } catch (err) {
+                                                            console.error("Error incrementing share count:", err);
+                                                        }
+
+                                                        try {
                                                             if (navigator.share) {
                                                                 await navigator.share(shareData);
                                                             } else {
@@ -854,7 +870,7 @@ const PostGrid = ({ posts, navigate, tab, ownProfile, onRefresh }) => {
 
                     {/* Content Section */}
                     <div style={{ padding: "20px" }}>
-                        <h3 style={{ margin: "0 0 8px", fontSize: "17px", fontWeight: 600, lineHeight: 1.4 }}>
+                        <h3 style={{ margin: "0 0 8px", fontSize: "17px", fontWeight: 600, lineHeight: 1.4, height: "48px", overflow: "hidden", textOverflow: "ellipsis" }}>
                             {post.title}
                         </h3>
                         <div style={{ display: "flex", justifyContent: "space-between", color: "#64748b", fontSize: "13px" }}>
@@ -873,19 +889,19 @@ const PostGrid = ({ posts, navigate, tab, ownProfile, onRefresh }) => {
                                 label: "Reported Content",
                                 bg: "#FEF2F2", // Light Red
                                 text: "#DC2626", // Dark Red
-                                icon: <Flag size={12} />
+                                icon: <Flag size={14} strokeWidth={3} />
                             },
                             deleted: {
                                 label: "Deleted Content",
                                 bg: "#F1F5F9", // Light Gray
                                 text: "#64748B", // Slate Gray
-                                icon: <Trash2 size={12} />
+                                icon: <Trash2 size={14} strokeWidth={3} />
                             },
                             active: {
                                 label: "Active Content",
                                 bg: "#F0FDF4", // Light Green
                                 text: "#16A34A", // Dark Green
-                                icon: null // Active usually doesn't need a loud label, but keep for consistency
+                                icon: <Activity size={14} strokeWidth={3} /> // Active usually doesn't need a loud label, but keep for consistency
                             }
                         };
 
@@ -893,11 +909,11 @@ const PostGrid = ({ posts, navigate, tab, ownProfile, onRefresh }) => {
 
                         return (
                             <div style={{
-                                fontSize: "11px",
+                                fontSize: "13px",
                                 textAlign: "center",
                                 backgroundColor: config.bg,
                                 color: config.text,
-                                fontWeight: "700",
+                                fontWeight: "600",
                                 textTransform: "uppercase",
                                 letterSpacing: "0.5px",
                                 padding: "6px 12px",

@@ -6,7 +6,7 @@ import BookmarkBorderOutlinedIcon from '@mui/icons-material/BookmarkBorderOutlin
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import { useStore } from '../data/zustand.jsx';
 import { useLocation, useNavigate } from 'react-router-dom';
-import api, { bulkAction } from '../utils/api';
+import api, { bulkAction, incrementShareCount, incrementViewCount } from '../utils/api';
 import ToastBlog from '../utils/toast.jsx';
 import { motion, AnimatePresence, hover } from 'framer-motion';
 import ButtonTrans from './buttonTran.jsx';
@@ -134,7 +134,16 @@ export default function PostCard({ postsData = null, onReload = null }) {
                             position: "relative",
                             cursor: "pointer"
                         }}
-                        onClick={() => navigate(`/blog/${item._id}`)}
+                        onClick={async () => {
+                            navigate(`/blog/${item._id}`)
+                            if (!isOwnProfile) {
+                                try {
+                                    await incrementViewCount(item._id);
+                                } catch (err) {
+                                    console.error("Error incrementing view count:", err);
+                                }
+                            }
+                        }}
                     >
                         {/* --- MENU BUTTON --- */}
                         <div style={{ position: "absolute", top: "10px", right: "10px", zIndex: 10 }}>
@@ -269,6 +278,12 @@ export default function PostCard({ postsData = null, onReload = null }) {
                                                 text: `Check out this post: ${item.title}`,
                                                 url: blogUrl
                                             };
+                                            try {
+                                                await incrementShareCount(item._id);
+                                                setSampleDatas(prev => prev.map((d, i) => i === idx ? { ...d, shareCount: (d.shareCount || 0) + 1 } : d));
+                                            } catch (err) {
+                                                console.log("Error incrementing share count:", err);
+                                            }
 
                                             try {
                                                 if (navigator.share) {

@@ -74,4 +74,7 @@ export const notifyBlog = (data) => api.post(`/blog/notify`, data);
 export const getNotify = (userId) => api.get(`/blog/getnotify/${userId}`);
 export const deleteNotify = (id) => api.post("/blog/deletenotify", { id });
 
+export const incrementViewCount = (id) => api.post(`/blog/view/${id}`);
+export const incrementShareCount = (id) => api.post(`/blog/share/${id}`);
+
 export default api;

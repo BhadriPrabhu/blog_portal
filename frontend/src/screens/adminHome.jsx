@@ -34,11 +34,12 @@ const StatsCard = ({ title, value, icon: Icon, color, bgColor }) => {
         display: 'flex',
         alignItems: 'center',
         gap: '16px',
-        minWidth: '220px',
+        minWidth: '240px',
         flex: '1', // Allows cards to grow equally in the row
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         cursor: 'default',
         transform: isHovered ? 'translateY(-4px)' : 'translateY(0)',
+        zIndex: isHovered ? 10 : 1
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -127,6 +128,8 @@ export default function AdminHome() {
         desc: post.desc || '',
         date: post.date || new Date().toISOString(),
         like: post.like || 0,
+        viewCount: post.viewCount || 0,
+        shareCount: post.shareCount || 0,
         comments: (post.comments || []).map(comment => ({
           ...comment,
           status: comment.status || 'pending',
@@ -285,16 +288,9 @@ export default function AdminHome() {
         />
       </div>
 
-      <div style={{ margin: '20px 0', textAlign: 'center' }}>
-        <input
-          type="text"
-          placeholder="Search posts..."
-          onChange={(e) => debouncedSearch(e.target.value)}
-          style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid #D5DBDB', width: '100%', maxWidth: '400px', backgroundColor: '#F7F9FA', color: '#2C3E50', fontFamily: "'Poppins', sans-serif", fontSize: '14px' }}
-        />
-      </div>
 
-      <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '20px' }}>
+
+      <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '20px' }}>
         <StatsCard title="Total Posts" value={posts.length} icon={Activity} color="#3498DB" bgColor="#FFFFFF" />
         <StatsCard title="Total Likes" value={totalLikes} icon={TrendingUp} color="#3498DB" bgColor="#FFFFFF" />
         <StatsCard title="Total Comments" value={totalComments} icon={Users} color="#3498DB" bgColor="#FFFFFF" />
@@ -303,26 +299,36 @@ export default function AdminHome() {
         <StatsCard title="Archived Posts" value={archivedPosts.length} icon={Flag} color="#FF6B6B" bgColor="#FFFFFF" />
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
-        <Button value="Delete Selected" onClick={() => handleBulkAction('delete')} style={{ backgroundColor: '#FF6B6B', color: '#FFFFFF', padding: '8px 16px', borderRadius: '6px' }} />
-        <Button value="Archive Selected" onClick={() => handleBulkAction('archive')} style={{ backgroundColor: '#3498DB', color: '#FFFFFF', padding: '8px 16px', borderRadius: '6px' }} />
+      <div className="controls-row" style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: '16px', marginBottom: '20px', flexWrap: 'wrap' }}>
+        <input
+          type="text"
+          placeholder="Search posts..."
+          className="search-input"
+          onChange={(e) => debouncedSearch(e.target.value)}
+          style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #e2e8f0', width: '100%', maxWidth: '400px', backgroundColor: '#fff', color: '#1e293b', outline: 'none', fontFamily: "'Poppins', sans-serif", fontSize: '14px' }}
+        />
+        <div style={{ display: 'flex', gap: '10px', flexDirection: 'row', justifyContent: 'center' }}>
+          <Button value="Delete Selected" onClick={() => handleBulkAction('delete')} style={{ backgroundColor: '#f43f5e', color: '#fff', padding: '10px 18px', borderRadius: '10px' }} />
+          <Button value="Archive Selected" onClick={() => handleBulkAction('archive')} style={{ backgroundColor: '#64748b', color: '#fff', padding: '10px 18px', borderRadius: '10px' }} />
+        </div>
       </div>
+
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: '40px' }}>Loading...</div>
       ) : (
-        <div style={{ overflowX: 'auto', backgroundColor: '#fff', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', border: '1px solid #D5DBDB', marginBottom: "20px" }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: "'Poppins', sans-serif" }}>
+        <div style={{ overflow: 'auto', backgroundColor: '#fff', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', border: '1px solid #D5DBDB', marginBottom: "20px" }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: "'Poppins', sans-serif", }}>
             <thead>
               <tr style={{ backgroundColor: '#EDEFF2', color: '#2C3E50', borderBottom: '2px solid #D5DBDB' }}>
                 <th style={{ padding: '12px' }}>
-                  <input type="checkbox" onChange={(e) => setSelectedIds(e.target.checked ? new Set(posts.map(p => p._id)) : new Set())} />
+                  <input type="checkbox" onChange={(e) => setSelectedIds(e.target.checked ? new Set(paginatedPosts.map(p => p._id)) : new Set())} />
                 </th>
                 <th style={{ ...headerStyle, cursor: 'default' }}>Profile</th>
                 <th style={headerStyle} onClick={() => handleSort('date')} title="Sort by Date">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>Date <SortIndicator field="date" /></div>
                 </th>
-                <th style={headerStyle} cursor="default">Author</th>
+                <th style={{ ...headerStyle, cursor: 'default' }}>Author</th>
                 <th style={headerStyle} onClick={() => handleSort('title')} title="Sort by Title">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>Title <SortIndicator field="title" /></div>
                 </th>
@@ -338,7 +344,7 @@ export default function AdminHome() {
             </thead>
             <tbody>
               {paginatedPosts.map(post => (
-                <tr key={post._id} style={{ borderBottom: '1px solid #D5DBDB', transition: 'background 0.2s' }} onClick={() => setSelectedPost(post)} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F7F9FA'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}>
+                <tr key={post._id} style={{ borderBottom: '1px solid #D5DBDB', transition: 'background 0.2s', cursor: "pointer" }} onClick={() => setSelectedPost(post)} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F7F9FA'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}>
                   <td style={{ padding: '10px', textAlign: 'center' }}>
                     <input type="checkbox" checked={selectedIds.has(post._id)} onChange={(e) => { e.stopPropagation(); const newSet = new Set(selectedIds); e.target.checked ? newSet.add(post._id) : newSet.delete(post._id); setSelectedIds(newSet); }} onClick={(e) => e.stopPropagation()} />
                   </td>
@@ -363,7 +369,8 @@ export default function AdminHome() {
                         cursor: 'pointer',
                         color: '#3498DB',
                         fontWeight: '500',
-                        transition: 'all 0.2s ease'
+                        transition: 'all 0.2s ease',
+                        fontSize: '14px'
                       }}
                       onMouseEnter={(e) => {
                         e.target.style.textDecoration = 'underline';
@@ -377,8 +384,9 @@ export default function AdminHome() {
                       {post.user?.user || 'Unknown'}
                     </span>
                   </td>
-                  <td style={{ padding: '10px', fontSize: '14px', fontWeight: '500' }}>{post.title}</td>
-                  <td style={{ padding: '10px', fontSize: '13px', color: '#7F8C8D' }}>{post.desc.substring(0, 50)}...</td>
+                  <td style={{
+                    padding: '10px', fontSize: '14px', fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{post.title}</td>
+                  <td style={{padding: '10px', fontSize: '13px', color: '#7F8C8D', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{post.desc.substring(0, 50)}...</td>
                   <td style={{ padding: '10px', fontSize: '14px' }}>{post.like}</td>
                   <td style={{ padding: '10px', fontSize: '14px' }}>{post.comments.length}</td>
                   <td style={{ padding: '10px', textAlign: 'center' }}>
@@ -450,7 +458,7 @@ export default function AdminHome() {
             fontFamily: "'Poppins', sans-serif"
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <label style={{ fontSize: '13px', color: '#7F8C8D', fontWeight: '500' }}>Rows per page:</label>
+              {/* <label style={{ fontSize: '13px', color: '#7F8C8D', fontWeight: '500' }}>Rows per page:</label> */}
               <select
                 value={postsPerPage}
                 onChange={(e) => { setPostsPerPage(Number(e.target.value)); setPage(1); }}
@@ -462,10 +470,11 @@ export default function AdminHome() {
                   cursor: 'pointer',
                   outline: 'none',
                   fontSize: '13px',
-                  fontFamily: "'Poppins', sans-serif"
+                  fontFamily: "'Poppins', sans-serif",
+                  fontWeight: '500',
                 }}
               >
-                {[5, 10, 20, 50].map(val => <option key={val} value={val}>{val}</option>)}
+                {[5, 10, 20, 50].map(val => <option key={val} value={val}>{val} Rows per Page</option>)}
               </select>
               <span style={{ fontSize: '13px', color: '#7F8C8D' }}>
                 Showing {Math.min(filteredPosts.length, (page - 1) * postsPerPage + 1)} to {Math.min(filteredPosts.length, page * postsPerPage)} of {filteredPosts.length} entries

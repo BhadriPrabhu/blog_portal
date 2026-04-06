@@ -22,6 +22,9 @@ const blogSchema = new mongoose.Schema({
 
   image: { type: String, default: "" },
 
+  viewCount: { type: Number, default: 0 },
+  shareCount: { type: Number, default: 0 },
+
   comments: [
     {
       user: { type: mongoose.Schema.Types.ObjectId, ref: 'auth' },

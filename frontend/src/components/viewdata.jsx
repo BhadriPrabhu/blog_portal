@@ -63,7 +63,7 @@
 import React from "react";
 import CommentData from "./commentData";
 import { useParams, useNavigate } from "react-router-dom";
-import api, { getBlog } from "../utils/api";
+import api, { getBlog, incrementShareCount } from "../utils/api";
 import ButtonTrans from "./buttonTran";
 import { motion } from "framer-motion";
 import { ArrowLeft, Share2, MessageSquareText } from "lucide-react";
@@ -322,6 +322,13 @@ export default function ViewData() {
                             text: `Check out this post: ${blog.title}`,
                             url: blogUrl
                         };
+
+                        try {
+                            await incrementShareCount(blog._id);
+                            setBlog(prev => ({ ...prev, shareCount: (prev.shareCount || 0) + 1 }));
+                        } catch (err) {
+                            console.log("Error incrementing share count:", err);
+                        }
 
                         try {
                             if (navigator.share) {

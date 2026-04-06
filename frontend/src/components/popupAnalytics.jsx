@@ -1,43 +1,46 @@
 import React, { useMemo, useState } from 'react';
-import axios from 'axios';
-import { X, TrendingUp, MessageCircle, Heart, Eye, Share2 } from 'lucide-react';
+import { X, TrendingUp, MessageCircle, Heart, Eye, Share2, User, Calendar, BarChart3, MessageSquare, Loader2 } from 'lucide-react';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { replyToComment } from '../utils/api';
+import api from '../utils/api';
+import { motion, AnimatePresence } from 'framer-motion';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-const StatCard = ({ icon: Icon, title, value, color, bgColor }) => (
+// Updated StatCard to match the theme
+const StatCard = ({ icon: Icon, title, value, color }) => (
   <div style={{
-    backgroundColor: bgColor,
+    backgroundColor: '#FFFFFF',
     padding: '20px',
-    borderRadius: '12px',
+    borderRadius: '16px',
     display: 'flex',
     alignItems: 'center',
     gap: '16px',
-    flex: 1,
-    minWidth: '180px',
-    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-    border: '1px solid #D5DBDB',
+    flex: '1',
+    minWidth: '200px',
+    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+    border: '1px solid #e2e8f0',
   }}>
     <div style={{
-      backgroundColor: color,
+      backgroundColor: `${color}15`,
       padding: '12px',
-      borderRadius: '10px',
-      color: '#FFFFFF',
+      borderRadius: '12px',
+      color: color,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
     }}>
-      <Icon size={24} />
+      <Icon size={24} strokeWidth={2.5} />
     </div>
     <div>
-      <h3 style={{ margin: '0 0 4px 0', fontSize: '24px', fontWeight: '700', color: '#2C3E50' }}>{value}</h3>
-      <p style={{ margin: 0, fontSize: '13px', color: '#7F8C8D', fontWeight: '500', fontFamily: "'Poppins', sans-serif" }}>{title}</p>
+      <h3 style={{ margin: '0 0 2px 0', fontSize: '22px', fontWeight: '700', color: '#1e293b', fontFamily: "'Poppins', sans-serif" }}>{value}</h3>
+      <p style={{ margin: 0, fontSize: '12px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{title}</p>
     </div>
   </div>
 );
 
+// Updated ChartContainer to match the theme
 const ChartContainer = ({ title, data, dataKey, color }) => {
   const chartData = {
     labels: data.map((item) => item.day),
@@ -46,26 +49,29 @@ const ChartContainer = ({ title, data, dataKey, color }) => {
         label: title.replace('📈 ', '').replace('💬 ', ''),
         data: data.map((item) => item[dataKey]),
         backgroundColor: color,
-        borderColor: color,
-        borderWidth: 1,
+        borderRadius: 6,
+        hoverBackgroundColor: `${color}CC`,
       },
     ],
   };
 
   const options = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
-      legend: { position: 'top' },
+      legend: { display: false },
       title: {
         display: true,
         text: title,
-        color: '#2C3E50',
-        font: { family: "'Poppins', sans-serif", size: 16 },
+        color: '#1e293b',
+        align: 'start',
+        font: { family: "'Poppins', sans-serif", size: 16, weight: '700' },
+        padding: { bottom: 20 }
       },
     },
     scales: {
-      y: { beginAtZero: true, ticks: { color: '#7F8C8D' } },
-      x: { ticks: { color: '#7F8C8D' } },
+      y: { grid: { color: '#f1f5f9' }, border: { display: false }, ticks: { color: '#94a3b8', font: { size: 11 } } },
+      x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 11 } } },
     },
   };
 
@@ -74,8 +80,9 @@ const ChartContainer = ({ title, data, dataKey, color }) => {
       backgroundColor: '#FFFFFF',
       padding: '24px',
       borderRadius: '16px',
-      boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
-      border: '1px solid #D5DBDB',
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+      border: '1px solid #e2e8f0',
+      height: '300px'
     }}>
       <Bar data={chartData} options={options} />
     </div>
@@ -96,27 +103,11 @@ export default function PopupAnalytics({ post, onClose, onCommentUpdate }) {
     const initialAnalytics = {
       likes,
       comments,
-      views: Math.floor(likes * 12),
-      shares: Math.floor(likes * 0.3),
+      views: post.viewCount || 0,
+      shares: post.shareCount || 0,
       engagementRate: likes > 0 ? ((likes + comments) / (likes * 12) * 100).toFixed(1) : 0,
-      likesOverTime: [
-        { day: 'Mon', likes: Math.floor(likes * 0.1) },
-        { day: 'Tue', likes: Math.floor(likes * 0.25) },
-        { day: 'Wed', likes: Math.floor(likes * 0.45) },
-        { day: 'Thu', likes: Math.floor(likes * 0.7) },
-        { day: 'Fri', likes: Math.floor(likes * 0.85) },
-        { day: 'Sat', likes: Math.floor(likes * 0.95) },
-        { day: 'Sun', likes },
-      ],
-      commentsOverTime: [
-        { day: 'Mon', comments: Math.floor(comments * 0.15) },
-        { day: 'Tue', comments: Math.floor(comments * 0.3) },
-        { day: 'Wed', comments: Math.floor(comments * 0.5) },
-        { day: 'Thu', comments: Math.floor(comments * 0.65) },
-        { day: 'Fri', comments: Math.floor(comments * 0.8) },
-        { day: 'Sat', comments: Math.floor(comments * 0.9) },
-        { day: 'Sun', comments },
-      ],
+      likesOverTime: [],
+      commentsOverTime: [],
       recentComments: post.comments?.map(comment => ({
         id: comment._id || `mock-comment-${Date.now()}-${Math.random()}`,
         author: comment.user?.user || post.user?.user || post.email || 'Unknown',
@@ -136,12 +127,8 @@ export default function PopupAnalytics({ post, onClose, onCommentUpdate }) {
     try {
       let response;
       if (action === 'reply') {
-        if (!replyText.trim()) {
-          setError('Please enter a reply.');
-          setIsLoading(false);
-          return;
-        }
-        response = await replyToComment(commentId, post._id, replyText.trim(), 'admin-user-id'); // Replace with actual user ID
+        if (!replyText.trim()) { setError('Please enter a reply.'); setIsLoading(false); return; }
+        response = await replyToComment(commentId, post._id, replyText.trim(), 'admin-user-id');
       } else {
         response = await api.post(`/blog/comments/${action}`, { commentId, blogId: post._id });
       }
@@ -196,7 +183,6 @@ export default function PopupAnalytics({ post, onClose, onCommentUpdate }) {
       setReplyCommentId(null);
     } catch (err) {
       setError(`Failed to ${action} comment: ${err.response?.data?.error || err.message}`);
-      console.error(`Error during ${action}:`, err);
     } finally {
       setIsLoading(false);
     }
@@ -206,452 +192,178 @@ export default function PopupAnalytics({ post, onClose, onCommentUpdate }) {
 
   return (
     <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="analytics-title"
       style={{
         position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        inset: 0,
+        backgroundColor: 'rgba(15, 23, 42, 0.5)',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        zIndex: 1000,
+        zIndex: 10000,
         padding: '20px',
         fontFamily: "'Poppins', sans-serif",
+        backdropFilter: 'blur(6px)',
       }}
-      onKeyDown={(e) => e.key === 'Escape' && onClose()}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div style={{
-        backgroundColor: '#F7F9FA',
-        borderRadius: '16px',
-        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.1)',
-        maxWidth: '1200px',
-        width: '100%',
-        maxHeight: '90vh',
-        overflow: 'auto',
-        position: 'relative',
-        border: '1px solid #D5DBDB',
-      }}>
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        style={{
+          backgroundColor: '#f8fafc',
+          borderRadius: '24px',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+          maxWidth: '1200px',
+          width: '100%',
+          maxHeight: '92vh',
+          overflow: 'hidden',
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          border: '1px solid #e2e8f0',
+        }}
+      >
+        {/* Header Section */}
         <div style={{
           backgroundColor: '#FFFFFF',
-          padding: '32px',
-          borderRadius: '16px 16px 0 0',
-          borderBottom: '1px solid #D5DBDB',
+          padding: '24px 32px',
+          borderBottom: '1px solid #f1f5f9',
           position: 'sticky',
           top: 0,
-          zIndex: 10,
+          zIndex: 20,
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '20px' }}>
-            <div style={{ flex: 1 }}>
-              <h2 id="analytics-title" style={{
-                margin: '0 0 8px 0',
-                fontSize: '28px',
-                fontWeight: '800',
-                color: '#2C3E50',
-                lineHeight: '1.2',
-                fontFamily: "'Poppins', sans-serif",
-              }}>Analytics Dashboard</h2>
-              <h2 style={{
-                margin: '0 0 12px 0',
-                fontSize: '20px',
-                fontWeight: '600',
-                color: '#7F8C8D',
-                lineHeight: '1.3',
-                fontFamily: "'Poppins', sans-serif",
-              }}>{post.title}</h2>
-              <p style={{
-                margin: '0 0 12px 0',
-                fontSize: '14px',
-                fontWeight: '600',
-                color: '#7F8C8D',
-                lineHeight: '1.3',
-                fontFamily: "'Poppins', sans-serif",
-              }}>{post.desc}</p>
-              <div style={{
-                display: 'flex',
-                gap: '16px',
-                fontSize: '14px',
-                color: '#7F8C8D',
-                fontFamily: "'Poppins', sans-serif",
-              }}>
-                <span><strong>Author:</strong> {post.user?.user || 'Unknown'}</span>
-                <span><strong>Posted:</strong> {new Date(post.date).toLocaleDateString()}</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div style={{ flex: 1, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#3b82f6', marginBottom: '4px' }}>
+                <BarChart3 size={18} strokeWidth={2.5} />
+                <span style={{ fontWeight: '700', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>Post Analytics</span>
+              </div>
+              <h2 style={{ margin: '0 0 4px 0', fontSize: '24px', fontWeight: '800', color: '#1e293b' }}>{post.title}</h2>
+              <div style={{ display: 'flex', gap: '16px', marginTop: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#64748b', fontSize: '13px' }}>
+                  <User size={14} /> {post.user?.user || 'Unknown Author'}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#64748b', fontSize: '13px' }}>
+                  <Calendar size={14} /> {new Date(post.date).toLocaleDateString()}
+                </div>
               </div>
             </div>
             <button
               onClick={onClose}
-              disabled={isLoading}
               style={{
-                backgroundColor: isLoading ? '#D5DBDB' : '#3498DB',
-                color: '#FFFFFF',
-                border: 'none',
-                borderRadius: '50%',
+                background: '#fff',
+                border: '1px solid #e2e8f0',
+                borderRadius: '12px',
                 width: '40px',
                 height: '40px',
-                cursor: isLoading ? 'not-allowed' : 'pointer',
+                cursor: 'pointer',
+                color: '#64748b',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                transition: 'background-color 0.2s ease, transform 0.2s ease',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                outline: 'none',
+                transition: 'all 0.2s',
               }}
-              onMouseEnter={(e) => !isLoading && (e.target.style.backgroundColor = '#3498DBCC')}
-              onMouseLeave={(e) => !isLoading && (e.target.style.backgroundColor = '#3498DB')}
-              onFocus={(e) => !isLoading && (e.target.style.outline = '2px solid #3498DB')}
-              onBlur={(e) => !isLoading && (e.target.style.outline = 'none')}
-              aria-label="Close analytics dashboard"
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#fef2f2'; e.currentTarget.style.color = '#ef4444'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#fff'; e.currentTarget.style.color = '#64748b'; }}
             >
-              <X size={24} />
+              <X size={20} />
             </button>
           </div>
         </div>
 
-        <div style={{ padding: '32px' }}>
-          {error && <p style={{ color: '#FF6B6B', textAlign: 'center', marginBottom: '20px', fontFamily: "'Poppins', sans-serif", fontSize: '14px' }}>{error}</p>}
+        <div className="custom-scrollbar" style={{ padding: '32px', overflowY: 'auto', flex: 1 }}>
+          {error && <div style={{ color: '#ef4444', backgroundColor: '#fef2f2', padding: '12px', borderRadius: '12px', marginBottom: '20px', border: '1px solid #fee2e2', fontSize: '14px' }}>{error}</div>}
 
-          <div style={{
-            display: 'flex',
-            gap: '20px',
-            marginBottom: '32px',
-            flexWrap: 'wrap',
-          }}>
-            <StatCard
-              icon={Heart}
-              title="Total Likes"
-              value={analytics.likes}
-              color="#3498DB"
-              bgColor="#FFFFFF"
-            />
-            <StatCard
-              icon={MessageCircle}
-              title="Total Comments"
-              value={analytics.comments}
-              color="#2ECC71"
-              bgColor="#FFFFFF"
-            />
-            <StatCard
-              icon={Eye}
-              title="Total Views"
-              value={analytics.views}
-              color="#3498DB"
-              bgColor="#FFFFFF"
-            />
-            <StatCard
-              icon={Share2}
-              title="Shares"
-              value={analytics.shares}
-              color="#3498DB"
-              bgColor="#FFFFFF"
-            />
-            <StatCard
-              icon={TrendingUp}
-              title="Engagement Rate"
-              value={`${analytics.engagementRate}%`}
-              color="#2ECC71"
-              bgColor="#FFFFFF"
-            />
+          {/* Stats Grid */}
+          <div style={{ display: 'flex', gap: '16px', marginBottom: '32px', flexWrap: 'wrap' }}>
+            <StatCard icon={Heart} title="Total Likes" value={analytics.likes} color="#3b82f6" />
+            <StatCard icon={MessageCircle} title="Comments" value={analytics.comments} color="#10b981" />
+            <StatCard icon={Eye} title="Total Views" value={analytics.views} color="#8b5cf6" />
+            <StatCard icon={Share2} title="Shares" value={analytics.shares} color="#f59e0b" />
+            <StatCard icon={TrendingUp} title="Engagement" value={`${analytics.engagementRate}%`} color="#10b981" />
           </div>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-            gap: '24px',
-            marginBottom: '32px',
-          }}>
-            <ChartContainer
-              title="Likes Over Time"
-              data={analytics.likesOverTime}
-              dataKey="likes"
-              color="#0092F4"
-            />
-            <ChartContainer
-              title="Comments Over Time"
-              data={analytics.commentsOverTime}
-              dataKey="comments"
-              color="#06DC5F"
-            />
+          {/* Charts Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px', marginBottom: '32px' }}>
+            <ChartContainer title="Like Trends" data={analytics.likesOverTime} dataKey="likes" color="#3b82f6" />
+            <ChartContainer title="Comment Activity" data={analytics.commentsOverTime} dataKey="comments" color="#10b981" />
           </div>
 
-          <div style={{
-            backgroundColor: '#FFFFFF',
-            padding: '24px',
-            borderRadius: '16px',
-            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
-            border: '1px solid #D5DBDB',
-          }}>
-            <h3 style={{
-              color: '#2C3E50',
-              marginBottom: '20px',
-              fontSize: '20px',
-              fontWeight: '700',
-              fontFamily: "'Poppins', sans-serif",
-            }}>Recent Comments Management</h3>
+          {/* Comments Management Section */}
+          <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '20px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
+              <MessageSquare size={20} color="#1e293b" strokeWidth={2.5} />
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#1e293b' }}>Content Moderation</h3>
+            </div>
 
             {replyCommentId && (
-              <div style={{ marginBottom: '20px' }}>
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} style={{ marginBottom: '24px', backgroundColor: '#f8fafc', padding: '16px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
                 <textarea
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
-                  placeholder="Enter your reply..."
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    borderRadius: '8px',
-                    border: '1px solid #D5DBDB',
-                    fontSize: '14px',
-                    resize: 'vertical',
-                    color: '#2C3E50',
-                    fontFamily: "'Poppins', sans-serif",
-                    outline: 'none',
-                  }}
-                  onFocus={(e) => (e.target.style.outline = '2px solid #3498DB')}
-                  onBlur={(e) => (e.target.style.outline = 'none')}
-                  aria-label="Enter reply to comment"
+                  placeholder="Type your official response..."
+                  style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '14px', minHeight: '80px', outline: 'none', fontFamily: "'Poppins', sans-serif" }}
                 />
-                <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                  <button
-                    onClick={() => handleCommentAction(replyCommentId, 'reply')}
-                    disabled={isLoading}
-                    style={{
-                      backgroundColor: isLoading ? '#D5DBDB' : '#2ECC71',
-                      color: '#FFFFFF',
-                      border: 'none',
-                      padding: '8px 16px',
-                      borderRadius: '8px',
-                      fontSize: '13px',
-                      fontWeight: '600',
-                      cursor: isLoading ? 'not-allowed' : 'pointer',
-                      transition: 'background-color 0.2s ease',
-                      fontFamily: "'Poppins', sans-serif",
-                    }}
-                    onMouseEnter={(e) => !isLoading && (e.target.style.backgroundColor = '#2ECC71CC')}
-                    onMouseLeave={(e) => !isLoading && (e.target.style.backgroundColor = '#2ECC71')}
-                    aria-label="Submit reply"
-                  >
-                    Submit Reply
+                <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
+                  <button onClick={() => handleCommentAction(replyCommentId, 'reply')} disabled={isLoading} style={{ backgroundColor: '#3b82f6', color: '#fff', border: 'none', padding: '8px 20px', borderRadius: '10px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>
+                    {isLoading ? 'Sending...' : 'Post Reply'}
                   </button>
-                  <button
-                    onClick={() => {
-                      setReplyText('');
-                      setReplyCommentId(null);
-                    }}
-                    disabled={isLoading}
-                    style={{
-                      backgroundColor: isLoading ? '#D5DBDB' : '#FFFFFF',
-                      color: '#2C3E50',
-                      border: '1px solid #D5DBDB',
-                      padding: '8px 16px',
-                      borderRadius: '8px',
-                      fontSize: '13px',
-                      fontWeight: '600',
-                      cursor: isLoading ? 'not-allowed' : 'pointer',
-                      transition: 'background-color 0.2s ease',
-                      fontFamily: "'Poppins', sans-serif",
-                    }}
-                    onMouseEnter={(e) => !isLoading && (e.target.style.backgroundColor = '#F7F9FA')}
-                    onMouseLeave={(e) => !isLoading && (e.target.style.backgroundColor = '#FFFFFF')}
-                    aria-label="Cancel reply"
-                  >
+                  <button onClick={() => { setReplyText(''); setReplyCommentId(null); }} style={{ backgroundColor: '#fff', color: '#64748b', border: '1px solid #e2e8f0', padding: '8px 20px', borderRadius: '10px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>
                     Cancel
                   </button>
                 </div>
-              </div>
+              </motion.div>
             )}
 
-            <div style={{ maxHeight: '400px', overflow: 'auto' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {analytics.recentComments.map(comment => (
-                <div key={comment.id} style={{
-                  backgroundColor: comment.status === 'flagged' ? '#FFF5F5' : '#FFFFFF',
-                  padding: '20px',
-                  borderRadius: '12px',
-                  marginBottom: '16px',
-                  border: comment.status === 'flagged' ? '2px solid #E74C3C' : '1px solid #D5DBDB',
-                  transition: 'all 0.2s ease',
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <div key={comment.id} style={{ padding: '20px', borderRadius: '16px', border: '1px solid #f1f5f9', backgroundColor: comment.status === 'flagged' ? '#fef2f2' : '#fff', transition: 'all 0.2s' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <strong style={{ color: '#2C3E50', fontSize: '15px', fontFamily: "'Poppins', sans-serif" }}>{comment.author}</strong>
-                      <span style={{
-                        fontSize: '11px',
-                        padding: '4px 8px',
-                        borderRadius: '12px',
-                        fontWeight: '600',
-                        backgroundColor: comment.status === 'approved' ? '#2ECC71' :
-                          comment.status === 'pending' ? '#3498DB' : '#E74C3C',
-                        color: '#FFFFFF',
-                        fontFamily: "'Poppins', sans-serif",
-                      }}>
-                        {comment.status.toUpperCase()}
-                      </span>
+                      <span style={{ fontWeight: '700', color: '#1e293b', fontSize: '14px' }}>{comment.author}</span>
+                      <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '6px', fontWeight: '800', textTransform: 'uppercase', backgroundColor: comment.status === 'approved' ? '#dcfce7' : comment.status === 'pending' ? '#dbeafe' : '#fee2e2', color: comment.status === 'approved' ? '#166534' : comment.status === 'pending' ? '#1e40af' : '#991b1b' }}>{comment.status}</span>
                     </div>
-                    <span style={{ fontSize: '13px', color: '#7F8C8D', fontWeight: '500', fontFamily: "'Poppins', sans-serif" }}>{comment.time}</span>
+                    <span style={{ fontSize: '12px', color: '#94a3b8' }}>{comment.time}</span>
                   </div>
-                  <p style={{ margin: '0 0 16px 0', color: '#7F8C8D', lineHeight: '1.5', fontSize: '14px', fontFamily: "'Poppins', sans-serif" }}>{comment.comment}</p>
+                  <p style={{ margin: '0 0 16px 0', color: '#475569', fontSize: '14px', lineHeight: '1.6' }}>{comment.comment}</p>
+                  
                   {comment.replies.length > 0 && (
-                    <div style={{ marginTop: '10px', paddingLeft: '20px', borderLeft: '2px solid #D5DBDB' }}>
+                    <div style={{ marginLeft: '16px', paddingLeft: '16px', borderLeft: '2px solid #e2e8f0', marginBottom: '16px' }}>
                       {comment.replies.map(reply => (
-                        <div key={reply._id || reply.id} style={{ marginBottom: '10px' }}>
-                          <strong style={{ color: '#2C3E50', fontSize: '14px', fontFamily: "'Poppins', sans-serif" }}>{reply.user?.user || 'Unknown'}</strong>
-                          <p style={{ margin: '5px 0', color: '#7F8C8D', fontSize: '13px', fontFamily: "'Poppins', sans-serif" }}>{reply.value}</p>
+                        <div key={reply._id || reply.id} style={{ marginBottom: '8px' }}>
+                          <span style={{ fontWeight: '700', fontSize: '13px', color: '#3b82f6' }}>Admin Response:</span>
+                          <p style={{ margin: '2px 0', color: '#64748b', fontSize: '13px' }}>{reply.value}</p>
                         </div>
                       ))}
                     </div>
                   )}
-                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                    <button
-                      onClick={() => handleCommentAction(comment.id, 'approve')}
-                      disabled={isLoading}
-                      style={{
-                        backgroundColor: isLoading ? '#D5DBDB' : '#2ECC71',
-                        color: '#FFFFFF',
-                        border: 'none',
-                        padding: '8px 16px',
-                        borderRadius: '8px',
-                        fontSize: '13px',
-                        fontWeight: '600',
-                        cursor: isLoading ? 'not-allowed' : 'pointer',
-                        transition: 'background-color 0.2s ease',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        fontFamily: "'Poppins', sans-serif",
-                      }}
-                      onMouseEnter={(e) => !isLoading && (e.target.style.backgroundColor = '#2ECC71CC')}
-                      onMouseLeave={(e) => !isLoading && (e.target.style.backgroundColor = '#2ECC71')}
-                      aria-label="Approve comment"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => handleCommentAction(comment.id, 'delete')}
-                      disabled={isLoading}
-                      style={{
-                        backgroundColor: isLoading ? '#D5DBDB' : '#FF6B6B',
-                        color: '#FFFFFF',
-                        border: 'none',
-                        padding: '8px 16px',
-                        borderRadius: '8px',
-                        fontSize: '13px',
-                        fontWeight: '600',
-                        cursor: isLoading ? 'not-allowed' : 'pointer',
-                        transition: 'background-color 0.2s ease',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        fontFamily: "'Poppins', sans-serif",
-                      }}
-                      onMouseEnter={(e) => !isLoading && (e.target.style.backgroundColor = '#FF6B6BCC')}
-                      onMouseLeave={(e) => !isLoading && (e.target.style.backgroundColor = '#FF6B6B')}
-                      aria-label="Delete comment"
-                    >
-                      Delete
-                    </button>
-                    <button
-                      onClick={() => handleCommentAction(comment.id, 'flag')}
-                      disabled={isLoading}
-                      style={{
-                        backgroundColor: isLoading ? '#D5DBDB' : '#E74C3C',
-                        color: '#FFFFFF',
-                        border: 'none',
-                        padding: '8px 16px',
-                        borderRadius: '8px',
-                        fontSize: '13px',
-                        fontWeight: '600',
-                        cursor: isLoading ? 'not-allowed' : 'pointer',
-                        transition: 'background-color 0.2s ease',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        fontFamily: "'Poppins', sans-serif",
-                      }}
-                      onMouseEnter={(e) => !isLoading && (e.target.style.backgroundColor = '#C0392B')}
-                      onMouseLeave={(e) => !isLoading && (e.target.style.backgroundColor = '#E74C3C')}
-                      aria-label="Flag comment as spam"
-                    >
-                      Flag as Spam
-                    </button>
-                    <button
-                      onClick={() => setReplyCommentId(comment.id)}
-                      disabled={isLoading}
-                      style={{
-                        backgroundColor: isLoading ? '#D5DBDB' : '#FFFFFF',
-                        color: '#2C3E50',
-                        border: '1px solid #D5DBDB',
-                        padding: '8px 16px',
-                        borderRadius: '8px',
-                        fontSize: '13px',
-                        fontWeight: '600',
-                        cursor: isLoading ? 'not-allowed' : 'pointer',
-                        transition: 'background-color 0.2s ease',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        fontFamily: "'Poppins', sans-serif",
-                      }}
-                      onMouseEnter={(e) => !isLoading && (e.target.style.backgroundColor = '#F7F9FA')}
-                      onMouseLeave={(e) => !isLoading && (e.target.style.backgroundColor = '#FFFFFF')}
-                      aria-label="Reply to comment"
-                    >
-                      Reply
-                    </button>
+
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={() => handleCommentAction(comment.id, 'approve')} style={{ padding: '6px 14px', borderRadius: '8px', border: 'none', backgroundColor: '#f0fdf4', color: '#166534', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Poppins', sans-serif" }}>Approve</button>
+                    <button onClick={() => setReplyCommentId(comment.id)} style={{ padding: '6px 14px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#fff', color: '#1e293b', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Poppins', sans-serif" }}>Reply</button>
+                    <button onClick={() => handleCommentAction(comment.id, 'flag')} style={{ padding: '6px 14px', borderRadius: '8px', border: 'none', backgroundColor: '#fff7ed', color: '#9a3412', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Poppins', sans-serif" }}>Spam</button>
+                    <button onClick={() => handleCommentAction(comment.id, 'delete')} style={{ padding: '6px 14px', borderRadius: '8px', border: 'none', backgroundColor: '#fef2f2', color: '#991b1b', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Poppins', sans-serif" }}>Delete</button>
                   </div>
                 </div>
               ))}
             </div>
           </div>
-          <style jsx>{`
-            @media (max-width: 768px) {
-              div[style*="padding: 32px"] {
-                padding: 16px;
-              }
-              h2[style*="fontSize: 28px"] {
-                font-size: 24px !important;
-              }
-              h3[style*="fontSize: 20px"] {
-                font-size: 18px !important;
-              }
-              div[style*="fontSize: 14px"] {
-                font-size: 12px !important;
-              }
-              div[style*="minWidth: 180px"] {
-                min-width: 140px !important;
-              }
-              div[style*="minmax(400px, 1fr)"] {
-                grid-template-columns: minmax(300px, 1fr) !important;
-              }
-              textarea {
-                font-size: 12px !important;
-                padding: 8px !important;
-              }
-              button[style*="padding: 8px 16px"] {
-                padding: 6px 12px !important;
-                font-size: 12px !important;
-              }
-              button[style*="width: 40px"] {
-                width: 32px !important;
-                height: 32px !important;
-              }
-              div[style*="padding: 20px"][style*="borderRadius: 12px"] {
-                padding: 16px !important;
-              }
-              p[style*="fontSize: 14px"] {
-                font-size: 12px !important;
-              }
-              span[style*="fontSize: 13px"] {
-                font-size: 11px !important;
-              }
-              strong[style*="fontSize: 15px"] {
-                font-size: 13px !important;
-              }
-            }
-          `}</style>
         </div>
-      </div>
+
+        {isLoading && (
+          <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(255, 255, 255, 0.7)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100, backdropFilter: 'blur(2px)' }}>
+            <Loader2 size={32} className="animate-spin" style={{ color: '#3b82f6' }} />
+          </div>
+        )}
+      </motion.div>
+
+      <style>{`
+        .animate-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+      `}</style>
     </div>
   );
 }

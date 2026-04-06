@@ -22,6 +22,7 @@ const { mentionController } = require('./controllers/mentionController.js');
 const { notificationAddController, getNotifications, DeleteNotification } = require('./controllers/notificationController.js');
 const { getProfileData, editProfileData, toggleFollow } = require('./controllers/profileController.js');
 const verifyToken = require('./middleware/authMiddleware.js');
+const { incrementViewCount, incrementShareCount } = require('./controllers/analyticsController.js');
 
 const corsOptions = {
   origin: '*', 
@@ -75,6 +76,8 @@ app.get("/blog/:id", findBlog);
 app.get("/blog/profile/:username", verifyToken, getProfileData);
 app.put("/blog/profile/edit", verifyToken, editProfileData);
 app.post("/blog/profile/follow/:targetUserId", verifyToken, toggleFollow);
+app.post("/blog/view/:id", incrementViewCount);
+app.post("/blog/share/:id", incrementShareCount);
 
 app.listen(PORT, () => {
   connectDB();
