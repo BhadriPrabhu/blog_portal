@@ -228,7 +228,13 @@ export default function PostCard({ postsData = null, onReload = null }) {
                                 <div style={{ width: '24px', height: '24px', backgroundColor: '#0c5686', borderRadius: '50%', color: 'white', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '12px', fontWeight: 'bold' }}>
                                     {item.user?.user?.charAt(0).toUpperCase() || 'U'}
                                 </div>
-                                <span style={{ fontSize: '15px', color: '#64748b', fontWeight: '500' }} onClick={() => navigate(`/blog/profile/${item.user.username}`)}>{item.user?.username || 'user'}</span>
+                                <span
+                                    style={{ fontSize: '15px', color: '#64748b', fontWeight: '500' }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        navigate(`/blog/profile/${item.user.username}`)
+                                    }}
+                                >{item.user?.username || 'user'}</span>
                             </div>
 
                             <h3 style={{ margin: "0 0 4px", fontSize: '18px', fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', }}>
