@@ -1,65 +1,3 @@
-// import React from "react";
-// import Dialog from "./dialog";
-// import CommentData from "./commentData";
-
-// export default function ViewData({ isOpen, viewValue, isClose }) {
-//     return (
-//         <Dialog
-//             children={
-//                 <>
-//                     {viewValue.map((item) => (
-//                         <div key={item._id} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-//                             <h2 style={{
-//                                 margin: "0px",
-//                                 padding: "5px 50px",
-//                                 display: "flex",
-//                                 justifyContent: "center",
-//                                 textAlign: "center",
-//                                 fontSize: "20px",
-//                                 color: "#2C3E50",
-//                                 fontFamily: "'Poppins', sans-serif",
-//                             }}>
-//                                 {item.title}
-//                             </h2>
-//                             <p style={{
-//                                 margin: "0px 20px",
-//                                 fontSize: "14px",
-//                                 color: "#7F8C8D",
-//                                 fontFamily: "'Poppins', sans-serif",
-//                                 lineHeight: "1.5",
-//                             }}>
-//                                 {item.desc}
-//                             </p>
-//                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', margin: '5px 20px' }}>
-//                                 {item.tags?.map((tag, index) => (
-//                                     <span
-//                                         key={index}
-//                                         style={{
-//                                             backgroundColor: 'gray',
-//                                             color: 'white',
-//                                             padding: '2px 8px',
-//                                             borderRadius: '12px',
-//                                             fontSize: '12px',
-//                                         }}
-//                                     >
-//                                         {tag}
-//                                     </span>
-//                                 ))}
-//                             </div>
-//                             <CommentData commentData={item.comments} blogId={item._id} />
-//                         </div>
-//                     ))}
-//                 </>
-//             }
-//             onclose={isClose}
-//             opened={isOpen}
-//             width="650px"
-//             height="500px"
-//         />
-//     );
-// }
-
-
 import React from "react";
 import CommentData from "./commentData";
 import { useParams, useNavigate } from "react-router-dom";
@@ -67,7 +5,7 @@ import api, { getBlog, incrementShareCount } from "../utils/api";
 import ButtonTrans from "./buttonTran";
 import { motion } from "framer-motion";
 import { ArrowLeft, Share2, MessageSquareText } from "lucide-react";
-import ThumbUpIcon from '@mui/icons-material/ThumbUp'; // Assuming MUI
+import ThumbUpIcon from '@mui/icons-material/ThumbUp'; 
 import ThumbUpOutlinedIcon from '@mui/icons-material/ThumbUpOutlined';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderOutlinedIcon from '@mui/icons-material/BookmarkBorderOutlined';
@@ -94,15 +32,12 @@ export default function ViewData() {
                 const res = await getBlog(id, profileData._id);
                 const data = res.data;
 
-
                 const processedData = {
                     ...data,
                     like: data.like ?? (data.likedBy?.length || 0)
                 };
 
                 setBlog(processedData);
-                console.log(processedData)
-                console.log(profileData._id);
             } catch (err) {
                 console.error("Link error:", err);
             } finally {
@@ -112,21 +47,11 @@ export default function ViewData() {
         if (id) loadBlog();
     }, [id, profileData._id]);
 
-
     const likeBlog = async (blogId, userId) => {
         try {
-            console.log("User ID:", userId);
             if (!userId) throw new Error('User ID is missing');
             const res = await api.put('/blog/like', { blogId, userId });
-            const { likeCount, liked } = res.data;
             setBlog(prev => ({ ...prev, like: res.data.likeCount, liked: res.data.liked }));
-            console.log('Like response:', res.data);
-            // setSampleDatas(prev =>
-            //     prev.map((item, i) =>
-            //         i === idx ? { ...item, like: likeCount, liked } : item
-            //     )
-            // );
-
         } catch (error) {
             console.error('Error liking blog:', error.response?.data || error.message);
         }
@@ -134,38 +59,29 @@ export default function ViewData() {
 
     const handleSave = async (blogId) => {
         try {
-
             if (!profileData._id) throw new Error('User ID is missing');
             const res = await api.post('/blog/save', { blogId, userId: profileData._id });
-
             if (res.data.saved) {
                 ToastBlog("Saved Post");
             }
-
-            console.log('Save response:', res.data);
-            // setSampleDatas((data) => data.map((d, i) =>
-            //     i === idx ? { ...d, saved: res.data.saved } : d
-            // ));
             setBlog(prev => ({ ...prev, saved: res.data.saved }));
-
-
         } catch (err) {
             console.error('Error saving blog:', err.response?.data || err.message);
         }
     };
 
-
     const buttonStyle = {
         backgroundColor: 'transparent',
         border: '0px',
         borderRadius: '15px',
-        height: '30px',
+        height: '40px', // Increased slightly for better mobile touch target
         display: 'flex',
-        justifyContent: 'start',
+        justifyContent: 'center',
         alignItems: 'center',
         fontFamily: 'Poppins, sans-serif',
         cursor: 'pointer',
         color: '#2C3E50',
+        flex: 1, // Allows buttons to distribute evenly on small screens
     };
     const hoverStyle = { backgroundColor: '#9637371a' };
 
@@ -173,19 +89,18 @@ export default function ViewData() {
     if (!blog) return <div style={{ textAlign: 'center', padding: '50px' }}>Post not found.</div>;
 
     return (
-        <div style={{
-            maxWidth: "800px",
-            minWidth: "600px",
+        <div className="view-container" style={{
+            maxWidth: "850px",
+            width: "95%", // Responsive width
             margin: "20px auto",
-            padding: "20px",
+            padding: "clamp(15px, 4vw, 30px)", // Responsive padding
             backgroundColor: "white",
             borderRadius: "12px",
+            boxSizing: "border-box",
             boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
         }}>
             <ButtonTrans
-                child={<>
-                    <ArrowLeft size="20px" />
-                </>}
+                child={<ArrowLeft size="20px" />}
                 buttonType="button"
                 noToolTip={true}
                 label="back"
@@ -194,15 +109,14 @@ export default function ViewData() {
                 hover={hover1}
                 mouseEnter={() => setHover1(true)}
                 mouseLeave={() => setHover1(false)}
-
             />
 
             <h1 style={{
                 textAlign: "center",
-                fontSize: "28px",
+                fontSize: "clamp(20px, 5vw, 28px)", // Fluid typography
                 color: "#2C3E50",
                 fontFamily: "'Poppins', sans-serif",
-                margin: "0px",
+                margin: "10px 0 20px 0",
             }}>
                 {blog.title}
             </h1>
@@ -210,11 +124,11 @@ export default function ViewData() {
             {blog.image && (
                 <div style={{
                     width: "100%",
-                    maxHeight: "450px",
+                    height: "clamp(200px, 50vw, 450px)", // Fluid height
                     overflow: "hidden",
                     borderRadius: "12px",
                     marginBottom: "24px",
-                    backgroundColor: "#F8FAFC" // Light placeholder color
+                    backgroundColor: "#F8FAFC"
                 }}>
                     <img
                         src={blog.image}
@@ -222,36 +136,38 @@ export default function ViewData() {
                         style={{
                             width: "100%",
                             height: "100%",
-                            objectFit: "cover", // Ensures the image fills the area beautifully
+                            objectFit: "cover",
                             display: "block"
                         }}
-                        onError={(e) => {
-                            // Fallback if Cloudinary link is broken
-                            e.target.style.display = 'none';
-                        }}
+                        onError={(e) => { e.target.style.display = 'none'; }}
                     />
                 </div>
             )}
 
             <p style={{
-                fontSize: "14px",
+                fontSize: "clamp(14px, 3.5vw, 15px)",
                 color: "#34495E",
                 fontFamily: "'Poppins', sans-serif",
                 lineHeight: "1.8",
-                margin: "20px 0"
+                margin: "20px 0",
+                wordBreak: "break-word" // Prevent long text from breaking layout
             }}>
                 {blog.desc}
             </p>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: "30px" }}>
                 {blog.tags?.map((tag, index) => (
-                    <span key={index} style={{ backgroundColor: '#ECF0F1', color: '#7F8C8D', padding: '4px 12px', borderRadius: '20px', fontSize: '13px' }}>
+                    <span key={index} style={{ backgroundColor: '#ECF0F1', color: '#7F8C8D', padding: '4px 12px', borderRadius: '20px', fontSize: '12px' }}>
                         #{tag}
                     </span>
                 ))}
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+            <div className="action-bar" style={{ 
+                display: 'flex', 
+                justifyContent: 'space-around',
+                gap: "10px" 
+            }}>
                 <motion.button
                     style={hover2 ? { ...buttonStyle, ...hoverStyle } : buttonStyle}
                     onMouseEnter={() => setHover2(true)}
@@ -260,15 +176,13 @@ export default function ViewData() {
                     aria-label={blog.liked ? 'Unlike post' : 'Like post'}
                     whileTap={{ scale: 0.8 }}
                 >
-                    <motion.div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+                    <motion.div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
                         key={blog.liked ? "liked" : "unliked"}
                         initial={{ scale: 1 }}
-                        animate={{
-                            scale: blog.liked ? [1, 1.5, 1.2, 1] : 1,
-                        }}
+                        animate={{ scale: blog.liked ? [1, 1.5, 1.2, 1] : 1 }}
                         transition={{ duration: 0.4, type: "spring", stiffness: 300 }}
                     >
-                        {blog.liked ? <ThumbUpIcon sx={{ color: '#0a82d2ff' }} /> : <ThumbUpOutlinedIcon sx={{ color: 'gray' }} />}
+                        {blog.liked ? <ThumbUpIcon sx={{ fontSize: "20px", color: '#0a82d2ff' }} /> : <ThumbUpOutlinedIcon sx={{ fontSize: "20px", color: 'gray' }} />}
                         <span style={{ fontSize: "14px", fontWeight: "600", color: "#2C3E50" }}>
                             {blog.like || 0}
                         </span>
@@ -286,12 +200,10 @@ export default function ViewData() {
                     <motion.div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
                         key={blog.saved ? "saved" : "unsaved"}
                         initial={{ scale: 1 }}
-                        animate={{
-                            scale: blog.saved ? [1, 1.5, 1.2, 1] : 1,
-                        }}
+                        animate={{ scale: blog.saved ? [1, 1.5, 1.2, 1] : 1 }}
                         transition={{ duration: 0.4, type: "spring", stiffness: 300 }}
                     >
-                        {blog.saved ? <BookmarkIcon sx={{ color: '#0a82d2ff' }} /> : <BookmarkBorderOutlinedIcon sx={{ color: 'gray' }} />}
+                        {blog.saved ? <BookmarkIcon sx={{ fontSize: "22px", color: '#0a82d2ff' }} /> : <BookmarkBorderOutlinedIcon sx={{ fontSize: "22px", color: 'gray' }} />}
                     </motion.div>
                 </motion.button>
 
@@ -305,7 +217,7 @@ export default function ViewData() {
                     aria-label='View comments'
                 >
                     <motion.div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <MessageSquareText color={hover4 ? 'black' : 'gray'} />
+                        <MessageSquareText size="22px" color={hover4 ? 'black' : 'gray'} />
                     </motion.div>
                 </motion.button>
 
@@ -316,42 +228,37 @@ export default function ViewData() {
                     aria-label='Share post'
                     onClick={async () => {
                         const blogUrl = `${window.location.origin}/blog/${blog._id}`;
-
-                        const shareData = {
-                            title: blog.title,
-                            text: `Check out this post: ${blog.title}`,
-                            url: blogUrl
-                        };
-
+                        const shareData = { title: blog.title, text: `Check out this post: ${blog.title}`, url: blogUrl };
                         try {
                             await incrementShareCount(blog._id);
                             setBlog(prev => ({ ...prev, shareCount: (prev.shareCount || 0) + 1 }));
-                        } catch (err) {
-                            console.log("Error incrementing share count:", err);
-                        }
-
-                        try {
                             if (navigator.share) {
                                 await navigator.share(shareData);
                             } else {
                                 await navigator.clipboard.writeText(blogUrl);
                                 ToastBlog("Link copied to clipboard!");
                             }
-                        } catch (err) {
-                            console.log("Error sharing", err);
-                        }
+                        } catch (err) { console.log("Error sharing", err); }
                     }}
                 >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Share2 color={hover5 ? '#3498DB' : 'gray'} />
+                        <Share2 size="22px" color={hover5 ? '#3498DB' : 'gray'} />
                     </div>
                 </button>
             </div>
 
-            <hr style={{ border: "0.5px solid #eee", marginBottom: "20px" }} />
+            <hr style={{ border: "0.5px solid #f1f1f1", margin: "20px 0" }} />
             <div id="comment-section">
                 <CommentData commentData={blog.comments} blogId={blog._id} />
             </div>
+
+            {/* Injected style for cleaner responsive behavior */}
+            <style>{`
+                @media (max-width: 480px) {
+                    .action-bar { gap: 5px !important; }
+                    .view-container { width: 100% !important; margin: 0 !important; border-radius: 0 !important; }
+                }
+            `}</style>
         </div>
     );
 }
