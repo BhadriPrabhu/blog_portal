@@ -23,6 +23,7 @@ const { notificationAddController, getNotifications, DeleteNotification } = requ
 const { getProfileData, editProfileData, toggleFollow } = require('./controllers/profileController.js');
 const verifyToken = require('./middleware/authMiddleware.js');
 const { incrementViewCount, incrementShareCount } = require('./controllers/analyticsController.js');
+const { respondToCollabRequest, getCollaboratedBlogs } = require('./controllers/collabController');
 
 const corsOptions = {
   origin: '*', 
@@ -78,6 +79,8 @@ app.put("/blog/profile/edit", verifyToken, editProfileData);
 app.post("/blog/profile/follow/:targetUserId", verifyToken, toggleFollow);
 app.post("/blog/view/:id", incrementViewCount);
 app.post("/blog/share/:id", incrementShareCount);
+app.post("/blog/collab/respond", verifyToken, respondToCollabRequest);
+app.get("/blog/collab/:userId", verifyToken, getCollaboratedBlogs);
 
 app.listen(PORT, () => {
   connectDB();

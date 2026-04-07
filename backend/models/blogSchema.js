@@ -11,7 +11,22 @@ const blogSchema = new mongoose.Schema({
   updatedAt: { type: Date },
 
 
-  viewCount: { type: Number, default: 0 },
+  collaborators: [
+    {
+      user: { type: mongoose.Schema.Types.ObjectId, ref: 'auth' },
+      // Status handles the request lifecycle
+      status: {
+        type: String,
+        enum: ['pending', 'accepted', 'declined'],
+        default: 'pending'
+      },
+      requestedAt: { type: Date, default: Date.now },
+      respondedAt: { type: Date }
+    }
+  ],
+
+
+  // viewCount: { type: Number, default: 0 },
   like: { type: Number, default: 0 },
   likedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'auth' }],
   savedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'auth' }],
@@ -47,7 +62,7 @@ const blogSchema = new mongoose.Schema({
   ],
 
 
-  status: { type: String, enum: ['active', 'deleted', 'archived','flag','report'], default: 'active' },
+  status: { type: String, enum: ['active', 'deleted', 'archived', 'flag', 'report'], default: 'active' },
   statusReason: { type: String },
 
 }, { timestamps: true });

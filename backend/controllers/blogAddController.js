@@ -3,7 +3,7 @@ const Blog = require("../models/blogSchema");
 
 const blogAddController = async (req, res) => {
   try {
-    const { title, desc, userId, email, tags, image } = req.body;
+    const { title, desc, userId, email, tags, image, collaborators } = req.body;
 
     // Validate required fields
     if (!title || !desc || !userId || !email) {
@@ -18,6 +18,17 @@ const blogAddController = async (req, res) => {
       return res.status(400).json({ message: "Invalid userId format" });
     }
 
+    let processedCollaborators = [];
+    if (collaborators && Array.isArray(collaborators)) {
+      processedCollaborators = collaborators
+        .filter(collab => collab.user && mongoose.Types.ObjectId.isValid(collab.user)) // Remove invalid IDs
+        .map(collab => ({
+          user: new mongoose.Types.ObjectId(collab.user),
+          status: 'pending',
+          requestedAt: new Date()
+        }));
+    }
+
     const newBlog = new Blog({
       user: new mongoose.Types.ObjectId(userId),
       title,
@@ -27,6 +38,7 @@ const blogAddController = async (req, res) => {
       tags,
       status: "active",
       image: image || "https://res.cloudinary.com/dw3ksypom/image/upload/v1773495536/undraw_images_v4j9_poeelm.png",
+      collaborators: processedCollaborators,
     });
 
     await newBlog.save();

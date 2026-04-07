@@ -537,7 +537,7 @@ export default function CommentData({ commentData, blogId }) {
                     </div>
                 )
             })}
-            <style jsx>{`
+            <style>{`
                 @media (max-width: 768px) {
                     div[style*="padding: 10px"] {
                         padding: 8px;

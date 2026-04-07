@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import ButtonTrans from "../components/buttonTran";
 import ToastBlog from "../utils/toast";
-import { bulkAction, editProfileData, fetchLikedBlogs, fetchMyPosts, fetchSavedBlogs, getProfileData, incrementShareCount, incrementViewCount, toggleFollow } from "../utils/api";
+import { bulkAction, editProfileData, fetchLikedBlogs, fetchMyPosts, fetchSavedBlogs, getCollaboratedBlogs, getProfileData, incrementShareCount, incrementViewCount, respondToCollabRequest, toggleFollow } from "../utils/api";
 import Button from "../components/button";
 import EditProfileModal from "../components/editProfileModal";
 import { uploadImageToCloudinary } from "../utils/imageUrl";
@@ -33,6 +33,7 @@ export default function ProfilePage() {
     const [myPost, setMyPost] = useState(null);
     const [savedPost, setSavedPost] = useState(null);
     const [likedPost, setLikedPost] = useState(null);
+    const [collabPost, setCollabPost] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [hover1, setHover1] = useState(false);
@@ -62,21 +63,29 @@ export default function ProfilePage() {
         try {
             const result = await fetchMyPosts(targetId);
             setMyPost(result.data);
-            console.log("Fetched my posts:", result.data);
         } catch (err) {
             console.error("Failed to fetch posts:", err);
         }
-        try {
-            const saved = await fetchSavedBlogs(targetId);
-            setSavedPost(saved.data);
-        } catch (err) {
-            console.log("Failed to fetch saved post:", err)
+        if (isOwnProfile) {
+            try {
+                const saved = await fetchSavedBlogs(targetId);
+                setSavedPost(saved.data);
+            } catch (err) {
+                console.log("Failed to fetch saved post:", err)
+            }
+            try {
+                const liked = await fetchLikedBlogs(targetId);
+                setLikedPost(liked.data);
+            } catch (err) {
+                console.log("Failed to fetch liked post:", err);
+            }
         }
         try {
-            const liked = await fetchLikedBlogs(targetId);
-            setLikedPost(liked.data);
+            const collab = await getCollaboratedBlogs(targetId);
+            setCollabPost(collab.data.data);
+            console.log("Fetched collaborated posts:", collab.data.data);
         } catch (err) {
-            console.log("Failed to fetch liked post:", err);
+            console.log("Failed to fetch collaborated posts:", err);
         }
     }, []);
 
@@ -87,8 +96,11 @@ export default function ProfilePage() {
 
             if (isOwnProfile) {
                 setUser(loggedInUser);
-                if (loggedInUser?._id) fetchPosts(loggedInUser._id);
+                if (loggedInUser?._id) {
+                    await fetchPosts(loggedInUser._id);
+                }
                 setLoading(false);
+                return; // Don't fetch profile data if it's own profile
             }
 
             try {
@@ -99,7 +111,7 @@ export default function ProfilePage() {
 
                 // Use the local variable instead of state
                 if (fetchedUser?._id) {
-                    fetchPosts(fetchedUser._id);
+                    await fetchPosts(fetchedUser._id);
                 }
             } catch (err) {
                 setError("Could not load profile. User might not exist.");
@@ -115,8 +127,9 @@ export default function ProfilePage() {
     // Added fetchPosts to dependency array since it's wrapped in useCallback
     const tabs = [
         { name: "Posts", icon: <Grid size={18} /> },
-        { name: "Saved", icon: <Bookmark size={18} /> },
-        { name: "Liked", icon: <Heart size={18} /> },
+        isOwnProfile && { name: "Saved", icon: <Bookmark size={18} /> },
+        isOwnProfile && { name: "Liked", icon: <Heart size={18} /> },
+        { name: "Collaborated", icon: <Users size={18} /> },
     ];
 
     if (loading) {
@@ -243,7 +256,7 @@ export default function ProfilePage() {
                 maxWidth: "980px",
                 width: "100%",
                 margin: "0 auto",
-                padding: "0 12px 40px",
+                padding: "0 12px 20px",
                 fontFamily: "'Poppins', system-ui, sans-serif",
                 boxSizing: "border-box",
             }}
@@ -573,11 +586,12 @@ export default function ProfilePage() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.25 }}
-                        style={{ minHeight: "40vh" }}
+                        style={{ minHeight: "auto" }}
                     >
                         {activeTab === "Posts" && <PostGrid posts={myPost || []} navigate={navigate} tab={activeTab} ownProfile={isOwnProfile} onRefresh={() => fetchPosts(user?._id)} />}
-                        {activeTab === "Saved" && <PostGrid posts={savedPost || []} navigate={navigate} tab={activeTab} ownProfile={isOwnProfile} onRefresh={() => fetchPosts(user?._id)} />}
-                        {activeTab === "Liked" && <PostGrid posts={likedPost || []} navigate={navigate} tab={activeTab} ownProfile={isOwnProfile} onRefresh={() => fetchPosts(user?._id)} />}
+                        {isOwnProfile && activeTab === "Saved" && <PostGrid posts={savedPost || []} navigate={navigate} tab={activeTab} ownProfile={isOwnProfile} onRefresh={() => fetchPosts(user?._id)} />}
+                        {isOwnProfile && activeTab === "Liked" && <PostGrid posts={likedPost || []} navigate={navigate} tab={activeTab} ownProfile={isOwnProfile} onRefresh={() => fetchPosts(user?._id)} />}
+                        {activeTab === "Collaborated" && <PostGrid posts={collabPost || []} navigate={navigate} tab={activeTab} ownProfile={isOwnProfile} onRefresh={() => fetchPosts(user?._id)} />}
                     </motion.div>
                 </AnimatePresence>
             </div>
@@ -633,7 +647,7 @@ const StatItem = ({ count, label, onClick }) => (
         onMouseLeave={e => onClick && (e.currentTarget.style.background = "transparent")}
     >
         <div style={{ fontSize: "20px", fontWeight: 700, color: "#1e293b" }}>
-            {count.toLocaleString()}
+            {count?.toLocaleString() || 0}
         </div>
         <div style={{ fontSize: "13px", color: "#64748b", marginTop: "2px" }}>
             {label}
@@ -647,6 +661,7 @@ const PostGrid = ({ posts, navigate, tab, ownProfile, onRefresh }) => {
         if (tab === "Posts") return <EmptyState icon={<Grid size={48} />} message="No posts yet" />;
         if (tab === "Saved") return <EmptyState icon={<Bookmark size={48} />} message="No saved posts yet" />;
         if (tab === "Liked") return <EmptyState icon={<Heart size={48} />} message="No liked posts yet" />;
+        if (tab === "Collaborated") return <EmptyState icon={<Users size={48} />} message="No collaborated posts yet" />;
     }
 
     const [hover1, setHover1] = useState(null);
@@ -657,6 +672,8 @@ const PostGrid = ({ posts, navigate, tab, ownProfile, onRefresh }) => {
         hover3: false,
     });
     const [trigger, setTrigger] = useState(0);
+
+    const { profileData: loggedInUser } = useStore();
 
     const toggleHover = (key, value) => {
         setHoverMenu(prev => ({ ...prev, [key]: value }));
@@ -673,266 +690,376 @@ const PostGrid = ({ posts, navigate, tab, ownProfile, onRefresh }) => {
         }
     }
 
+    const handleCollabResponse = async (e, blogId, status) => {
+        e.stopPropagation();
+        try {
+            // FIXED: Passing arguments individually to match your api.js definition
+            await respondToCollabRequest(blogId, status);
+
+            ToastBlog(`Collaboration ${status}`);
+
+            // Trigger a refresh. Since fetchPosts is in ProfilePage, 
+            // ensure onRefresh is calling the parent's fetchUser or fetchPosts.
+            if (onRefresh) onRefresh();
+        } catch (err) {
+            console.error("Error responding to collab:", err);
+            ToastBlog("Failed to respond to request");
+        }
+    };
+
+
     return (
         <div style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
             gap: "24px",
         }}>
-            {posts.map(post => (
-                <motion.div
-                    key={post._id}
-                    whileHover={{ y: -4, boxShadow: "0 20px 40px -12px rgba(0,0,0,0.12)" }}
-                    style={{
-                        background: "white",
-                        borderRadius: "16px",
-                        overflow: "hidden",
-                        border: "1px solid #e2e8f0",
-                        boxShadow: "0 4px 16px rgba(0,0,0,0.06)",
-                        transition: "all 0.22s ease",
-                        position: "relative", // Required for absolute positioning of the dots
-                        cursor: "pointer"
-                    }}
-                    onClick={async () => {
-                        navigate(`/blog/${post._id}`)
-                        if(!ownProfile){
-                            try {
-                                await incrementViewCount(post._id);
-                            } catch (err) {
-                                console.error("Error incrementing view count:", err);
+            {posts.map(post => {
+                const userCollab = post.collaborators?.find(c => {
+                    // 1. Check if the ID is nested in .user (populated) or just the ID itself
+                    const collabId = c.user?._id || c.user?.id || c.user;
+                    // 2. Use a more robust ID from Zustand (check for ._id or .id)
+                    const currentLoggedId = loggedInUser?._id || loggedInUser?.id;
+                    if (!collabId || !currentLoggedId) return false;
+                    return String(collabId) === String(currentLoggedId);
+                });
+
+                const isPending = userCollab?.status === 'pending' && tab === "Collaborated" && ownProfile;
+
+                return (
+                    <motion.div
+                        key={post._id}
+                        whileHover={{ y: -4, boxShadow: "0 20px 40px -12px rgba(0,0,0,0.12)" }}
+                        style={{
+                            background: "white",
+                            borderRadius: "16px",
+                            overflow: "hidden",
+                            border: isPending ? "2px solid #3b82f6" : "1px solid #e2e8f0",
+                            boxShadow: "0 4px 16px rgba(0,0,0,0.06)",
+                            transition: "all 0.22s ease",
+                            position: "relative",
+                            cursor: "pointer",
+                            filter: isPending ? "grayscale(0.5)" : "none",
+                            flexDirection: "column",
+                            display: "flex",
+                            height: "fit-content"
+                        }}
+                        onClick={async () => {
+                            navigate(`/blog/${post._id}`)
+                            if (!ownProfile) {
+                                try {
+                                    await incrementViewCount(post._id);
+                                } catch (err) {
+                                    console.error("Error incrementing view count:", err);
+                                }
                             }
-                        }
-                    }}
-                >
-                    {/* --- THREE DOTS MENU --- */}
-                    <div style={{ position: "absolute", top: "10px", right: "10px", zIndex: 10 }}>
-                        <ButtonTrans
-                            child={<MoreVertical size={22} strokeWidth="2px" color={post.image ? "white" : "#3e4b5d"} />}
-                            buttonType="button"
-                            noToolTip={true}
-                            paddingEdit="1px"
-                            ClickEvent={(e) => {
-                                e.stopPropagation();
-                                setActiveMenu(activeMenu === post._id ? null : post._id);
-                            }}
-                            hover={hover1 === post._id}
-                            label="Post options"
-                            mouseEnter={() => setHover1(post._id)}
-                            mouseLeave={() => setHover1(null)}
-
-                        />
-                        <AnimatePresence>
-                            {activeMenu === post._id && (
-                                <>
-                                    {ownProfile ? (
-                                        <>
-                                            <motion.div
-                                                initial={{ opacity: 0, scale: 0.95, y: -5 }} // Gentler scale/move
-                                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                                exit={{ opacity: 0, scale: 0.95, y: -5 }}
-                                                transition={{ duration: 0.2, ease: "easeOut" }} // Smoother timing
-                                                style={dropdownContainer}
-                                                onClick={(e) => e.stopPropagation()}
-                                            >
-                                                {/* Edit - Neutral Action */}
-                                                <div
-                                                    style={getHoverStyle(hoverMenu.hover1)}
-                                                    onMouseEnter={() => toggleHover('hover1', true)}
-                                                    onMouseLeave={() => toggleHover('hover1', false)}
-                                                // onClick={() => handleEdit(post._id)}
-                                                >
-                                                    <Edit2 size={16} style={{ marginRight: '8px' }} />
-                                                    <span>Edit Post</span>
-                                                </div>
-
-                                                {/* Divider Line */}
-                                                <div style={{ height: '1px', backgroundColor: '#eee', margin: '2px 0' }} />
-
-                                                {/* Delete - Destructive Action */}
-                                                <div
-                                                    style={{ ...getHoverStyle(hoverMenu.hover2), color: "#e74c3c" }}
-                                                    onMouseEnter={() => toggleHover('hover2', true)}
-                                                    onMouseLeave={() => toggleHover('hover2', false)}
-                                                    onClick={() => handleDelete(post._id)}
-                                                >
-                                                    <Trash2 size={16} style={{ marginRight: '8px' }} />
-                                                    <span>Delete</span>
-                                                </div>
-
-                                                <div style={{ height: '1px', backgroundColor: '#eee', margin: '2px 0' }} />
-
-                                                <div
-                                                    style={{ ...getHoverStyle(hoverMenu.hover3), color: "gray" }}
-                                                    onMouseEnter={() => toggleHover('hover3', true)}
-                                                    onMouseLeave={() => toggleHover('hover3', false)}
-                                                    onClick={() => {
-                                                        setActiveMenu(null);
-                                                    }}
-                                                >
-                                                    <X size={16} style={{ marginRight: '8px' }} />
-                                                    <span>Close</span>
-                                                </div>
-                                            </motion.div>
-                                        </>) : (
-                                        <>
-                                            <motion.div
-                                                initial={{ opacity: 0, scale: 0.95, y: -5 }} // Gentler scale/move
-                                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                                exit={{ opacity: 0, scale: 0.95, y: -5 }}
-                                                transition={{ duration: 0.2, ease: "easeOut" }} // Smoother timing
-                                                style={dropdownContainer}
-                                                onClick={(e) => e.stopPropagation()}
-                                            >
-                                                {/* Share - Neutral Action */}
-                                                <div
-                                                    style={getHoverStyle(hoverMenu.hover1)}
-                                                    onMouseEnter={() => toggleHover('hover1', true)}
-                                                    onMouseLeave={() => toggleHover('hover1', false)}
-                                                    onClick={async () => {
-                                                        const blogUrl = `${window.location.origin}/blog/${post._id}`;
-
-                                                        const shareData = {
-                                                            title: post.title,
-                                                            text: `Check out this post: ${post.title}`,
-                                                            url: blogUrl
-                                                        };
-
-                                                        try {
-                                                            await incrementShareCount(post._id); 
-                                                        } catch (err) {
-                                                            console.error("Error incrementing share count:", err);
-                                                        }
-
-                                                        try {
-                                                            if (navigator.share) {
-                                                                await navigator.share(shareData);
-                                                            } else {
-                                                                await navigator.clipboard.writeText(blogUrl);
-                                                                ToastBlog("Link copied to clipboard!");
-                                                            }
-                                                        } catch (err) {
-                                                            console.log("Error sharing", err);
-                                                        }
-                                                    }}
-                                                >
-                                                    <Share2 size={16} style={{ marginRight: '8px' }} />
-                                                    <span>Share</span>
-                                                </div>
-
-                                                {/* Divider Line */}
-                                                <div style={{ height: '1px', backgroundColor: '#eee', margin: '2px 0' }} />
-
-                                                {/* Report - Destructive Action */}
-                                                <div
-                                                    style={{ ...getHoverStyle(hoverMenu.hover2), color: "#e74c3c" }}
-                                                    onMouseEnter={() => toggleHover('hover2', true)}
-                                                    onMouseLeave={() => toggleHover('hover2', false)}
-                                                // onClick={() => handleDelete(post._id)}
-                                                >
-                                                    <Flag size={16} style={{ marginRight: '8px' }} />
-                                                    <span>Report</span>
-                                                </div>
-
-                                                <div style={{ height: '1px', backgroundColor: '#eee', margin: '2px 0' }} />
-
-                                                <div
-                                                    style={{ ...getHoverStyle(hoverMenu.hover3), color: "gray" }}
-                                                    onMouseEnter={() => toggleHover('hover3', true)}
-                                                    onMouseLeave={() => toggleHover('hover3', false)}
-                                                    onClick={() => {
-                                                        setActiveMenu(null);
-                                                    }}
-                                                >
-                                                    <X size={16} style={{ marginRight: '8px' }} />
-                                                    <span>Close</span>
-                                                </div>
-                                            </motion.div>
-                                        </>)}
-
-
-                                </>
-
-                            )}
-                        </AnimatePresence>
-                    </div>
-
-                    {/* Image Section */}
-                    <div style={{
-                        height: "160px",
-                        background: post.image ? `url(${post.image}) center/cover` : "linear-gradient(135deg, #eddddd, #cca7f1)",
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}>
-                        {!post.image && <BlogImage style={{ width: '80%', height: '80%' }} />}
-
-                    </div>
-
-                    {/* Content Section */}
-                    <div style={{ padding: "20px" }}>
-                        <h3 style={{ margin: "0 0 8px", fontSize: "17px", fontWeight: 600, lineHeight: 1.4, height: "48px", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            {post.title}
-                        </h3>
-                        <div style={{ display: "flex", justifyContent: "space-between", color: "#64748b", fontSize: "13px" }}>
-                            <span>{new Date(post.date).toLocaleDateString()}</span>
-                            <div style={{ display: "flex", gap: "16px" }}>
-                                <span>{typeof post.like === 'object' ? post.like.length : post.like} likes</span>
-                                <span>{post.comments?.length || 0} comments</span>
-                            </div>
-                        </div>
-                    </div>
-                    {/* Replace your single line with this logic-driven component */}
-                    {(() => {
-                        // 1. Define configuration for each status
-                        const statusConfig = {
-                            report: {
-                                label: "Reported Content",
-                                bg: "#FEF2F2", // Light Red
-                                text: "#DC2626", // Dark Red
-                                icon: <Flag size={14} strokeWidth={3} />
-                            },
-                            deleted: {
-                                label: "Deleted Content",
-                                bg: "#F1F5F9", // Light Gray
-                                text: "#64748B", // Slate Gray
-                                icon: <Trash2 size={14} strokeWidth={3} />
-                            },
-                            active: {
-                                label: "Active Content",
-                                bg: "#F0FDF4", // Light Green
-                                text: "#16A34A", // Dark Green
-                                icon: <Activity size={14} strokeWidth={3} /> // Active usually doesn't need a loud label, but keep for consistency
-                            }
-                        };
-
-                        const config = statusConfig[post.status] || statusConfig.active;
-
-                        return (
+                        }}
+                    >
+                        {isPending && (
                             <div style={{
-                                fontSize: "13px",
-                                textAlign: "center",
-                                backgroundColor: config.bg,
-                                color: config.text,
-                                fontWeight: "600",
-                                textTransform: "uppercase",
-                                letterSpacing: "0.5px",
-                                padding: "6px 12px",
+                                position: "absolute",
+                                inset: 0,
+                                backgroundColor: "rgba(255, 255, 255, 0.8)",
+                                zIndex: 20,
                                 display: "flex",
+                                flexDirection: "column",
                                 alignItems: "center",
                                 justifyContent: "center",
-                                gap: "6px",
-                                borderTop: "1px solid rgba(0,0,0,0.05)",
-                                // Ensure it fits perfectly at the bottom of your card
-                                borderBottomLeftRadius: "16px",
-                                borderBottomRightRadius: "16px"
+                                padding: "20px",
+                                textAlign: "center",
+                                backdropFilter: "blur(2px)"
                             }}>
-                                {config.icon}
-                                {config.label}
+                                <Users size={32} color="#3b82f6" style={{ marginBottom: "12px" }} />
+                                <p style={{ fontSize: "14px", fontWeight: "600", color: "#1e293b", margin: "0 0 16px" }}>
+                                    Collaboration Request
+                                </p>
+
+                                <div style={{ display: "flex", gap: "10px", width: "100%", marginBottom: "10px", flexDirection: "column" }}>
+                                    <div style={{ display: "flex", gap: "10px", width: "100%" }}>
+                                        <button
+                                            onClick={(e) => handleCollabResponse(e, post._id, 'accepted')}
+                                            style={{
+                                                flex: 1, backgroundColor: "#3b82f6", color: "white", border: "none",
+                                                padding: "8px", borderRadius: "4px", fontSize: "12px", fontWeight: "600", cursor: "pointer",
+                                                fontFamily: "Poppins"
+                                            }}
+                                        >
+                                            Accept
+                                        </button>
+                                        <button
+                                            onClick={(e) => handleCollabResponse(e, post._id, 'declined')}
+                                            style={{
+                                                flex: 1, backgroundColor: "#ef4444", color: "white", border: "none",
+                                                padding: "8px", borderRadius: "4px", fontSize: "12px", fontWeight: "600", cursor: "pointer",
+                                                fontFamily: "Poppins"
+                                            }}
+                                        >
+                                            Decline
+                                        </button>
+                                    </div>
+                                    <div style={{ width: "100%" }}>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation(); // CRITICAL: Stop parent card click
+                                                navigate(`/blog/${post._id}`);
+                                            }}
+                                            style={{
+                                                width: "100%", // Changed from flex to 100% width
+                                                backgroundColor: "#f1f5f9", // Changed to a neutral color so it doesn't compete with 'Accept'
+                                                color: "#475569",
+                                                border: "1px solid #e2e8f0",
+                                                padding: "10px",
+                                                borderRadius: "4px",
+                                                fontSize: "12px",
+                                                fontWeight: "600",
+                                                cursor: "pointer",
+                                                transition: "background 0.2s",
+                                                fontFamily: "Poppins"
+                                            }}
+                                            onMouseEnter={(e) => e.target.style.backgroundColor = "#e2e8f0"}
+                                            onMouseLeave={(e) => e.target.style.backgroundColor = "#f1f5f9"}
+                                        >
+                                            See Details
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                        );
-                    })()}
-                </motion.div>
-            ))}
+                        )}
+
+                        {/* --- THREE DOTS MENU --- */}
+                        <div style={{ position: "absolute", top: "10px", right: "10px", zIndex: 10 }}>
+                            <ButtonTrans
+                                child={<MoreVertical size={22} strokeWidth="2px" color={post.image ? "white" : "#3e4b5d"} />}
+                                buttonType="button"
+                                noToolTip={true}
+                                paddingEdit="1px"
+                                ClickEvent={(e) => {
+                                    e.stopPropagation();
+                                    setActiveMenu(activeMenu === post._id ? null : post._id);
+                                }}
+                                hover={hover1 === post._id}
+                                label="Post options"
+                                mouseEnter={() => setHover1(post._id)}
+                                mouseLeave={() => setHover1(null)}
+
+                            />
+                            <AnimatePresence>
+                                {activeMenu === post._id && (
+                                    <>
+                                        {ownProfile ? (
+                                            <>
+                                                <motion.div
+                                                    initial={{ opacity: 0, scale: 0.95, y: -5 }} // Gentler scale/move
+                                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                    exit={{ opacity: 0, scale: 0.95, y: -5 }}
+                                                    transition={{ duration: 0.2, ease: "easeOut" }} // Smoother timing
+                                                    style={dropdownContainer}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    {/* Edit - Neutral Action */}
+                                                    <div
+                                                        style={getHoverStyle(hoverMenu.hover1)}
+                                                        onMouseEnter={() => toggleHover('hover1', true)}
+                                                        onMouseLeave={() => toggleHover('hover1', false)}
+                                                    // onClick={() => handleEdit(post._id)}
+                                                    >
+                                                        <Edit2 size={16} style={{ marginRight: '8px' }} />
+                                                        <span>Edit Post</span>
+                                                    </div>
+
+                                                    {/* Divider Line */}
+                                                    <div style={{ height: '1px', backgroundColor: '#eee', margin: '2px 0' }} />
+
+                                                    {/* Delete - Destructive Action */}
+                                                    <div
+                                                        style={{ ...getHoverStyle(hoverMenu.hover2), color: "#e74c3c" }}
+                                                        onMouseEnter={() => toggleHover('hover2', true)}
+                                                        onMouseLeave={() => toggleHover('hover2', false)}
+                                                        onClick={() => handleDelete(post._id)}
+                                                    >
+                                                        <Trash2 size={16} style={{ marginRight: '8px' }} />
+                                                        <span>Delete</span>
+                                                    </div>
+
+                                                    <div style={{ height: '1px', backgroundColor: '#eee', margin: '2px 0' }} />
+
+                                                    <div
+                                                        style={{ ...getHoverStyle(hoverMenu.hover3), color: "gray" }}
+                                                        onMouseEnter={() => toggleHover('hover3', true)}
+                                                        onMouseLeave={() => toggleHover('hover3', false)}
+                                                        onClick={() => {
+                                                            setActiveMenu(null);
+                                                        }}
+                                                    >
+                                                        <X size={16} style={{ marginRight: '8px' }} />
+                                                        <span>Close</span>
+                                                    </div>
+                                                </motion.div>
+                                            </>) : (
+                                            <>
+                                                <motion.div
+                                                    initial={{ opacity: 0, scale: 0.95, y: -5 }} // Gentler scale/move
+                                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                    exit={{ opacity: 0, scale: 0.95, y: -5 }}
+                                                    transition={{ duration: 0.2, ease: "easeOut" }} // Smoother timing
+                                                    style={dropdownContainer}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    {/* Share - Neutral Action */}
+                                                    <div
+                                                        style={getHoverStyle(hoverMenu.hover1)}
+                                                        onMouseEnter={() => toggleHover('hover1', true)}
+                                                        onMouseLeave={() => toggleHover('hover1', false)}
+                                                        onClick={async () => {
+                                                            const blogUrl = `${window.location.origin}/blog/${post._id}`;
+
+                                                            const shareData = {
+                                                                title: post.title,
+                                                                text: `Check out this post: ${post.title}`,
+                                                                url: blogUrl
+                                                            };
+
+                                                            try {
+                                                                await incrementShareCount(post._id);
+                                                            } catch (err) {
+                                                                console.error("Error incrementing share count:", err);
+                                                            }
+
+                                                            try {
+                                                                if (navigator.share) {
+                                                                    await navigator.share(shareData);
+                                                                } else {
+                                                                    await navigator.clipboard.writeText(blogUrl);
+                                                                    ToastBlog("Link copied to clipboard!");
+                                                                }
+                                                            } catch (err) {
+                                                                console.log("Error sharing", err);
+                                                            }
+                                                        }}
+                                                    >
+                                                        <Share2 size={16} style={{ marginRight: '8px' }} />
+                                                        <span>Share</span>
+                                                    </div>
+
+                                                    {/* Divider Line */}
+                                                    <div style={{ height: '1px', backgroundColor: '#eee', margin: '2px 0' }} />
+
+                                                    {/* Report - Destructive Action */}
+                                                    <div
+                                                        style={{ ...getHoverStyle(hoverMenu.hover2), color: "#e74c3c" }}
+                                                        onMouseEnter={() => toggleHover('hover2', true)}
+                                                        onMouseLeave={() => toggleHover('hover2', false)}
+                                                    // onClick={() => handleDelete(post._id)}
+                                                    >
+                                                        <Flag size={16} style={{ marginRight: '8px' }} />
+                                                        <span>Report</span>
+                                                    </div>
+
+                                                    <div style={{ height: '1px', backgroundColor: '#eee', margin: '2px 0' }} />
+
+                                                    <div
+                                                        style={{ ...getHoverStyle(hoverMenu.hover3), color: "gray" }}
+                                                        onMouseEnter={() => toggleHover('hover3', true)}
+                                                        onMouseLeave={() => toggleHover('hover3', false)}
+                                                        onClick={() => {
+                                                            setActiveMenu(null);
+                                                        }}
+                                                    >
+                                                        <X size={16} style={{ marginRight: '8px' }} />
+                                                        <span>Close</span>
+                                                    </div>
+                                                </motion.div>
+                                            </>)}
+
+
+                                    </>
+
+                                )}
+                            </AnimatePresence>
+                        </div>
+
+                        {/* Image Section */}
+                        <div style={{
+                            height: "160px",
+                            background: post.image ? `url(${post.image}) center/cover` : "linear-gradient(135deg, #eddddd, #cca7f1)",
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}>
+                            {!post.image && <BlogImage style={{ width: '80%', height: '80%' }} />}
+
+                        </div>
+
+                        {!isPending && (<>
+                            {/* Content Section */}
+                            <div style={{ padding: "20px" }}>
+                                <h3 style={{ margin: "0 0 8px", fontSize: "17px", fontWeight: 600, lineHeight: 1.4, height: "48px", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                    {post.title}
+                                </h3>
+                                <div style={{ display: "flex", justifyContent: "space-between", color: "#64748b", fontSize: "13px" }}>
+                                    <span>{new Date(post.date).toLocaleDateString()}</span>
+                                    <div style={{ display: "flex", gap: "16px" }}>
+                                        <span>{typeof post.like === 'object' ? post.like.length : post.like} likes</span>
+                                        <span>{post.comments?.length || 0} comments</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </>)}
+
+                        {/* Replace your single line with this logic-driven component */}
+                        {(() => {
+                            // 1. Define configuration for each status
+                            const statusConfig = {
+                                report: {
+                                    label: "Reported Content",
+                                    bg: "#FEF2F2", // Light Red
+                                    text: "#DC2626", // Dark Red
+                                    icon: <Flag size={14} strokeWidth={3} />
+                                },
+                                deleted: {
+                                    label: "Deleted Content",
+                                    bg: "#F1F5F9", // Light Gray
+                                    text: "#64748B", // Slate Gray
+                                    icon: <Trash2 size={14} strokeWidth={3} />
+                                },
+                                active: {
+                                    label: "Active Content",
+                                    bg: "#F0FDF4", // Light Green
+                                    text: "#16A34A", // Dark Green
+                                    icon: <Activity size={14} strokeWidth={3} /> // Active usually doesn't need a loud label, but keep for consistency
+                                }
+                            };
+
+                            const config = statusConfig[post.status] || statusConfig.active;
+
+                            return (
+                                <div style={{
+                                    fontSize: "13px",
+                                    textAlign: "center",
+                                    backgroundColor: config.bg,
+                                    color: config.text,
+                                    fontWeight: "600",
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.5px",
+                                    padding: "6px 12px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    gap: "6px",
+                                    borderTop: "1px solid rgba(0,0,0,0.05)",
+                                    // Ensure it fits perfectly at the bottom of your card
+                                    borderBottomLeftRadius: "16px",
+                                    borderBottomRightRadius: "16px"
+                                }}>
+                                    {config.icon}
+                                    {config.label}
+                                </div>
+                            );
+                        })()}
+                    </motion.div>
+                )
+            }
+            )}
         </div>
     );
 };

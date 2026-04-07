@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import Profile from "../assets/icons/profile";
 import { useStore } from "../data/zustand";
 import { TagsRefer } from '../data/tagsRefer';
-import { addBlog, notifyBlog, reportAiFlag } from '../utils/api';
-import { BadgePlus, Check, Image, Tag, Video, X, Send, RotateCw, AlertCircle } from "lucide-react";
+import { addBlog, notifyBlog, reportAiFlag, fetchSuggestions } from '../utils/api';
+import { BadgePlus, Check, Image, Tag, Video, X, Send, RotateCw, AlertCircle, Users, UserPlus } from "lucide-react";
 import GenAI from "../utils/AI";
 import ToastBlog from "../utils/toast";
 import ButtonTrans from "./buttonTran";
@@ -15,7 +15,7 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function PostBox() {
   const profileData = useStore((state) => state.profileData);
   const setTriggerRefresh = useStore((state) => state.setTriggerRefresh);
-  
+
   // Hover states for theme buttons
   const [hoverStates, setHoverStates] = useState({
     image: false,
@@ -27,6 +27,7 @@ export default function PostBox() {
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoading1, setIsLoading1] = useState(false);
   const [error, setError] = useState("");
   const [generatedTags, setGeneratedTags] = useState([]);
   const [selectedTags, setselectedTags] = useState([]);
@@ -36,18 +37,62 @@ export default function PostBox() {
     userId: "",
     email: "",
   });
-  
+
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [videoFile, setVideoFile] = useState(null);
   const [videoPreview, setVideoPreview] = useState(null);
-  
+
   const fileInputRef = React.useRef(null);
   const videoInputRef = React.useRef(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [videoPreviewOpen, setVideoPreviewOpen] = useState(false);
 
   const [hover, setHover] = useState(false);
+
+  const [collabInput, setCollabInput] = useState("");
+  const [collabSuggestions, setCollabSuggestions] = useState([]);
+  const [selectedCollabs, setSelectedCollabs] = useState([]);
+
+
+  const handleCollabChange = async (e) => {
+    const val = e.target.value;
+    setCollabInput(val);
+
+    const lastAtIndex = val.lastIndexOf("@");
+    if (lastAtIndex !== -1) {
+      const query = val.slice(lastAtIndex + 1).split(" ")[0];
+      if (query.length > 1) { // Start searching after 2 chars
+        try {
+          const result = await fetchSuggestions(query);
+          // Filter out current user and already selected users
+          const filtered = result.data.message.filter(
+            (u) => u._id !== profileData._id &&
+              !selectedCollabs.some(c => c.user === u._id)
+          );
+          setCollabSuggestions(filtered);
+        } catch (err) {
+          console.error("Collab fetch error:", err);
+        }
+      }
+    } else {
+      setCollabSuggestions([]);
+    }
+  };
+
+  const addCollaborator = (user) => {
+    setSelectedCollabs([...selectedCollabs, {
+      user: user._id,
+      username: user.username,
+      role: 'editor'
+    }]);
+    setCollabInput("");
+    setCollabSuggestions([]);
+  };
+
+  const removeCollab = (id) => {
+    setSelectedCollabs(selectedCollabs.filter(c => c.user !== id));
+  };
 
   // --- LOGIC PRESERVED FROM ORIGINAL ---
   const fetchData = async (retryCount = 0, maxRetries = 3) => {
@@ -56,7 +101,7 @@ export default function PostBox() {
       return;
     }
     try {
-      setIsLoading(true);
+      setIsLoading1(true);
       const prompt = `Select relevant tags from the following title and description based on the provided tags reference. Return tags as a JSON array of strings.
 Title: ${data.title}
 Description: ${data.desc}
@@ -75,7 +120,7 @@ Example Output: ["tech", "programming"]`;
         setError("Failed to parse tags from AI response");
         return [];
       }
-      setIsLoading(false);
+      setIsLoading1(false);
       setGeneratedTags(tags);
       return tags;
     } catch (error) {
@@ -84,7 +129,7 @@ Example Output: ["tech", "programming"]`;
         await new Promise(resolve => setTimeout(resolve, waitTime));
         return fetchData(retryCount + 1, maxRetries);
       }
-      setIsLoading(false);
+      setIsLoading1(false);
       setError(`Error: ${error.message}`);
       return [];
     }
@@ -117,10 +162,12 @@ Example Output: ["tech", "programming"]`;
         email: profileData.email,
         tags: selectedTags.length > 0 ? selectedTags : ["General"],
         image: uploadedImageUrl,
+        collaborators: selectedCollabs.map(c => ({ user: c.user, role: c.role }))
       };
 
       const res = await addBlog(postData);
       const id = res.data.blog?._id;
+      setSelectedCollabs([]);
 
       const moderationPrompt = `Act as a legal content moderator... Return ONLY "true" or "false". Content: ${data.title} ${data.desc}`;
       const result = await GenAI(moderationPrompt);
@@ -192,7 +239,7 @@ Example Output: ["tech", "programming"]`;
 
       {error && (
         <div style={{ color: '#ef4444', fontSize: '13px', backgroundColor: '#fef2f2', padding: '8px', borderRadius: '8px', border: '1px solid #fee2e2', display: "flex", alignItems: "center", gap: "2px" }}>
-            <AlertCircle size={16} style={{display: 'inline', marginRight: '4px'}}/> {error}
+          <AlertCircle size={16} style={{ display: 'inline', marginRight: '4px' }} /> {error}
         </div>
       )}
 
@@ -215,9 +262,12 @@ Example Output: ["tech", "programming"]`;
           transition: "border-color 0.2s"
         }}
         onFocus={(e) => e.target.style.borderColor = "#3b82f6"}
-        onBlur={(e) => e.target.style.borderColor = "#f1f5f9"}
+        onBlur={(e) => {
+          e.target.style.borderColor = "#f1f5f9"
+          setTimeout(() => setCollabSuggestions([]), 200);
+        }}
       />
-      
+
       <textarea
         rows="4"
         value={data.desc}
@@ -241,23 +291,23 @@ Example Output: ["tech", "programming"]`;
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: "flex", gap: "8px" }}>
-           {/* Media Previews inline */}
-           {preview && (
-            <div onClick={() => setPreviewOpen(true)} style={{cursor: 'pointer', position: 'relative'}}>
-                <img src={preview} style={{ width: '80px', height: '80px', borderRadius: '8px', objectFit: 'cover', border: '2px solid #3b82f6'}} />
+          {/* Media Previews inline */}
+          {preview && (
+            <div onClick={() => setPreviewOpen(true)} style={{ cursor: 'pointer', position: 'relative' }}>
+              <img src={preview} style={{ width: '80px', height: '80px', borderRadius: '8px', objectFit: 'cover', border: '2px solid #3b82f6' }} />
             </div>
-           )}
-           {videoPreview && (
-            <div onClick={() => setVideoPreviewOpen(true)} style={{cursor: 'pointer', position: 'relative'}}>
-                <video src={videoPreview} style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'cover', border: '2px solid #3b82f6'}} />
+          )}
+          {videoPreview && (
+            <div onClick={() => setVideoPreviewOpen(true)} style={{ cursor: 'pointer', position: 'relative' }}>
+              <video src={videoPreview} style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'cover', border: '2px solid #3b82f6' }} />
             </div>
-           )}
+          )}
         </div>
 
         <ButtonTrans
-          child={<><Tag size={16} /> {isLoading ? "Analyzing..." : "Suggest Tags"}</>}
+          child={<><Tag size={16} /> {isLoading1 ? "Analyzing..." : "Suggest Tags"}</>}
           ClickEvent={() => fetchData()}
-          disable={isLoading}
+          disable={isLoading1}
           buttonType="button"
           hover={hoverStates.tags}
           mouseEnter={() => updateHover('tags', true)}
@@ -269,8 +319,8 @@ Example Output: ["tech", "programming"]`;
 
       <AnimatePresence>
         {generatedTags.length > 0 && (
-          <motion.div 
-            initial={{ opacity: 0, y: -10 }} 
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             style={{ display: "flex", flexWrap: "wrap", gap: "6px", padding: "10px", backgroundColor: "#e5eaef", borderRadius: "10px" }}
           >
@@ -303,6 +353,70 @@ Example Output: ["tech", "programming"]`;
           </motion.div>
         )}
       </AnimatePresence>
+
+      <div style={{ position: 'relative', width: '100%' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+          <Users size={18} color="#64748b" />
+          <span style={{ fontSize: '14px', fontWeight: '600', color: '#475569' }}>Collaborators</span>
+        </div>
+
+        {/* Selected Collabs Badges */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '4px' }}>
+          {selectedCollabs.map(collab => (
+            <div key={collab.user} style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#f1f5f9', padding: '2px 10px', borderRadius: '15px', border: '1px solid #e2e8f0', fontSize: '12px' }}>
+              <span>@{collab.username}</span>
+              <X size={12} style={{ cursor: 'pointer' }} onClick={() => removeCollab(collab.user)} />
+            </div>
+          ))}
+        </div>
+
+        <input
+          value={collabInput}
+          onChange={handleCollabChange}
+          placeholder="Type @username to add collaborators..."
+          type="text"
+          style={{
+            height: "40px",
+            fontSize: "15px",
+            fontFamily: "'Poppins', sans-serif",
+            borderRadius: "10px",
+            border: "1.5px solid #f1f5f9",
+            padding: "0 14px",
+            backgroundColor: "#f8fafc",
+            color: "#1e293b",
+            outline: "none",
+            transition: "border-color 0.2s",
+            width: "100%",
+            boxSizing: "border-box",
+          }}
+          onFocus={(e) => e.target.style.borderColor = "#3b82f6"}
+          onBlur={(e) => e.target.style.borderColor = "#f1f5f9"}
+        />
+
+        {/* Suggestions Dropdown */}
+        {collabSuggestions.length > 0 && (
+          <div style={{
+            position: 'absolute', zIndex: 10, top: '100%', left: 0, right: 0,
+            backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            border: '1px solid #e2e8f0', maxHeight: '150px', overflowY: 'auto'
+          }}>
+            {collabSuggestions.map(user => (
+              <div
+                key={user._id}
+                onClick={() => addCollaborator(user)}
+                style={{ padding: '8px 12px', cursor: 'pointer', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid #f1f5f9' }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#f8fafc'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = '#fff'}
+              >
+                <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#3b82f6', color: '#fff', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '10px' }}>
+                  {user.username.charAt(0).toUpperCase()}
+                </div>
+                {user.username}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "2px solid #eaf2fb", paddingTop: "10px" }}>
         <div style={{ display: "flex", gap: "10px" }}>
@@ -362,22 +476,22 @@ Example Output: ["tech", "programming"]`;
 
       {/* Previews */}
       <Dialog opened={previewOpen} onclose={() => setPreviewOpen(false)} width="600px">
-        <div style={{padding: '4px'}}>
-            <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '10px'}}>
-                <span style={{fontWeight: '700'}}>Image Preview</span>
-                <X onClick={() => setPreviewOpen(false)} style={{cursor: 'pointer'}}/>
-            </div>
-            <img src={preview} style={{ width: '100%', borderRadius: '12px' }} />
+        <div style={{ padding: '4px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+            <span style={{ fontWeight: '700' }}>Image Preview</span>
+            <X onClick={() => setPreviewOpen(false)} style={{ cursor: 'pointer' }} />
+          </div>
+          <img src={preview} style={{ width: '100%', borderRadius: '12px' }} />
         </div>
       </Dialog>
 
       <Dialog opened={videoPreviewOpen} onclose={() => setVideoPreviewOpen(false)} width="600px">
-        <div style={{padding: '4px'}}>
-            <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '10px'}}>
-                <span style={{fontWeight: '700'}}>Video Preview</span>
-                <X onClick={() => setVideoPreviewOpen(false)} style={{cursor: 'pointer'}}/>
-            </div>
-            <video src={videoPreview} controls style={{ width: '100%', borderRadius: '12px' }} />
+        <div style={{ padding: '4px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+            <span style={{ fontWeight: '700' }}>Video Preview</span>
+            <X onClick={() => setVideoPreviewOpen(false)} style={{ cursor: 'pointer' }} />
+          </div>
+          <video src={videoPreview} controls style={{ width: '100%', borderRadius: '12px' }} />
         </div>
       </Dialog>
 

@@ -77,4 +77,7 @@ export const deleteNotify = (id) => api.post("/blog/deletenotify", { id });
 export const incrementViewCount = (id) => api.post(`/blog/view/${id}`);
 export const incrementShareCount = (id) => api.post(`/blog/share/${id}`);
 
+export const respondToCollabRequest = (blogId, status) => api.post('/blog/collab/respond', { blogId, status });
+export const getCollaboratedBlogs = (userId) => api.get(`/blog/collab/${userId}`);
+
 export default api;

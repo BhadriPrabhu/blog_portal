@@ -178,7 +178,7 @@ export default function Login() {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         @media (max-width: 768px) {
           div[style*="maxWidth: 400px"] {
             padding: 12px 16px;
