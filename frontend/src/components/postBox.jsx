@@ -169,14 +169,23 @@ Example Output: ["tech", "programming"]`;
       const id = res.data.blog?._id;
       setSelectedCollabs([]);
 
-      const moderationPrompt = `Act as a legal content moderator... Return ONLY "true" or "false". Content: ${data.title} ${data.desc}`;
+      const moderationPrompt = `
+  Analyze the following content for illegal material, hate speech, or harassment. 
+  If the content VIOLATES policies, return "true". 
+  If the content is SAFE, return "false".
+  Return ONLY "true" or "false".
+  Content: ${data.title} ${data.desc}`;
+
       const result = await GenAI(moderationPrompt);
-      if (result.response.text().toLowerCase().includes("true")) {
+      const aiResponse = result.response.text().trim().toLowerCase();
+
+      if (aiResponse === "true") {
         ToastBlog("Content flagged for Manual review");
         await notifyBlog({ type: "new_post", senderId: profileData._id, recipientId: profileData._id, blogId: id, notifyContent: "Your post has been reported." });
         await reportAiFlag(id);
       }
 
+      
       setData({ title: "", desc: "", userId: "", email: "" });
       if (preview) URL.revokeObjectURL(preview);
       setPreview(null);
