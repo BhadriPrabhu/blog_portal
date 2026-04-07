@@ -6,7 +6,7 @@ import BookmarkBorderOutlinedIcon from '@mui/icons-material/BookmarkBorderOutlin
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import { useStore } from '../data/zustand.jsx';
 import { useLocation, useNavigate } from 'react-router-dom';
-import api, { bulkAction, incrementShareCount, incrementViewCount } from '../utils/api';
+import api, { bulkAction, incrementShareCount, incrementViewCount, notifyBlog, reportPost } from '../utils/api';
 import ToastBlog from '../utils/toast.jsx';
 import { motion, AnimatePresence, hover } from 'framer-motion';
 import ButtonTrans from './buttonTran.jsx';
@@ -110,6 +110,22 @@ export default function PostCard({ postsData = null, onReload = null }) {
         return <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>No posts to show.</div>;
     }
 
+    const handleReport = async (e, post) => {
+        if (e) e.stopPropagation();
+        try {
+            const ownerId = post.user?._id || post.user;
+            await reportPost(post._id);
+            await notifyBlog({ type: "report", senderId: profileData._id, recipientId: ownerId, blogId: post._id, notifyContent: `Your post has been reported by ${profileData.username}.`, link: `/blog/${post._id}` });
+            ToastBlog("Post Reported");
+            setActiveMenu(null);
+            await fetchPosts();
+        } catch (err) {
+            console.log("Failed to Report:", err);
+            ToastBlog("Failed to report post");
+        }
+    };
+
+
     return (
         <div style={{
             display: "grid",
@@ -196,7 +212,9 @@ export default function PostCard({ postsData = null, onReload = null }) {
                                                 </div>
                                             </>
                                         ) : (
-                                            <div style={{ ...getHoverStyle(hoverMenu.hover2), color: "#e74c3c" }} onMouseEnter={() => toggleHover('hover2', true)} onMouseLeave={() => toggleHover('hover2', false)}>
+                                            <div style={{ ...getHoverStyle(hoverMenu.hover2), color: "#e74c3c" }} onMouseEnter={() => toggleHover('hover2', true)} onMouseLeave={() => toggleHover('hover2', false)}
+                                                onClick={(e) => handleReport(e, item)}
+                                            >
                                                 <Flag size={16} style={{ marginRight: '8px' }} />
                                                 <span>Report</span>
                                             </div>

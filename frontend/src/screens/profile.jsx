@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import ButtonTrans from "../components/buttonTran";
 import ToastBlog from "../utils/toast";
-import { bulkAction, editProfileData, fetchLikedBlogs, fetchMyPosts, fetchSavedBlogs, getCollaboratedBlogs, getProfileData, incrementShareCount, incrementViewCount, notifyBlog, respondToCollabRequest, toggleFollow } from "../utils/api";
+import { bulkAction, editProfileData, fetchLikedBlogs, fetchMyPosts, fetchSavedBlogs, getCollaboratedBlogs, getProfileData, incrementShareCount, incrementViewCount, notifyBlog, reportPost, respondToCollabRequest, toggleFollow } from "../utils/api";
 import Button from "../components/button";
 import EditProfileModal from "../components/editProfileModal";
 import { uploadImageToCloudinary } from "../utils/imageUrl";
@@ -696,9 +696,9 @@ const PostGrid = ({ posts, navigate, tab, ownProfile, onRefresh }) => {
             // FIXED: Passing arguments individually to match your api.js definition
             await respondToCollabRequest(post._id, status);
             ToastBlog(`Collaboration ${status}`);
-            if(status === 'accepted') {
+            if (status === 'accepted') {
                 await notifyBlog({ type: "collab_accept", senderId: loggedInUser._id, recipientId: post.user._id, blogId: post._id, notifyContent: `Your post has been accepted for collaboration by ${loggedInUser.username}.`, link: `/blog/${post._id}` });
-            }else if(status === 'declined') {
+            } else if (status === 'declined') {
                 await notifyBlog({ type: "collab_decline", senderId: loggedInUser._id, recipientId: post.user._id, blogId: post._id, notifyContent: `Your post has been declined for collaboration by ${loggedInUser.username}.`, link: `/blog/${post._id}` });
             }
             // Trigger a refresh. Since fetchPosts is in ProfilePage, 
@@ -707,6 +707,19 @@ const PostGrid = ({ posts, navigate, tab, ownProfile, onRefresh }) => {
         } catch (err) {
             console.error("Error responding to collab:", err);
             ToastBlog("Failed to respond to request");
+        }
+    };
+
+    const handleReport = async (e, post) => {
+        if(e) e.stopPropagation();
+        try {
+        await reportPost(post._id);
+        await notifyBlog({ type: "report", senderId: loggedInUser._id, recipientId: post.user._id, blogId: post._id, notifyContent: `Your post has been reported by ${loggedInUser.username}.`, link: `/blog/${post._id}` });
+        ToastBlog("Post Reported");
+        setActiveMenu(null);
+        } catch (err) {
+            console.log("Failed to Report:", err);
+            ToastBlog("Failed to report post");
         }
     };
 
@@ -952,7 +965,7 @@ const PostGrid = ({ posts, navigate, tab, ownProfile, onRefresh }) => {
                                                         style={{ ...getHoverStyle(hoverMenu.hover2), color: "#e74c3c" }}
                                                         onMouseEnter={() => toggleHover('hover2', true)}
                                                         onMouseLeave={() => toggleHover('hover2', false)}
-                                                    // onClick={() => handleDelete(post._id)}
+                                                        onClick={(e) => handleReport(e, post)}
                                                     >
                                                         <Flag size={16} style={{ marginRight: '8px' }} />
                                                         <span>Report</span>
@@ -984,10 +997,12 @@ const PostGrid = ({ posts, navigate, tab, ownProfile, onRefresh }) => {
                         {/* Image Section */}
                         <div style={{
                             height: "160px",
-                            background: post.image ? `url(${post.image}) center/cover` : "linear-gradient(135deg, #eddddd, #cca7f1)",
+                            background: post.image
+                                ? `url(${post.image}) center/cover`
+                                : "linear-gradient(135deg, #eddddd, #cca7f1)",
                             display: 'flex',
                             alignItems: 'center',
-                            justifyContent: 'center'
+                            justifyContent: 'center',
                         }}>
                             {!post.image && <BlogImage style={{ width: '80%', height: '80%' }} />}
 
@@ -1015,6 +1030,12 @@ const PostGrid = ({ posts, navigate, tab, ownProfile, onRefresh }) => {
                             const statusConfig = {
                                 report: {
                                     label: "Reported Content",
+                                    bg: "#FEF2F2", // Light Red
+                                    text: "#DC2626", // Dark Red
+                                    icon: <Flag size={14} strokeWidth={3} />
+                                },
+                                flag: {
+                                    label: "Flagged Content",
                                     bg: "#FEF2F2", // Light Red
                                     text: "#DC2626", // Dark Red
                                     icon: <Flag size={14} strokeWidth={3} />

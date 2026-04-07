@@ -1,7 +1,7 @@
 import React, { useState, memo, useCallback } from 'react';
-import { Flag, FlagOff, Trash2, X, XCircle } from 'lucide-react';
+import { BadgeMinus, Flag, FlagOff, Trash2, X, XCircle } from 'lucide-react';
 import PopupPostDetails from './popupPostDetails';
-import { restorePost, permanentDeletePost } from '../utils/api';
+import { restorePost, permanentDeletePost, bulkAction } from '../utils/api';
 import ButtonTrans from './buttonTran';
 import { useNavigate } from 'react-router-dom';
 
@@ -31,15 +31,16 @@ export default function ReportedPosts({ posts, onRestore, onError }) {
   const [selectedPost, setSelectedPost] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hover1, setHover1] = React.useState(false);
-  const [hover2, setHover2] = React.useState(false);
-  const [hover3, setHover3] = React.useState(false);
-  const [hover4, setHover4] = React.useState(false);
+  // const [hover2, setHover2] = React.useState(null);
+  const [hover3, setHover3] = React.useState(null);
+  const [hover4, setHover4] = React.useState(null);
+  const [hover5, setHover5] = React.useState(null);
 
   const navigate = useNavigate();
 
   const handlePopupToggle = () => {
     setIsPopupOpen((prev) => !prev)
-    setHover1(false);
+    setHover1(null);
   };
 
   // Callback memoization for selected post
@@ -229,15 +230,37 @@ export default function ReportedPosts({ posts, onRestore, onError }) {
                           }}
                         />
                         <ButtonTrans
+                          child={<BadgeMinus size={14} />}
+                          ClickEvent={async (e) => {
+                            e.stopPropagation();
+                            if (!window.confirm("Confirm to move the post to trash?")) return;
+                            try {
+                              await bulkAction("delete", post._id);
+                              if (onRestore) {
+                                onRestore(post);
+                              }
+                              ToastBlog("Post moved to trash");
+                            } catch (err) {
+                              onError("Failed to delete post");
+                            }
+                          }}
+                          mouseEnter={() => setHover4(post._id)}
+                          mouseLeave={() => setHover4(null)}
+                          hover={hover4 === post._id}
+                          paddingEdit="4px"
+                          buttonType={"button"}
+                          noToolTip={true}
+                        />
+                        <ButtonTrans
                           child={<>
                             <Trash2 size="16px" />
                           </>}
                           noToolTip={true}
                           buttonType="button"
                           label="Permanent Delete"
-                          hover={hover4 === post._id}
-                          mouseEnter={() => setHover4(post._id)}
-                          mouseLeave={() => setHover4(null)}
+                          hover={hover5 === post._id}
+                          mouseEnter={() => setHover5(post._id)}
+                          mouseLeave={() => setHover5(null)}
                           paddingEdit="4px 4px"
                           ClickEvent={(e) => {
                             e.stopPropagation();
