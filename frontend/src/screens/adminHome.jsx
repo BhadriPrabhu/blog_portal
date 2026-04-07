@@ -11,12 +11,13 @@ import PopupAnalytics from '../components/popupAnalytics';
 import DeletedPosts from '../components/deletedPosts';
 import ArcheivedPosts from '../components/archeivedPosts';
 import { useNavigate } from 'react-router-dom';
-import { fetchBlogByStatus, bulkAction, reportAiFlag } from '../utils/api';
+import { fetchBlogByStatus, bulkAction, reportPost } from '../utils/api';
 import api from '../utils/api';
 import ReportedPosts from '../components/reportedPosts';
 import { useStore } from '../data/zustand';
 import ButtonTrans from '../components/buttonTran';
 import ToastBlog from '../utils/toast';
+import FlaggedPosts from '../components/flaggedPosts';
 
 const StatsCard = ({ title, value, icon: Icon, color, bgColor }) => {
   const [isHovered, setIsHovered] = React.useState(false);
@@ -91,6 +92,7 @@ export default function AdminHome() {
   const [deletedPosts, setDeletedPosts] = React.useState([]);
   const [reportedPosts, setReportedPosts] = React.useState([]);
   const [archivedPosts, setArchivedPosts] = React.useState([]);
+  const [flaggedPosts, setFlaggedPosts] = React.useState([]);
   const [selectedPost, setSelectedPost] = React.useState(null);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [selectedIds, setSelectedIds] = React.useState(new Set());
@@ -114,11 +116,12 @@ export default function AdminHome() {
       setLoading(true);
       setError(null);
 
-      const [activeRes, deletedRes, archivedRes, reportedRes] = await Promise.all([
+      const [activeRes, deletedRes, archivedRes, reportedRes, flaggedRes] = await Promise.all([
         fetchBlogByStatus('active').catch(err => ({ error: err, data: [] })),
         fetchBlogByStatus('deleted').catch(err => ({ error: err, data: [] })),
         fetchBlogByStatus('archived').catch(err => ({ error: err, data: [] })),
         fetchBlogByStatus('report').catch(err => ({ error: err, data: [] })),
+        fetchBlogByStatus('flag').catch(err => ({ error: err, data: [] })),
       ]);
 
       const mapPosts = (data) => data.map(post => ({
@@ -146,6 +149,7 @@ export default function AdminHome() {
       setDeletedPosts(mapPosts(deletedRes.data));
       setArchivedPosts(mapPosts(archivedRes.data));
       setReportedPosts(mapPosts(reportedRes.data));
+      setFlaggedPosts(mapPosts(flaggedRes.data));
     } catch (err) {
       console.error('Fetch error:', err);
       setError('Failed to fetch posts.');
@@ -243,7 +247,7 @@ export default function AdminHome() {
 
   const handleReport = async (id) => {
     try {
-      await reportAiFlag(id);
+      await reportPost(id);
       ToastBlog("Post Reported");
       setTriggerRefresh();
     } catch (err) {
@@ -297,6 +301,7 @@ export default function AdminHome() {
         <StatsCard title="Deleted Posts" value={deletedPosts.length} icon={Trash2} color="#FF6B6B" bgColor="#FFFFFF" />
         <StatsCard title="Reported Posts" value={reportedPosts.length} icon={Flag} color="#FF6B6B" bgColor="#FFFFFF" />
         <StatsCard title="Archived Posts" value={archivedPosts.length} icon={Flag} color="#FF6B6B" bgColor="#FFFFFF" />
+        <StatsCard title="Flagged Posts" value={flaggedPosts.length} icon={Flag} color="#FF6B6B" bgColor="#FFFFFF" />
       </div>
 
       <div className="controls-row" style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: '16px', marginBottom: '20px', flexWrap: 'wrap' }}>
@@ -539,6 +544,7 @@ export default function AdminHome() {
       <DeletedPosts posts={deletedPosts} onRestore={(post) => { setPosts(prev => [...prev, { ...post, status: 'active' }]); setDeletedPosts(prev => prev.filter(p => p._id !== post._id)); }} onError={handleError} />
       <ReportedPosts posts={reportedPosts} onRestore={(post) => { setPosts(prev => [...prev, { ...post, status: 'active' }]); setReportedPosts(prev => prev.filter(p => p._id !== post._id)); }} onError={handleError} />
       <ArcheivedPosts posts={archivedPosts} onUnarchive={(post) => { setPosts(prev => [...prev, { ...post, status: 'active' }]); setArchivedPosts(prev => prev.filter(p => p._id !== post._id)); }} onError={handleError} />
+      <FlaggedPosts posts={flaggedPosts} onRestore={(post) => { setPosts(prev => [...prev, { ...post, status: 'active' }]); setFlaggedPosts(prev => prev.filter(p => p._id !== post._id)); }} onError={handleError} />
       {selectedPost && <PopupAnalytics post={selectedPost} onClose={() => setSelectedPost(null)} onCommentUpdate={handleCommentUpdate} />}
     </div>
   );

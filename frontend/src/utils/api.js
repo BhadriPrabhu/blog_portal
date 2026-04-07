@@ -65,7 +65,8 @@ export const addReply = (blogId, commentId, userId, value) => api.post(`/blog/${
 export const replyToComment = (commentId, blogId, replyText, userId) => api.post('/blog/comments/reply', { commentId, blogId, replyText, userId });
 
 export const fetchBlogByStatus = (status) => api.get(`/blog`, { params: { status } });
-export const reportAiFlag = (id) => api.post('/blog/report', { ids: [id] });
+export const reportPost = (id) => api.post('/blog/report', { ids: [id] });
+export const flagPost = (id) => api.post('/blog/flag', { ids: [id] });
 export const unReportAiFlag = (id) => api.post('/blog/unreport', { ids: [id] });
 export const fetchSuggestions = (query) => api.get(`/blog/mentions`, { params: { search: query } });
 

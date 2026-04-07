@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import Profile from "../assets/icons/profile";
 import { useStore } from "../data/zustand";
 import { TagsRefer } from '../data/tagsRefer';
-import { addBlog, notifyBlog, reportAiFlag, fetchSuggestions } from '../utils/api';
+import { addBlog, notifyBlog, reportPost, fetchSuggestions, flagPost } from '../utils/api';
 import { BadgePlus, Check, Image, Tag, Video, X, Send, RotateCw, AlertCircle, Users, UserPlus } from "lucide-react";
 import GenAI from "../utils/AI";
 import ToastBlog from "../utils/toast";
@@ -182,10 +182,10 @@ Example Output: ["tech", "programming"]`;
       if (aiResponse === "true") {
         ToastBlog("Content flagged for Manual review");
         await notifyBlog({ type: "new_post", senderId: profileData._id, recipientId: profileData._id, blogId: id, notifyContent: "Your post has been reported." });
-        await reportAiFlag(id);
+        await flagPost(id);
       }
 
-      
+
       setData({ title: "", desc: "", userId: "", email: "" });
       if (preview) URL.revokeObjectURL(preview);
       setPreview(null);
