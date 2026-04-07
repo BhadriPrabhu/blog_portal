@@ -1,11 +1,11 @@
 import React from "react";
 import CommentData from "./commentData";
 import { useParams, useNavigate } from "react-router-dom";
-import api, { getBlog, incrementShareCount } from "../utils/api";
+import api, { getBlog, incrementShareCount, notifyBlog, respondToCollabRequest } from "../utils/api";
 import ButtonTrans from "./buttonTran";
-import { motion } from "framer-motion";
-import { ArrowLeft, Share2, MessageSquareText } from "lucide-react";
-import ThumbUpIcon from '@mui/icons-material/ThumbUp'; 
+import { hover, motion } from "framer-motion";
+import { ArrowLeft, Share2, MessageSquareText, Users } from "lucide-react";
+import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import ThumbUpOutlinedIcon from '@mui/icons-material/ThumbUpOutlined';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderOutlinedIcon from '@mui/icons-material/BookmarkBorderOutlined';
@@ -22,6 +22,9 @@ export default function ViewData() {
     const [hover3, setHover3] = React.useState(false);
     const [hover4, setHover4] = React.useState(false);
     const [hover5, setHover5] = React.useState(false);
+    const [hover6, setHover6] = React.useState(false);
+    const [hover7, setHover7] = React.useState(false);
+    const [isCollabPending, setIsCollabPending] = React.useState(false);
 
     const profileData = useStore((state) => state.profileData);
 
@@ -38,6 +41,13 @@ export default function ViewData() {
                 };
 
                 setBlog(processedData);
+
+                const collab = data.collaborators?.find(c => {
+                    const collabUserId = typeof c.user === 'object' ? c.user._id : c.user;
+                    return String(collabUserId) === String(profileData._id);
+                });
+                setIsCollabPending(collab ? collab.status === 'pending' : false);
+
             } catch (err) {
                 console.error("Link error:", err);
             } finally {
@@ -163,10 +173,90 @@ export default function ViewData() {
                 ))}
             </div>
 
-            <div className="action-bar" style={{ 
-                display: 'flex', 
+            {isCollabPending && (
+                <div style={{
+                    backgroundColor: '#f0f7ff', // Soft Blue for invitations
+                    border: '1px solid #3b82f6',
+                    padding: '16px',
+                    borderRadius: '12px',
+                    marginBottom: '24px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '12px'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Users size={20} color="#3b82f6" />
+                        <p style={{ margin: 0, fontWeight: '600', color: '#1e40af' }}>
+                            You've been invited to collaborate on this post!
+                        </p>
+                    </div>
+                    <div style={{ display: "flex", gap: "10px", width: "100%", maxWidth: "400px" }}>
+
+                        <ButtonTrans
+                            child="Decline"
+                            buttonType="button"
+                            noToolTip={true}
+                            paddingEdit="8px 20px"
+                            ClickEvent={async () => {
+                                try {
+                                    await respondToCollabRequest(blog._id, 'declined');
+                                    const ownerId = blog.user?._id || blog.user;
+                                    await notifyBlog({
+                                        type: "collab_decline",
+                                        senderId: profileData._id,
+                                        recipientId: ownerId,
+                                        blogId: blog._id,
+                                        notifyContent: `${profileData.username} declined the collaboration.`,
+                                        link: `/blog/${blog._id}`
+                                    });
+                                    setIsCollabPending(false);
+                                    ToastBlog("Collaboration declined.");
+                                } catch (err) {
+                                    ToastBlog("Failed to decline request.");
+                                }
+                            }}
+                            hover={hover6}
+                            mouseEnter={() => setHover6(true)}
+                            mouseLeave={() => setHover6(false)}
+                        />
+                        <ButtonTrans
+                            child="Accept"
+                            buttonType="button"
+                            noToolTip={true}
+                            paddingEdit="8px 20px"
+                            ClickEvent={async () => {
+                                try {
+                                    await respondToCollabRequest(blog._id, 'accepted');
+                                    // Use blog.user._id or blog.user based on population
+                                    const ownerId = blog.user?._id || blog.user;
+                                    await notifyBlog({
+                                        type: "collab_accept",
+                                        senderId: profileData._id,
+                                        recipientId: ownerId,
+                                        blogId: blog._id,
+                                        notifyContent: `${profileData.username} accepted your collaboration request.`,
+                                        link: `/blog/${blog._id}`
+                                    });
+                                    setIsCollabPending(false);
+                                    ToastBlog("Collaboration Accepted.");
+                                } catch (err) {
+                                    ToastBlog("Failed to accept request.");
+                                }
+                            }}
+                            hover={hover7}
+                            mouseEnter={() => setHover7(true)}
+                            mouseLeave={() => setHover7(false)}
+                        />
+                    </div>
+                </div>
+            )}
+
+
+            <div className="action-bar" style={{
+                display: 'flex',
                 justifyContent: 'space-around',
-                gap: "10px" 
+                gap: "10px"
             }}>
                 <motion.button
                     style={hover2 ? { ...buttonStyle, ...hoverStyle } : buttonStyle}

@@ -167,6 +167,20 @@ Example Output: ["tech", "programming"]`;
 
       const res = await addBlog(postData);
       const id = res.data.blog?._id;
+
+      if (selectedCollabs.length > 0) {
+        await Promise.all(selectedCollabs.map(collab =>
+          notifyBlog({
+            type: "collab_request",
+            senderId: profileData._id,
+            recipientId: collab.user,
+            blogId: id,
+            notifyContent: `${profileData.username} invited you to collaborate, Check your Collaboration Tab in profile.`,
+            link: `/blog/${id}`
+          })
+        ));
+      }
+
       setSelectedCollabs([]);
 
       const moderationPrompt = `

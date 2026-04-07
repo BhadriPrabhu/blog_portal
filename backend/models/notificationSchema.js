@@ -19,7 +19,7 @@ const notificationSchema = new mongoose.Schema({
   // 3. THE ACTION: What happened?
   type: {
     type: String,
-    enum: ['like', 'comment', 'follow', 'new_post'],
+    enum: ['like', 'comment', 'follow', 'new_post','collab_request', 'collab_accept', 'collab_decline', 'mention', 'report', 'unreport', 'flag'],
     required: true
   },
 

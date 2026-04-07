@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import ButtonTrans from "../components/buttonTran";
 import ToastBlog from "../utils/toast";
-import { bulkAction, editProfileData, fetchLikedBlogs, fetchMyPosts, fetchSavedBlogs, getCollaboratedBlogs, getProfileData, incrementShareCount, incrementViewCount, respondToCollabRequest, toggleFollow } from "../utils/api";
+import { bulkAction, editProfileData, fetchLikedBlogs, fetchMyPosts, fetchSavedBlogs, getCollaboratedBlogs, getProfileData, incrementShareCount, incrementViewCount, notifyBlog, respondToCollabRequest, toggleFollow } from "../utils/api";
 import Button from "../components/button";
 import EditProfileModal from "../components/editProfileModal";
 import { uploadImageToCloudinary } from "../utils/imageUrl";
@@ -690,14 +690,17 @@ const PostGrid = ({ posts, navigate, tab, ownProfile, onRefresh }) => {
         }
     }
 
-    const handleCollabResponse = async (e, blogId, status) => {
+    const handleCollabResponse = async (e, post, status) => {
         e.stopPropagation();
         try {
             // FIXED: Passing arguments individually to match your api.js definition
-            await respondToCollabRequest(blogId, status);
-
+            await respondToCollabRequest(post._id, status);
             ToastBlog(`Collaboration ${status}`);
-
+            if(status === 'accepted') {
+                await notifyBlog({ type: "collab_accept", senderId: loggedInUser._id, recipientId: post.user._id, blogId: post._id, notifyContent: `Your post has been accepted for collaboration by ${loggedInUser.username}.`, link: `/blog/${post._id}` });
+            }else if(status === 'declined') {
+                await notifyBlog({ type: "collab_decline", senderId: loggedInUser._id, recipientId: post.user._id, blogId: post._id, notifyContent: `Your post has been declined for collaboration by ${loggedInUser.username}.`, link: `/blog/${post._id}` });
+            }
             // Trigger a refresh. Since fetchPosts is in ProfilePage, 
             // ensure onRefresh is calling the parent's fetchUser or fetchPosts.
             if (onRefresh) onRefresh();
@@ -777,7 +780,7 @@ const PostGrid = ({ posts, navigate, tab, ownProfile, onRefresh }) => {
                                 <div style={{ display: "flex", gap: "10px", width: "100%", marginBottom: "10px", flexDirection: "column" }}>
                                     <div style={{ display: "flex", gap: "10px", width: "100%" }}>
                                         <button
-                                            onClick={(e) => handleCollabResponse(e, post._id, 'accepted')}
+                                            onClick={(e) => handleCollabResponse(e, post, 'accepted')}
                                             style={{
                                                 flex: 1, backgroundColor: "#3b82f6", color: "white", border: "none",
                                                 padding: "8px", borderRadius: "4px", fontSize: "12px", fontWeight: "600", cursor: "pointer",
@@ -787,7 +790,7 @@ const PostGrid = ({ posts, navigate, tab, ownProfile, onRefresh }) => {
                                             Accept
                                         </button>
                                         <button
-                                            onClick={(e) => handleCollabResponse(e, post._id, 'declined')}
+                                            onClick={(e) => handleCollabResponse(e, post, 'declined')}
                                             style={{
                                                 flex: 1, backgroundColor: "#ef4444", color: "white", border: "none",
                                                 padding: "8px", borderRadius: "4px", fontSize: "12px", fontWeight: "600", cursor: "pointer",
