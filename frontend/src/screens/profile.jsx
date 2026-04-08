@@ -711,12 +711,12 @@ const PostGrid = ({ posts, navigate, tab, ownProfile, onRefresh }) => {
     };
 
     const handleReport = async (e, post) => {
-        if(e) e.stopPropagation();
+        if (e) e.stopPropagation();
         try {
-        await reportPost(post._id);
-        await notifyBlog({ type: "report", senderId: loggedInUser._id, recipientId: post.user._id, blogId: post._id, notifyContent: `Your post has been reported by ${loggedInUser.username}.`, link: `/blog/${post._id}` });
-        ToastBlog("Post Reported");
-        setActiveMenu(null);
+            await reportPost(post._id);
+            await notifyBlog({ type: "report", senderId: loggedInUser._id, recipientId: post.user._id, blogId: post._id, notifyContent: `Your post has been reported by ${loggedInUser.username}.`, link: `/blog/${post._id}` });
+            ToastBlog("Post Reported");
+            setActiveMenu(null);
         } catch (err) {
             console.log("Failed to Report:", err);
             ToastBlog("Failed to report post");
@@ -845,7 +845,23 @@ const PostGrid = ({ posts, navigate, tab, ownProfile, onRefresh }) => {
                         {/* --- THREE DOTS MENU --- */}
                         <div style={{ position: "absolute", top: "10px", right: "10px", zIndex: 10 }}>
                             <ButtonTrans
-                                child={<MoreVertical size={22} strokeWidth="2px" color={post.image ? "white" : "#3e4b5d"} />}
+                                child={
+                                    <div style={{
+                                        backgroundColor: post.image ? "rgba(0, 0, 0, 0.3)" : "transparent",
+                                        borderRadius: "50%",
+                                        padding: "2px",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        backdropFilter: post.image ? "blur(4px)" : "none"
+                                    }}>
+                                        <MoreVertical
+                                            size={20}
+                                            strokeWidth="2.5px"
+                                            color={post.image ? "white" : "#3e4b5d"}
+                                        />
+                                    </div>
+                                }
                                 buttonType="button"
                                 noToolTip={true}
                                 paddingEdit="1px"

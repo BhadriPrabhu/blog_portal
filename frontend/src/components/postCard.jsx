@@ -164,7 +164,23 @@ export default function PostCard({ postsData = null, onReload = null }) {
                         {/* --- MENU BUTTON --- */}
                         <div style={{ position: "absolute", top: "10px", right: "10px", zIndex: 10 }}>
                             <ButtonTrans
-                                child={<MoreVertical size={22} strokeWidth="2px" color={item.image ? "white" : "#3e4b5d"} />}
+                                child={
+                                    <div style={{
+                                        backgroundColor: item.image ? "rgba(0, 0, 0, 0.3)" : "transparent",
+                                        borderRadius: "50%",
+                                        padding: "2px",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        backdropFilter: item.image ? "blur(4px)" : "none"
+                                    }}>
+                                        <MoreVertical
+                                            size={20}
+                                            strokeWidth="2.5px"
+                                            color={item.image ? "white" : "#3e4b5d"}
+                                        />
+                                    </div>
+                                }
                                 buttonType="button"
                                 noToolTip={true}
                                 paddingEdit="1px"
