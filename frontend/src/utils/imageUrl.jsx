@@ -1,8 +1,8 @@
 export const uploadImageToCloudinary = async (file) => {
     if (!file) return null;
 
-    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "dw3ksypom"; // Default to your Cloudinary cloud name if env var is missing
-    const uploadPreset = import.meta.env.VITE_CLOUDINARY_PRESET_NAME || "blog_portal";
+    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = import.meta.env.VITE_CLOUDINARY_PRESET_NAME;
 
     if (!cloudName || !uploadPreset) {
         console.error("Cloudinary config missing! Check your .env file.");

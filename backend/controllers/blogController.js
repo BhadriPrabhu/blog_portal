@@ -48,6 +48,10 @@ const blogController = async (req, res) => {
         path: 'comments.reply.user',
         select: 'user email username role',
       })
+      .populate({
+        path: 'collaborators.user',
+        select: 'user email username role',
+      })
       .sort(sortOption)
       .lean();
 
@@ -62,6 +66,12 @@ const blogController = async (req, res) => {
         liked: userId ? likedByStr.includes(userId.toString()) : false,
         saved: userId ? savedByStr.includes(userId.toString()) : false,
         tags: blog.tags || [],
+        collaborators: (blog.collaborators || []).map(collab => ({
+          ...collab,
+          user: collab.user && collab.user._id
+            ? collab.user
+            : { username: 'Unknown User', _id: collab.user } // Fallback if population failed
+        })),
         comments: (blog.comments || []).map(comment => ({
           ...comment,
           status: comment.status || 'pending',

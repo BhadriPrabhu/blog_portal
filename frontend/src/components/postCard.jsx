@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MessageSquareText, Share2, MoreVertical, Trash2, Edit2, X, Grid, Bookmark, Heart, Flag } from 'lucide-react';
+import { MessageSquareText, Share2, MoreVertical, Trash2, Edit2, X, Grid, Bookmark, Heart, Flag, Users } from 'lucide-react';
 import ThumbUpOutlinedIcon from '@mui/icons-material/ThumbUpOutlined';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import BookmarkBorderOutlinedIcon from '@mui/icons-material/BookmarkBorderOutlined';
@@ -18,6 +18,7 @@ export default function PostCard({ postsData = null, onReload = null }) {
     const [hoverMenu, setHoverMenu] = useState({ hover1: false, hover2: false, hover3: false });
     const [hover, setHover] = useState({ hoverLike: null, hoverComment: null, hoverShare: null, hoverSave: null });
     const [hover1, setHover1] = useState(false);
+    const [openCollabList, setOpenCollabList] = useState(null);
 
     const profileData = useStore((state) => state.profileData);
     const refreshTrigger = useStore((state) => state.refreshTrigger);
@@ -135,6 +136,7 @@ export default function PostCard({ postsData = null, onReload = null }) {
         }}>
             {sampleDatas.map((item, idx) => {
                 const isOwnProfile = item.user?._id === profileData?._id;
+                const acceptedCollabs = item.collaborators?.filter(c => c.status === 'accepted') || [];
 
                 return (
                     <motion.div
@@ -258,17 +260,94 @@ export default function PostCard({ postsData = null, onReload = null }) {
 
                         {/* --- CONTENT SECTION --- */}
                         <div style={{ padding: "16px" }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-                                <div style={{ width: '24px', height: '24px', backgroundColor: '#0c5686', borderRadius: '50%', color: 'white', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '12px', fontWeight: 'bold' }}>
-                                    {item.user?.user?.charAt(0).toUpperCase() || 'U'}
+                            {/* --- AUTHOR & COLLABORATORS ROW --- */}
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', position: 'relative' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <div style={{ width: '24px', height: '24px', backgroundColor: '#0c5686', borderRadius: '50%', color: 'white', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '12px', fontWeight: 'bold' }}>
+                                        {item.user?.user?.charAt(0).toUpperCase() || 'U'}
+                                    </div>
+                                    <span
+                                        style={{ fontSize: '14px', color: '#64748b', fontWeight: '500' }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            navigate(`/blog/profile/${item.user.username}`)
+                                        }}
+                                    >{item.user?.username || 'user'}</span>
                                 </div>
-                                <span
-                                    style={{ fontSize: '15px', color: '#64748b', fontWeight: '500' }}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        navigate(`/blog/profile/${item.user.username}`)
-                                    }}
-                                >{item.user?.username || 'user'}</span>
+
+                                {/* --- COLLABORATOR PILE WITH CLICKABLE MODAL --- */}
+                                {acceptedCollabs.length > 0 && (
+                                    <div style={{ position: 'relative' }}>
+                                        <div
+                                            style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setOpenCollabList(openCollabList === item._id ? null : item._id);
+                                            }}
+                                        >
+                                            <div style={{ display: 'flex', flexDirection: 'row-reverse' }}>
+                                                {acceptedCollabs.slice(0, 3).map((collab) => (
+                                                    <div key={collab._id} style={{ width: '22px', height: '22px', borderRadius: '50%', backgroundColor: '#e2e8f0', border: '2px solid white', marginLeft: '-8px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                                                        {collab.user?.avatar ? <img src={collab.user.avatar} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Users size={12} />}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            {acceptedCollabs.length > 3 && (
+                                                <span style={{ fontSize: '11px', color: '#94a3b8', marginLeft: '4px' }}>+{acceptedCollabs.length - 3}</span>
+                                            )}
+                                        </div>
+
+                                        {/* --- SMALL MODAL BOX --- */}
+                                        <AnimatePresence>
+                                            {openCollabList === item._id && (
+                                                <>
+                                                    {/* Invisible backdrop to close on click outside */}
+                                                    <div
+                                                        style={{ position: 'fixed', inset: 0, zIndex: 40 }}
+                                                        onClick={(e) => { e.stopPropagation(); setOpenCollabList(null); }}
+                                                    />
+                                                    <motion.div
+                                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                                        style={{
+                                                            position: 'absolute',
+                                                            bottom: '30px',
+                                                            right: '0',
+                                                            backgroundColor: 'white',
+                                                            borderRadius: '12px',
+                                                            boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+                                                            border: '1px solid #e2e8f0',
+                                                            padding: '12px',
+                                                            zIndex: 50,
+                                                            minWidth: '150px',
+                                                            pointerEvents: 'auto'
+                                                        }}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                        <p style={{ margin: '0 0 8px 0', fontSize: '12px', fontWeight: '700', color: '#64748b', borderBottom: '1px solid #f1f5f9', paddingBottom: '4px' }}>
+                                                            Collaborators
+                                                        </p>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                            {acceptedCollabs.map((collab) => (
+                                                                <div
+                                                                    key={collab._id}
+                                                                    style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                                                                    onClick={() => navigate(`/blog/profile/${collab.user.username}`)}
+                                                                >
+                                                                    <div style={{ width: '20px', height: '20px', borderRadius: '50%', backgroundColor: '#3b82f6', color: 'white', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '10px' }}>
+                                                                        {collab.user?.username?.charAt(0).toUpperCase()}
+                                                                    </div>
+                                                                    <span style={{ fontSize: '13px', color: '#1e293b' }}>@{collab.user?.username}</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </motion.div>
+                                                </>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+                                )}
                             </div>
 
                             <h3 style={{ margin: "0 0 4px", fontSize: '18px', fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', }}>

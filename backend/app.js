@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 const mongoose = require('mongoose');
 const authController = require("./controllers/authController.js");
 const registerController = require('./controllers/registerController.js');
@@ -33,7 +33,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-const URI = process.env.MONGO_URI || "mongodb+srv://bhadriprabhu:bhadri%402006@bhadri.osdxvju.mongodb.net/?appName=bhadri";
+const URI = process.env.MONGO_URI;
 
 const connectDB = async () => {
   try {
