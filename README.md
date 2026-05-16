@@ -6,8 +6,8 @@ A full-stack blog and collaboration portal with user authentication, post creati
 
 Blog Portal is built as a two-part application:
 
-- `backend/` — Express.js + MongoDB API server
-- `frontend/` — React + Vite client application
+- `backend/` - Express.js + MongoDB API server
+- `frontend/` - React + Vite client application
 
 The app supports:
 - user login/register
