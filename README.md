@@ -59,3 +59,6 @@ The app supports:
   - `utils/`
   - `data/`
   - `assets/`
+
+## Developer
+* **Full-Stack Development** - Bhadri Prabhu K
