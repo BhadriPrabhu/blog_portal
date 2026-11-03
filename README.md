@@ -20,6 +20,26 @@ The app supports:
 - admin moderation for posts/comments
 - AI tag suggestion and content moderation integration
 
+## System Architecture
+
+```mermaid
+graph TD
+  User["User (Web Browser)"]
+  Client["Blog Portal Client (React 19 + Vite + React Router)"]
+  API["REST API (Node.js + Express 5)"]
+  Database[("Application Database (MongoDB Atlas + Mongoose)")]
+  Gemini["AI Features (Google Gemini API)"]
+  Cloudinary["Image Storage (Cloudinary)"]
+  EmailJS["OTP Email Delivery (EmailJS)"]
+
+  User -->|"HTTP(S): app access"| Client
+  Client -->|"HTTP/JSON: REST calls; JWT Bearer token where supplied"| API
+  API -->|"Database queries via Mongoose"| Database
+  Client -->|"HTTPS: AI generation requests"| Gemini
+  Client -->|"HTTPS multipart upload: images"| Cloudinary
+  Client -->|"HTTPS: OTP email requests"| EmailJS
+```
+
 ## Tech Stack
 
 ### Backend
